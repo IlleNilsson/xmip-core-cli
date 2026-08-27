@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net11.0</TargetFramework>
+    <RootNamespace>Xmip.Cli</RootNamespace>
+    <AssemblyName>xmip</AssemblyName>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+    <!-- The whole point of this assembly is to cross a C ABI. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <!-- An operator surface reports identifiers, status codes and module
+         names. None of that is locale-dependent, and pulling ICU in for it
+         costs 30 MB in a self-contained build. -->
+    <InvariantGlobalization>true</InvariantGlobalization>
+
+    <PublishAot>true</PublishAot>
+  </PropertyGroup>
+
+</Project>
