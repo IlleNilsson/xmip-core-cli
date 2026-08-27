@@ -1,4 +1,12 @@
-# Rust / Cargo build output
+# .NET build output
+bin/
+obj/
+**/bin/
+**/obj/
+*.user
+
+# Rust / Cargo build output. Kept: a module implementation may still be Rust,
+# and this repository holds the .NET surface over it rather than replacing it.
 target/
 **/target/
 

@@ -1,32 +1,58 @@
 # Repository architecture
 
-Status: Template  
-Classification: To be defined  
-Maturity: reserved  
-Owning capability: To be defined
+Status: Accepted
+Classification: Surface module
+Maturity: pre-alpha
+Owning capability: operator surfaces (ADR-0014)
 
 ## Responsibility
 
-State the single responsibility owned by this repository.
+The Xmip command line. It configures, operates, reports on and diagnoses a
+running Xmip, and it does so over the C ABI in `xmip-core-abi`.
+
+## Why this is .NET and not Rust
+
+ADR-0014, amended 2026-08-26: every user-interfacing module is .NET 11, and
+`xmip-core-abi` is the exception. The CLI, the PowerShell module, the MAUI
+desktop GUI and the Blazor web GUI are four surfaces over one boundary, and
+writing one of them in a different language means maintaining the binding
+twice.
+
+This repository held a Rust template stub until 2026-08-26. It never
+implemented anything — its `main` called `xmip_service::startup_sequence()`,
+in a crate that no longer exists.
 
 ## Public contracts
 
-List the public types, traits, schemas or behaviours owned by this repository.
+None. A command line is an operator surface; nothing depends on it as a
+library, and its output format is not an API.
 
 ## Dependencies
 
-List allowed dependencies and explain their architectural direction.
+`include/xmip_module.h` from `xmip-core-abi`, and nothing else.
+
+**No Xmip Rust crate is referenced, and none may be.** ADR-0012 clause 2 makes
+the header normative and the bindings a convenience; a surface that linked Rust
+would be proof that the boundary does not work. That this project compiles
+without a single Xmip source file is the test.
 
 ## Non-responsibilities
 
-State what this repository deliberately does not own.
+- Not a runtime. It drives a runtime, and holds no execution state.
+- Not a place for domain logic. A rule that belongs in a Process does not
+  belong in a subcommand.
+- Not the PowerShell surface. `xmip-core-powershell` binds the same ABI
+  directly; it does not shell out to this.
 
 ## Compatibility
 
-Describe compatibility guarantees, breaking-change rules and migration requirements.
+Bound to `XMIP_ABI_VERSION`. A module that reports a different handshake
+version is reported as a disagreement, not silently accepted.
+
+The commands and their output are pre-alpha and unstable.
 
 ## Verification
 
-Describe how the responsibility, contracts and dependency rules will be verified.
-
-The accepted values and repository placement must match the authoritative [Xmip architecture manifest](https://github.com/IlleNilsson/Xmip/blob/main/xmip-architecture.json).
+`dotnet build` and `dotnet test`. `xmip probe` against a conforming module is
+the first of the seven conformance rules in section 11 of the header, which
+ADR-0012 leaves open.
