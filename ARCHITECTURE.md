@@ -54,5 +54,7 @@ The commands and their output are pre-alpha and unstable.
 ## Verification
 
 `dotnet build` and `dotnet test`. `xmip probe` against a conforming module is
-the first of the seven conformance rules in section 11 of the header, which
-ADR-0012 leaves open.
+the first of the seven conformance rules in section 11 of
+`docs/specification.md` in xmip-core-abi — the header has twelve sections and
+none of them is conformance; this line said "the header" until 2026-08-31 and
+sent readers to the path trait.
