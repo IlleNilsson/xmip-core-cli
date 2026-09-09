@@ -9,9 +9,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 
-    <!-- The whole point of this assembly is to cross a C ABI. -->
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-
     <!-- An operator surface reports identifiers, status codes and module
          names. None of that is locale-dependent, and pulling ICU in for it
          costs 30 MB in a self-contained build. -->
@@ -19,5 +16,14 @@
 
     <PublishAot>true</PublishAot>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The C ABI, bound once. Xmip.Abi in xmip-core-abi declares the two
+         headers for every surface — this one, the PowerShell module and the
+         GUI — so nothing here crosses the boundary on its own (ADR-0014,
+         amendment of 2026-08-26). A sibling in the estate, not vendored: the
+         path is the estate's layout, four levels up from this project. -->
+    <ProjectReference Include="..\..\..\..\foundation\abi\dotnet\Xmip.Abi\Xmip.Abi.csproj" />
+  </ItemGroup>
 
 </Project>
