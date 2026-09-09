@@ -1,9 +1,10 @@
+using Xmip.Abi.Module;
 using Xmip.Cli;
-using Xmip.Cli.Interop;
 
 // The Xmip command line. ADR-0014: every user-interfacing module is .NET 11,
 // and xmip-core-abi is the exception. This surface drives Xmip through the C
-// ABI and links no Rust.
+// ABI and links no Rust. The binding is Xmip.Abi in xmip-core-abi, the same
+// one the PowerShell module and the GUI hold, so the boundary is declared once.
 
 return args switch
 {
@@ -11,6 +12,8 @@ return args switch
     ["abi"] => ShowAbi(),
     ["status", var code] => ExplainStatus(code),
     ["probe", var library] => ProbeModule(library),
+    ["health", var library, var scope] => RuntimeCommands.Health(library, scope),
+    ["validate", var library, var node] => RuntimeCommands.Validate(library, node),
     [var unknown, ..] => Unknown(unknown),
 };
 
@@ -19,9 +22,11 @@ static int Usage()
     Console.WriteLine("""
         xmip — the Xmip command line
 
-          xmip abi                 the module boundary this build speaks
-          xmip status <code>       what a status code means
-          xmip probe <library>     load a module and report what it says it is
+          xmip abi                          the module boundary this build speaks
+          xmip status <code>                what a status code means
+          xmip probe <library>              load a module and report what it says it is
+          xmip health <runtime> <scope>     health at and beneath a scope, from a runtime
+          xmip validate <runtime> <toml>    check a node configuration without starting it
 
         Every command answers over the C ABI in xmip-core-abi. Nothing here
         links Xmip's Rust, which is what makes the boundary worth having.
@@ -32,9 +37,10 @@ static int Usage()
 
 static int ShowAbi()
 {
-    Console.WriteLine($"handshake version   {XmipAbi.AbiVersion}");
-    Console.WriteLine($"entrypoint symbol   {XmipAbi.Entrypoint}");
-    Console.WriteLine($"module file name    {XmipAbi.LibraryFileName("xmip_core_transport_file")}");
+    Console.WriteLine($"handshake version   {ModuleAbi.AbiVersion}");
+    Console.WriteLine($"entrypoint symbol   {ModuleAbi.Entrypoint}");
+    Console.WriteLine(
+        $"module file name    {ModuleAbi.LibraryFileName("xmip_core_transport_file")}");
 
     return 0;
 }
@@ -43,7 +49,8 @@ static int ExplainStatus(string code)
 {
     if (!int.TryParse(code, out var value))
     {
-        Console.Error.WriteLine($"'{code}' is not a number. Status codes are integers, zero or negative.");
+        Console.Error.WriteLine(
+            $"'{code}' is not a number. Status codes are integers, zero or negative.");
         return 2;
     }
 
@@ -58,7 +65,8 @@ static int ExplainStatus(string code)
         return 1;
     }
 
-    Console.WriteLine($"       retryable: {Yes(status.IsRetryable())}   terminal: {Yes(status.IsTerminal())}");
+    Console.WriteLine(
+        $"       retryable: {Yes(status.IsRetryable())}   terminal: {Yes(status.IsTerminal())}");
 
     return 0;
 }
@@ -75,9 +83,14 @@ static int ProbeModule(string library)
 
     try
     {
-        result = ModuleProbe.Probe(Path.GetFullPath(library));
+        // Module log lines go to stderr as they arrive; the cmdlet puts the
+        // same lines on its verbose stream. One probe, two sinks.
+        result = ModuleProbe.Probe(
+            Path.GetFullPath(library),
+            line => Console.Error.WriteLine($"  {line}"));
     }
-    catch (Exception failure) when (failure is DllNotFoundException or EntryPointNotFoundException or BadImageFormatException)
+    catch (Exception failure) when (failure
+        is DllNotFoundException or EntryPointNotFoundException or BadImageFormatException)
     {
         // The three ways loading fails that say something specific about the
         // module rather than about this process.
@@ -87,12 +100,14 @@ static int ProbeModule(string library)
 
     if (result.Status != XmipStatus.Ok)
     {
-        Console.Error.WriteLine($"{XmipAbi.Entrypoint} returned {result.Status} — {result.LastError}");
+        Console.Error.WriteLine(
+            $"{ModuleAbi.Entrypoint} returned {result.Status} — {result.LastError}");
 
         if (result.Status == XmipStatus.Unsupported)
         {
             Console.Error.WriteLine(
-                $"That is the answer a module gives when it cannot speak abi_version {XmipAbi.AbiVersion}.");
+                "That is the answer a module gives when it cannot speak " +
+                $"abi_version {ModuleAbi.AbiVersion}.");
         }
 
         return 1;
@@ -105,10 +120,11 @@ static int ProbeModule(string library)
     Console.WriteLine($"trait version       {result.TraitVersion}");
     Console.WriteLine($"module version      {result.ModuleVersion}");
 
-    if (result.AbiVersion != XmipAbi.AbiVersion)
+    if (result.AbiVersion != ModuleAbi.AbiVersion)
     {
         Console.Error.WriteLine(
-            $"Loaded, and disagrees: the module says {result.AbiVersion}, this build speaks {XmipAbi.AbiVersion}.");
+            $"Loaded, and disagrees: the module says {result.AbiVersion}, " +
+            $"this build speaks {ModuleAbi.AbiVersion}.");
         return 1;
     }
 
@@ -116,7 +132,8 @@ static int ProbeModule(string library)
     {
         // Section 4: standard is empty only when provider is "core".
         Console.Error.WriteLine(
-            $"A core module named a standard ('{result.Standard}'). ADR-0011 leaves that slot empty for core.");
+            $"A core module named a standard ('{result.Standard}'). " +
+            "ADR-0011 leaves that slot empty for core.");
         return 1;
     }
 
