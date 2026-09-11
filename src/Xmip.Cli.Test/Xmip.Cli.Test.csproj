@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The executable's tests (ADR-0052 clauses 5 and 6): argument parsing, the
+    text and JSON renderings over a fake operator surface, and which runtime
+    library wins when several are named. Nothing here loads a native library;
+    what crosses the C ABI is the binding's to test.
+
+    Target framework and the rest come from Directory.Build.props.
+  -->
+
+  <PropertyGroup>
+    <RootNamespace>Xmip.Cli.Test</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+
+    <!-- Test classes are public for the runner, not for a reader. -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Xmip.Cli\Xmip.Cli.csproj" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

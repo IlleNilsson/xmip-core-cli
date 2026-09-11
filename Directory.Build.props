@@ -1,0 +1,39 @@
+<Project>
+
+  <!--
+    Properties every project in this repository shares — the executable and
+    its tests. Here rather than in each .csproj, for the reason xmip-core-gui
+    gives: two manifests that must agree about the target framework will
+    eventually stop agreeing.
+  -->
+
+  <PropertyGroup>
+    <!-- ADR-0014, amendment of 2026-08-30: an executable owns its runtime and
+         targets net11.0; the binding it references targets net10.0 because
+         pwsh hosts that, and a net11.0 executable references it without
+         complaint. -->
+    <TargetFramework>net11.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- A warning nobody has to fix is a warning nobody reads. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!-- An operator surface reports identifiers, status codes and module
+         names. None of that is locale-dependent, and pulling ICU in for it
+         costs about 30 MB in a self-contained build. -->
+    <InvariantGlobalization>true</InvariantGlobalization>
+
+    <!-- A restore that resolves differently on two machines is not a problem
+         this repository wants to own. -->
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+
+    <Authors>Ilian Nilsson</Authors>
+    <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
+  </PropertyGroup>
+
+</Project>

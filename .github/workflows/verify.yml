@@ -7,6 +7,40 @@ on:
 permissions:
   contents: read
 
+# A .NET repository verified in its own language (ADR-0052 clause 6). The
+# shared rust-verify.yml ran here until 2026-09-11 over a repository with no
+# Cargo.toml in it.
+#
+# The executable references Xmip.Abi and Xmip.Surface by path inside the
+# composed estate (ADR-0014, amendment of 2026-09-09), four levels up from
+# its project, so the binding's repository is checked out where the path
+# expects it: module/foundation/abi beside module/operation/cli. Its main is
+# what the estate tracks (ADR-0005).
 jobs:
   verify:
-    uses: IlleNilsson/.github/.github/workflows/rust-verify.yml@v1
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out this repository
+        uses: actions/checkout@v4
+        with:
+          path: module/operation/cli
+
+      - name: Check out xmip-core-abi beside it
+        uses: actions/checkout@v4
+        with:
+          repository: IlleNilsson/xmip-core-abi
+          ref: main
+          path: module/foundation/abi
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: module/operation/cli/global.json
+
+      - name: Build
+        run: dotnet build module/operation/cli/src/Xmip.Cli.Test/Xmip.Cli.Test.csproj
+
+      - name: Test
+        run: >-
+          dotnet test module/operation/cli/src/Xmip.Cli.Test/Xmip.Cli.Test.csproj
+          --no-build
