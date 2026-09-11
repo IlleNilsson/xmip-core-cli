@@ -1,29 +1,28 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <!--
+    The xmip executable (ADR-0014 clause 8; ADR-0052 clause 5). Argument
+    parsing and rendering over the shared surface library; nothing here
+    crosses the C ABI on its own, and nothing here links Xmip's Rust.
+
+    Target framework and the rest come from Directory.Build.props.
+  -->
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net11.0</TargetFramework>
     <RootNamespace>Xmip.Cli</RootNamespace>
     <AssemblyName>xmip</AssemblyName>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-
-    <!-- An operator surface reports identifiers, status codes and module
-         names. None of that is locale-dependent, and pulling ICU in for it
-         costs 30 MB in a self-contained build. -->
-    <InvariantGlobalization>true</InvariantGlobalization>
-
     <PublishAot>true</PublishAot>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- The C ABI, bound once. Xmip.Abi in xmip-core-abi declares the two
-         headers for every surface — this one, the PowerShell module and the
-         GUI — so nothing here crosses the boundary on its own (ADR-0014,
-         amendment of 2026-08-26). A sibling in the estate, not vendored: the
-         path is the estate's layout, four levels up from this project. -->
+    <!-- The C ABI, bound once, and the model every .NET surface shares. Both
+         live in xmip-core-abi — the binding by ADR-0014's amendment of
+         2026-09-09, the surface library by ADR-0052 clause 1 — and every
+         surface references them by path inside the composed estate, four
+         levels up from this project. Siblings, not vendored. -->
     <ProjectReference Include="..\..\..\..\foundation\abi\dotnet\Xmip.Abi\Xmip.Abi.csproj" />
+    <ProjectReference Include="..\..\..\..\foundation\abi\dotnet\Xmip.Surface\Xmip.Surface.csproj" />
   </ItemGroup>
 
 </Project>

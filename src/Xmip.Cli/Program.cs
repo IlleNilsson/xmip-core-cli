@@ -1,152 +1,96 @@
-using Xmip.Abi.Module;
+using Xmip.Abi.Operate;
 using Xmip.Cli;
+using Xmip.Surface;
 
 // The Xmip command line. ADR-0014: every user-interfacing module is .NET 11,
-// and xmip-core-abi is the exception. This surface drives Xmip through the C
-// ABI and links no Rust. The binding is Xmip.Abi in xmip-core-abi, the same
-// one the PowerShell module and the GUI hold, so the boundary is declared once.
+// and xmip-core-abi is the exception. This executable is argument parsing and
+// rendering over Xmip.Surface, the model every .NET surface shares (ADR-0052),
+// and Xmip.Abi, the one binding over the C ABI. It links no Rust.
+//
+// Text for a person on stdout; --json one document, --follow JSON Lines
+// (ADR-0014 clause 10). Every complaint goes to stderr with a non-zero exit:
+// 2 when the line could not be obeyed, 1 when the thing asked about is wrong.
+// The console, the runtime and Ctrl+C are wired here and nowhere else.
 
-return args switch
+Invocation? invocation = Invocation.Parse(args, out string problem);
+
+if (invocation is null)
 {
-    [] or ["--help"] or ["-h"] or ["help"] => Usage(),
-    ["abi"] => ShowAbi(),
-    ["status", var code] => ExplainStatus(code),
-    ["probe", var library] => ProbeModule(library),
-    ["health", var library, var scope] => RuntimeCommands.Health(library, scope),
-    ["validate", var library, var node] => RuntimeCommands.Validate(library, node),
-    [var unknown, ..] => Unknown(unknown),
-};
-
-static int Usage()
-{
-    Console.WriteLine("""
-        xmip — the Xmip command line
-
-          xmip abi                          the module boundary this build speaks
-          xmip status <code>                what a status code means
-          xmip probe <library>              load a module and report what it says it is
-          xmip health <runtime> <scope>     health at and beneath a scope, from a runtime
-          xmip validate <runtime> <toml>    check a node configuration without starting it
-
-        Every command answers over the C ABI in xmip-core-abi. Nothing here
-        links Xmip's Rust, which is what makes the boundary worth having.
-        """);
-
-    return 0;
-}
-
-static int ShowAbi()
-{
-    Console.WriteLine($"handshake version   {ModuleAbi.AbiVersion}");
-    Console.WriteLine($"entrypoint symbol   {ModuleAbi.Entrypoint}");
-    Console.WriteLine(
-        $"module file name    {ModuleAbi.LibraryFileName("xmip_core_transport_file")}");
-
-    return 0;
-}
-
-static int ExplainStatus(string code)
-{
-    if (!int.TryParse(code, out var value))
-    {
-        Console.Error.WriteLine(
-            $"'{code}' is not a number. Status codes are integers, zero or negative.");
-        return 2;
-    }
-
-    var status = (XmipStatus)value;
-    var known = Enum.IsDefined(status);
-
-    Console.WriteLine($"{value,5}  {(known ? status.ToString() : "unknown")}");
-    Console.WriteLine($"       {status.Explain()}");
-
-    if (!known)
-    {
-        return 1;
-    }
-
-    Console.WriteLine(
-        $"       retryable: {Yes(status.IsRetryable())}   terminal: {Yes(status.IsTerminal())}");
-
-    return 0;
-}
-
-static int ProbeModule(string library)
-{
-    if (!File.Exists(library))
-    {
-        Console.Error.WriteLine($"No file at {library}.");
-        return 2;
-    }
-
-    ModuleProbe.Result result;
-
-    try
-    {
-        // Module log lines go to stderr as they arrive; the cmdlet puts the
-        // same lines on its verbose stream. One probe, two sinks.
-        result = ModuleProbe.Probe(
-            Path.GetFullPath(library),
-            line => Console.Error.WriteLine($"  {line}"));
-    }
-    catch (Exception failure) when (failure
-        is DllNotFoundException or EntryPointNotFoundException or BadImageFormatException)
-    {
-        // The three ways loading fails that say something specific about the
-        // module rather than about this process.
-        Console.Error.WriteLine(failure.Message);
-        return 1;
-    }
-
-    if (result.Status != XmipStatus.Ok)
-    {
-        Console.Error.WriteLine(
-            $"{ModuleAbi.Entrypoint} returned {result.Status} — {result.LastError}");
-
-        if (result.Status == XmipStatus.Unsupported)
-        {
-            Console.Error.WriteLine(
-                "That is the answer a module gives when it cannot speak " +
-                $"abi_version {ModuleAbi.AbiVersion}.");
-        }
-
-        return 1;
-    }
-
-    Console.WriteLine($"provider            {Shown(result.Provider)}");
-    Console.WriteLine($"module              {Shown(result.Module)}");
-    Console.WriteLine($"standard            {Shown(result.Standard, "(none)")}");
-    Console.WriteLine($"abi version         {result.AbiVersion}");
-    Console.WriteLine($"trait version       {result.TraitVersion}");
-    Console.WriteLine($"module version      {result.ModuleVersion}");
-
-    if (result.AbiVersion != ModuleAbi.AbiVersion)
-    {
-        Console.Error.WriteLine(
-            $"Loaded, and disagrees: the module says {result.AbiVersion}, " +
-            $"this build speaks {ModuleAbi.AbiVersion}.");
-        return 1;
-    }
-
-    if (result.Provider == "core" && result.Standard.Length > 0)
-    {
-        // Section 4: standard is empty only when provider is "core".
-        Console.Error.WriteLine(
-            $"A core module named a standard ('{result.Standard}'). " +
-            "ADR-0011 leaves that slot empty for core.");
-        return 1;
-    }
-
-    return 0;
-}
-
-static int Unknown(string command)
-{
-    Console.Error.WriteLine($"'{command}' is not an xmip command. Try 'xmip help'.");
+    Console.Error.WriteLine(problem);
     return 2;
 }
 
-static string Yes(bool value) => value ? "yes" : "no";
+return invocation.Command switch
+{
+    Command.Help => Usage.Print(Console.Out),
+    Command.Abi => AbiCommand.Run(invocation.Json, Console.Out),
+    Command.Status => StatusCommand.Run(
+        invocation.Argument, invocation.Json, Console.Out, Console.Error),
+    Command.Probe => ProbeCommand.Run(
+        invocation.Argument, invocation.Json, Console.Out, Console.Error),
+    Command.Health => await HealthAsync(invocation).ConfigureAwait(false),
+    Command.Validate => Validate(invocation),
+    _ => Usage.Print(Console.Out),
+};
 
-static string Shown(string value, string whenEmpty = "(empty)") =>
-    value.Length == 0 ? whenEmpty : value;
+static async Task<int> HealthAsync(Invocation invocation)
+{
+    using NativeOperator surface = new(RuntimeChoice.Find(invocation.Runtime));
+
+    if (!surface.IsLoaded)
+    {
+        Console.Error.WriteLine(surface.Reason);
+        return 1;
+    }
+
+    if (!invocation.Follow)
+    {
+        return HealthCommand.Run(
+            surface, invocation.Argument, invocation.Json, Console.Out, Console.Error);
+    }
+
+    using CancellationTokenSource stop = new();
+
+    Console.CancelKeyPress += (_, interrupt) =>
+    {
+        // Ours to end: the loop stops, the runtime is released, the exit is
+        // clean. Without this the process dies mid-line.
+        interrupt.Cancel = true;
+        stop.Cancel();
+    };
+
+    return await HealthCommand.FollowAsync(
+        surface, invocation.Argument, Console.Out, HealthCommand.Interval, stop.Token)
+        .ConfigureAwait(false);
+}
+
+static int Validate(Invocation invocation)
+{
+    string configurationPath = invocation.Argument;
+
+    if (!File.Exists(configurationPath))
+    {
+        Console.Error.WriteLine($"No file at {configurationPath}.");
+        return 2;
+    }
+
+    // The binding's Operator rather than NativeOperator: the surface's
+    // Validate answers in English only, and a document for a program needs
+    // the record — the status and each problem — as well as the sentence.
+    using Operator? runtime = Operator.Load(
+        RuntimeChoice.Find(invocation.Runtime), out string reason);
+
+    if (runtime is null)
+    {
+        Console.Error.WriteLine(reason);
+        return 1;
+    }
+
+    return ValidateCommand.Run(
+        configurationPath,
+        File.ReadAllText(configurationPath),
+        runtime.Validate,
+        invocation.Json,
+        Console.Out,
+        Console.Error);
+}
