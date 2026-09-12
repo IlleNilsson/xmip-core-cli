@@ -12,22 +12,30 @@ namespace Xmip.Cli;
 /// path, a scope, a configuration path — or empty for the ones without.</param>
 /// <param name="Json">Emit one JSON document instead of text for a person.
 /// ADR-0014 clause 10.</param>
-/// <param name="Follow">Emit JSON Lines of health as it changes, until
+/// <param name="Follow">Emit JSON Lines of health or activity as it changes, until
 /// interrupted. Implies <see cref="Json"/>.</param>
 /// <param name="Runtime">An explicit runtime library, overriding discovery.
 /// Null when the discovery rule decides.</param>
 public sealed record Invocation(
     Command Command, string Argument, bool Json, bool Follow, string? Runtime)
 {
-    private static readonly Dictionary<string, (Command Command, bool TakesArgument)> Known =
+    private static readonly Dictionary<string, (Command Command, int Minimum, int Maximum)> Known =
         new(StringComparer.Ordinal)
         {
-            ["help"] = (Command.Help, false),
-            ["abi"] = (Command.Abi, false),
-            ["status"] = (Command.Status, true),
-            ["probe"] = (Command.Probe, true),
-            ["health"] = (Command.Health, true),
-            ["validate"] = (Command.Validate, true),
+            ["help"] = (Command.Help, 0, 0),
+            ["abi"] = (Command.Abi, 0, 0),
+            ["status"] = (Command.Status, 1, 1),
+            ["probe"] = (Command.Probe, 1, 1),
+            ["health"] = (Command.Health, 1, 1),
+            ["activity"] = (Command.Activity, 0, 1),
+            ["list"] = (Command.List, 0, 1),
+            ["show"] = (Command.Show, 1, 1),
+            ["pause"] = (Command.Pause, 1, 1),
+            ["resume"] = (Command.Resume, 1, 1),
+            ["start"] = (Command.Start, 1, 1),
+            ["stop"] = (Command.Stop, 1, 1),
+            ["restart"] = (Command.Restart, 1, 1),
+            ["validate"] = (Command.Validate, 1, 1),
         };
 
     /// <summary>
@@ -88,25 +96,27 @@ public sealed record Invocation(
             return new Invocation(Command.Help, string.Empty, json, follow, runtime);
         }
 
-        if (!Known.TryGetValue(words[0], out (Command Command, bool TakesArgument) known))
+        if (!Known.TryGetValue(words[0], out (Command Command, int Minimum, int Maximum) known))
         {
             problem = $"'{words[0]}' is not an xmip command. Try 'xmip help'.";
             return null;
         }
 
-        int expected = known.TakesArgument ? 2 : 1;
+        int arguments = words.Count - 1;
 
-        if (words.Count != expected)
+        if (arguments < known.Minimum || arguments > known.Maximum)
         {
-            problem = known.TakesArgument
-                ? $"'{words[0]}' takes exactly one argument. Try 'xmip help'."
-                : $"'{words[0]}' takes no argument. Try 'xmip help'.";
+            problem = known.Minimum == 0 && known.Maximum == 0
+                ? $"'{words[0]}' takes no argument. Try 'xmip help'."
+                : known.Minimum == 0
+                    ? $"'{words[0]}' takes at most one argument. Try 'xmip help'."
+                    : $"'{words[0]}' takes exactly one argument. Try 'xmip help'.";
             return null;
         }
 
-        if (follow && known.Command != Command.Health)
+        if (follow && known.Command is not (Command.Health or Command.Activity))
         {
-            problem = "--follow only applies to 'health'.";
+            problem = "--follow only applies to 'health' or 'activity'.";
             return null;
         }
 
@@ -114,7 +124,7 @@ public sealed record Invocation(
 
         return new Invocation(
             known.Command,
-            known.TakesArgument ? words[1] : string.Empty,
+            arguments == 1 ? words[1] : string.Empty,
             json || follow,
             follow,
             runtime);
