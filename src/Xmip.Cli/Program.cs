@@ -29,6 +29,14 @@ return invocation.Command switch
     Command.Probe => ProbeCommand.Run(
         invocation.Argument, invocation.Json, Console.Out, Console.Error),
     Command.Health => await HealthAsync(invocation).ConfigureAwait(false),
+    Command.Activity => await ActivityAsync(invocation).ConfigureAwait(false),
+    Command.List => ScopeRead(invocation, list: true),
+    Command.Show => ScopeRead(invocation, list: false),
+    Command.Pause => ScopeAction(invocation, "pause"),
+    Command.Resume => ScopeAction(invocation, "resume"),
+    Command.Start => ScopeAction(invocation, "start"),
+    Command.Stop => ScopeAction(invocation, "stop"),
+    Command.Restart => ScopeAction(invocation, "restart"),
     Command.Validate => Validate(invocation),
     _ => Usage.Print(Console.Out),
 };
@@ -64,6 +72,36 @@ static async Task<int> HealthAsync(Invocation invocation)
         .ConfigureAwait(false);
 }
 
+static async Task<int> ActivityAsync(Invocation invocation)
+{
+    using NativeOperator surface = new(RuntimeChoice.Find(invocation.Runtime));
+
+    if (!surface.IsLoaded)
+    {
+        Console.Error.WriteLine(surface.Reason);
+        return 1;
+    }
+
+    string scope = string.IsNullOrEmpty(invocation.Argument)
+        ? ScopeTree.Root
+        : invocation.Argument;
+
+    if (!invocation.Follow)
+    {
+        return ActivityCommand.Run(surface, scope, invocation.Json, Console.Out, Console.Error);
+    }
+
+    using CancellationTokenSource stop = new();
+    Console.CancelKeyPress += (_, interrupt) =>
+    {
+        interrupt.Cancel = true;
+        stop.Cancel();
+    };
+
+    return await ActivityCommand.FollowAsync(surface, scope, Console.Out, stop.Token)
+        .ConfigureAwait(false);
+}
+
 static int Validate(Invocation invocation)
 {
     string configurationPath = invocation.Argument;
@@ -93,4 +131,38 @@ static int Validate(Invocation invocation)
         invocation.Json,
         Console.Out,
         Console.Error);
+}
+
+static int ScopeRead(Invocation invocation, bool list)
+{
+    using NativeOperator surface = new(RuntimeChoice.Find(invocation.Runtime));
+
+    if (!surface.IsLoaded)
+    {
+        Console.Error.WriteLine(surface.Reason);
+        return 1;
+    }
+
+    string scope = string.IsNullOrEmpty(invocation.Argument)
+        ? ScopeTree.Root
+        : invocation.Argument;
+
+    return list
+        ? ScopeCommand.List(surface, scope, invocation.Json, Console.Out, Console.Error)
+        : ScopeCommand.Show(surface, scope, invocation.Json, Console.Out, Console.Error);
+}
+
+static int ScopeAction(Invocation invocation, string action)
+{
+    using NativeOperator surface = new(RuntimeChoice.Find(invocation.Runtime));
+
+    if (!surface.IsLoaded)
+    {
+        Console.Error.WriteLine(surface.Reason);
+        return 1;
+    }
+
+    return ScopeCommand.Apply(
+        surface, invocation.Argument, action, Environment.UserName,
+        invocation.Json, Console.Out, Console.Error);
 }

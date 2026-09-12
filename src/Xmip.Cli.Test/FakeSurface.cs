@@ -18,6 +18,9 @@ public sealed class FakeSurface(IReadOnlyList<HealthRecord> records) : IOperator
     /// <summary>The records the next <see cref="Health"/> answers from.</summary>
     public IReadOnlyList<HealthRecord> Records { get; set; } = records;
 
+    /// <summary>Measurements returned by kind; absent means unpublished.</summary>
+    public Dictionary<Counted, ulong> Measurements { get; } = [];
+
     /// <summary>How many times <see cref="Health"/> was asked.</summary>
     public int Reads { get; private set; }
 
@@ -55,7 +58,9 @@ public sealed class FakeSurface(IReadOnlyList<HealthRecord> records) : IOperator
     /// <inheritdoc />
     public MeasurementRecord? Measure(string scope, Counted counted)
     {
-        return null;
+        return Measurements.TryGetValue(counted, out ulong value)
+            ? new MeasurementRecord(scope, counted, value, Seen.AddMinutes(-1), Seen, Seen)
+            : null;
     }
 
     /// <inheritdoc />
