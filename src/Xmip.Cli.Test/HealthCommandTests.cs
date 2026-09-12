@@ -102,8 +102,9 @@ public sealed class HealthCommandTests
         using CancellationTokenSource stop = new();
         FakeSurface surface = Estate();
 
-        // Five reads: the first emits, the second and third repeat and emit
-        // nothing, the fourth sees the change, the fifth stops the follow.
+        // Five synthetic publication notices: the first emits, the second
+        // and third repeat and emit nothing, the fourth sees the change, and
+        // the fifth stops the follow.
         surface = new FakeSurface(surface.Records)
         {
             OnRead = reads =>
