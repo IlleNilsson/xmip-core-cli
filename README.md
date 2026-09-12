@@ -25,8 +25,8 @@ The runtime library is found by the one rule every surface uses:
 `Xmip:RuntimeLibrary` in the configuration, else the `XMIP_RUNTIME_LIBRARY`
 environment variable, else the library beside the executable. `--runtime`
 overrides all three. Text goes to stdout for a person, column-aligned;
-`--json` emits one document; `--follow` polls the surface every second and
-emits one JSON Lines record each time health changes, until interrupted
+`--json` emits one document; `--follow` subscribes to the shared operator
+change stream and emits one JSON Lines record each time health changes, until interrupted
 (ADR-0014 clause 10). Complaints go to stderr with a non-zero exit: 2 when the
 line could not be obeyed, 1 when the thing asked about is wrong.
 
