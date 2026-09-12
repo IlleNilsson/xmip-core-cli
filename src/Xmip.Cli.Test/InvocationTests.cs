@@ -66,12 +66,42 @@ public sealed class InvocationTests
     }
 
     [Fact]
-    public void FollowAppliesToHealthOnly()
+    public void FollowAppliesToLiveCommandsOnly()
     {
         Invocation? parsed = Invocation.Parse(["abi", "--follow"], out string problem);
 
         Assert.Null(parsed);
         Assert.Contains("--follow", problem, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ActivityDefaultsToTheClusterAndMayFollow()
+    {
+        Invocation? parsed = Invocation.Parse(["activity", "--follow"], out _);
+
+        Assert.NotNull(parsed);
+        Assert.Equal(Command.Activity, parsed.Command);
+        Assert.Empty(parsed.Argument);
+        Assert.True(parsed.Follow);
+    }
+
+    [Fact]
+    public void ActivityAcceptsOneScope()
+    {
+        Invocation? parsed = Invocation.Parse(["activity", "xmip:///edge-01"], out _);
+
+        Assert.NotNull(parsed);
+        Assert.Equal("xmip:///edge-01", parsed.Argument);
+    }
+
+    [Fact]
+    public void ListDefaultsToTheCluster()
+    {
+        Invocation? parsed = Invocation.Parse(["list"], out _);
+
+        Assert.NotNull(parsed);
+        Assert.Equal(Command.List, parsed.Command);
+        Assert.Empty(parsed.Argument);
     }
 
     [Fact]
@@ -119,6 +149,12 @@ public sealed class InvocationTests
     [InlineData("probe")]
     [InlineData("health")]
     [InlineData("validate")]
+    [InlineData("show")]
+    [InlineData("pause")]
+    [InlineData("resume")]
+    [InlineData("start")]
+    [InlineData("stop")]
+    [InlineData("restart")]
     public void ACommandThatTakesAnArgumentRefusesToGoWithout(string word)
     {
         Invocation? parsed = Invocation.Parse([word], out string problem);
