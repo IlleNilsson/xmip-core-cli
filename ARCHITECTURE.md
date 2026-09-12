@@ -78,5 +78,5 @@ The commands and their output are pre-alpha and unstable.
 `dotnet build` and `dotnet test` on `src/Xmip.Cli.Test`; the workflow in
 `.github/workflows/verify.yml` does the same with `xmip-core-abi` checked out
 beside this repository. `xmip probe` against a conforming module is the first
-of the seven conformance rules in section 11 of `docs/specification.md` in
+of the seven conformance rules in section 11 of `doc/specification.md` in
 xmip-core-abi.
