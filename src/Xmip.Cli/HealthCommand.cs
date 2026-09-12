@@ -14,7 +14,10 @@ namespace Xmip.Cli;
 /// </summary>
 public static class HealthCommand
 {
-    /// <summary>How often <c>--follow</c> asks the surface again.</summary>
+    /// <summary>
+    /// Retained for source compatibility with callers compiled before change
+    /// notifications. Current surfaces wake the command and do not poll.
+    /// </summary>
     public static readonly TimeSpan Interval = TimeSpan.FromSeconds(1);
 
     /// <summary>Read once and render.</summary>
@@ -42,11 +45,9 @@ public static class HealthCommand
     }
 
     /// <summary>
-    /// Read every <see cref="Interval"/> and emit one JSON Lines record each
-    /// time what the surface says differs from the last time, the first read
-    /// included, until <paramref name="stop"/> is cancelled. Observation is
-    /// lossy by design (ADR-0014 clause 5): a change between two reads is not
-    /// seen, and this says nothing about it.
+    /// Emit one JSON Lines record for the current snapshot, then whenever the
+    /// surface says its published snapshot advanced. Notifications may be
+    /// coalesced; each record is the latest immutable truth.
     /// </summary>
     public static async Task<int> FollowAsync(
         IOperatorSurface surface,
@@ -55,28 +56,31 @@ public static class HealthCommand
         TimeSpan interval,
         CancellationToken stop)
     {
+        // Kept in the signature so existing callers remain source-compatible.
+        // Production surfaces do not use it; their change stream wakes us.
+        _ = interval;
         string? last = null;
 
-        while (!stop.IsCancellationRequested)
+        try
         {
-            IReadOnlyList<HealthRecord> records = surface.Health(scope);
-            string document = Document(surface, scope, records);
-
-            if (!string.Equals(document, last, StringComparison.Ordinal))
+            await foreach (SurfaceChange _ in surface.WatchAsync(stop).ConfigureAwait(false))
             {
+                IReadOnlyList<HealthRecord> records = surface.Health(scope);
+                string document = Document(surface, scope, records);
+
+                if (string.Equals(document, last, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
                 output.WriteLine(document);
                 await output.FlushAsync(stop).ConfigureAwait(false);
                 last = document;
             }
-
-            try
-            {
-                await Task.Delay(interval, stop).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException)
-            {
-                break;
-            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Ctrl+C is the normal end of --follow.
         }
 
         return 0;

@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Xmip.Abi.Operate;
 using Xmip.Surface;
 
@@ -35,6 +36,20 @@ public sealed class FakeSurface(IReadOnlyList<HealthRecord> records) : IOperator
 
         return ScopeTree.WorstFirst(
             Records.Where(record => ScopeTree.Beneath(record.Scope, scope)));
+    }
+
+    /// <inheritdoc />
+    public async IAsyncEnumerable<SurfaceChange> WatchAsync(
+        [EnumeratorCancellation] CancellationToken stop = default)
+    {
+        ulong revision = 0;
+
+        while (!stop.IsCancellationRequested)
+        {
+            yield return new SurfaceChange(
+                revision++, SurfaceChangeKind.All, DateTimeOffset.UtcNow, Source);
+            await Task.Yield();
+        }
     }
 
     /// <inheritdoc />
