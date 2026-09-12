@@ -19,6 +19,30 @@ public enum Command
     /// <summary>Health at and beneath a scope, from the runtime.</summary>
     Health,
 
+    /// <summary>Received, processed, sent, retrying and failed.</summary>
+    Activity,
+
+    /// <summary>Direct children of a scope.</summary>
+    List,
+
+    /// <summary>One scope with health and activity.</summary>
+    Show,
+
+    /// <summary>Pause a scope.</summary>
+    Pause,
+
+    /// <summary>Resume a scope.</summary>
+    Resume,
+
+    /// <summary>Start a scope.</summary>
+    Start,
+
+    /// <summary>Stop a scope.</summary>
+    Stop,
+
+    /// <summary>Restart a scope.</summary>
+    Restart,
+
     /// <summary>Check a node configuration without starting it.</summary>
     Validate,
 }

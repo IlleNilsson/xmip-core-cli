@@ -11,11 +11,19 @@ public static class Usage
           xmip status <code>        what a status code means
           xmip probe <library>      load a module and report what it says it is
           xmip health <scope>       health at and beneath a scope, from the runtime
+          xmip activity [scope]     received, processed, sent, retrying, failed
+          xmip list [scope]         direct children of a scope (cluster by default)
+          xmip show <scope>         health and activity for one scope
+          xmip pause <scope>        pause a node, service, process or location
+          xmip resume <scope>       resume a paused scope
+          xmip start <scope>        start a scope when its runtime supports it
+          xmip stop <scope>         stop a scope when its runtime supports it
+          xmip restart <scope>      restart a scope when its runtime supports it
           xmip validate <toml>      check a node configuration without starting it
           xmip help                 this text
 
           --json                    one JSON document instead of text
-          --follow                  with health: JSON Lines as health changes
+          --follow                  with health/activity: JSON Lines as Xmip changes
           --runtime <path>          the runtime library, instead of finding it
 
         The runtime is found by one rule, the same for every surface:
