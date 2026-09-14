@@ -1,0 +1,118 @@
+using System.Globalization;
+using System.Text.Json;
+using Xmip.Surface;
+
+namespace Xmip.Cli;
+
+/// <summary>
+/// <c>xmip measure [scope]</c>: the six figures at a scope, the cluster when
+/// none is named — Streams, Messages, Journeys, bytes, Retrying, Failed, in
+/// the order every surface says them (ADR-0027 clause 5). A figure the
+/// runtime has not published is a dash, never a zero. With <c>--follow</c>,
+/// one JSON Lines record each time the figures change.
+/// </summary>
+public static class MeasureCommand
+{
+    /// <summary>Read once and render.</summary>
+    public static int Run(
+        IOperatorSurface surface, string scope, bool json, TextWriter output, TextWriter error)
+    {
+        Figures figures = surface.Figures(scope);
+
+        if (!figures.HasValues)
+        {
+            error.WriteLine($"Nothing measured at {scope} ({surface.Source}).");
+            return 1;
+        }
+
+        output.WriteLine(json ? Document(surface, figures) : Text(figures));
+        return 0;
+    }
+
+    /// <summary>Emit a record now and whenever the published figures change.</summary>
+    public static async Task<int> FollowAsync(
+        IOperatorSurface surface, string scope, TextWriter output, CancellationToken stop)
+    {
+        string? last = null;
+
+        try
+        {
+            await foreach (SurfaceChange _ in surface.WatchAsync(stop).ConfigureAwait(false))
+            {
+                string document = Document(surface, surface.Figures(scope));
+
+                if (string.Equals(document, last, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                output.WriteLine(document);
+                await output.FlushAsync(stop).ConfigureAwait(false);
+                last = document;
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Ctrl+C is the normal end of --follow.
+        }
+
+        return 0;
+    }
+
+    /// <summary>The six figures on one line, for a person.</summary>
+    public static string Text(Figures figures)
+    {
+        return $"Streams {Figure(figures.Streams)}  Messages {Figure(figures.Messages)}  " +
+            $"Journeys {Figure(figures.Journeys)}  Bytes {Figure(figures.Bytes)}  " +
+            $"Retrying {Figure(figures.Retrying)}  Failed {Figure(figures.Failed)}";
+    }
+
+    /// <summary>The six figures as one JSON document, for a program.</summary>
+    public static string Document(IOperatorSurface surface, Figures figures)
+    {
+        return JsonText.Document(writer =>
+        {
+            writer.WriteString("scope", figures.Scope);
+            writer.WriteString("source", surface.Source);
+            Write(writer, figures);
+        });
+    }
+
+    /// <summary>The six figures and when they were observed, into an open object.</summary>
+    public static void Write(Utf8JsonWriter writer, Figures figures)
+    {
+        WriteNullable(writer, "streams", figures.Streams);
+        WriteNullable(writer, "messages", figures.Messages);
+        WriteNullable(writer, "journeys", figures.Journeys);
+        WriteNullable(writer, "bytes", figures.Bytes);
+        WriteNullable(writer, "retrying", figures.Retrying);
+        WriteNullable(writer, "failed", figures.Failed);
+
+        if (figures.Observed is { } observed)
+        {
+            writer.WriteString("observed", observed);
+        }
+        else
+        {
+            writer.WriteNull("observed");
+        }
+    }
+
+    /// <summary>A figure for a person: grouped digits, or a dash when unpublished.</summary>
+    public static string Figure(ulong? value)
+    {
+        return value?.ToString("N0", CultureInfo.InvariantCulture) ?? "–";
+    }
+
+    private static void WriteNullable(Utf8JsonWriter writer, string name, ulong? value)
+    {
+        if (value.HasValue)
+        {
+            writer.WriteNumber(name, value.Value);
+        }
+        else
+        {
+            writer.WriteNull(name);
+        }
+    }
+}

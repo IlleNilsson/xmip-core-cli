@@ -29,14 +29,11 @@ return invocation.Command switch
     Command.Probe => ProbeCommand.Run(
         invocation.Argument, invocation.Json, Console.Out, Console.Error),
     Command.Health => await HealthAsync(invocation).ConfigureAwait(false),
-    Command.Activity => await ActivityAsync(invocation).ConfigureAwait(false),
+    Command.Measure => await MeasureAsync(invocation).ConfigureAwait(false),
     Command.List => ScopeRead(invocation, list: true),
     Command.Show => ScopeRead(invocation, list: false),
-    Command.Pause => ScopeAction(invocation, "pause"),
-    Command.Resume => ScopeAction(invocation, "resume"),
-    Command.Start => ScopeAction(invocation, "start"),
-    Command.Stop => ScopeAction(invocation, "stop"),
-    Command.Restart => ScopeAction(invocation, "restart"),
+    Command.Pause => Act(invocation, ScopeAction.Pause),
+    Command.Resume => Act(invocation, ScopeAction.Resume),
     Command.Validate => Validate(invocation),
     _ => Usage.Print(Console.Out),
 };
@@ -72,7 +69,7 @@ static async Task<int> HealthAsync(Invocation invocation)
         .ConfigureAwait(false);
 }
 
-static async Task<int> ActivityAsync(Invocation invocation)
+static async Task<int> MeasureAsync(Invocation invocation)
 {
     using NativeOperator surface = new(RuntimeChoice.Find(invocation.Runtime));
 
@@ -82,24 +79,29 @@ static async Task<int> ActivityAsync(Invocation invocation)
         return 1;
     }
 
-    string scope = string.IsNullOrEmpty(invocation.Argument)
-        ? ScopeTree.Root
-        : invocation.Argument;
+    string scope = ScopeOrCluster(invocation);
 
     if (!invocation.Follow)
     {
-        return ActivityCommand.Run(surface, scope, invocation.Json, Console.Out, Console.Error);
+        return MeasureCommand.Run(surface, scope, invocation.Json, Console.Out, Console.Error);
     }
 
     using CancellationTokenSource stop = new();
+
     Console.CancelKeyPress += (_, interrupt) =>
     {
         interrupt.Cancel = true;
         stop.Cancel();
     };
 
-    return await ActivityCommand.FollowAsync(surface, scope, Console.Out, stop.Token)
+    return await MeasureCommand.FollowAsync(surface, scope, Console.Out, stop.Token)
         .ConfigureAwait(false);
+}
+
+// 'measure' and 'list' take the cluster when no scope is named.
+static string ScopeOrCluster(Invocation invocation)
+{
+    return string.IsNullOrEmpty(invocation.Argument) ? ScopeTree.Root : invocation.Argument;
 }
 
 static int Validate(Invocation invocation)
@@ -143,16 +145,14 @@ static int ScopeRead(Invocation invocation, bool list)
         return 1;
     }
 
-    string scope = string.IsNullOrEmpty(invocation.Argument)
-        ? ScopeTree.Root
-        : invocation.Argument;
+    string scope = ScopeOrCluster(invocation);
 
     return list
         ? ScopeCommand.List(surface, scope, invocation.Json, Console.Out, Console.Error)
         : ScopeCommand.Show(surface, scope, invocation.Json, Console.Out, Console.Error);
 }
 
-static int ScopeAction(Invocation invocation, string action)
+static int Act(Invocation invocation, ScopeAction action)
 {
     using NativeOperator surface = new(RuntimeChoice.Find(invocation.Runtime));
 

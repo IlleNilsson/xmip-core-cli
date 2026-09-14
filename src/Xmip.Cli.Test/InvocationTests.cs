@@ -75,20 +75,20 @@ public sealed class InvocationTests
     }
 
     [Fact]
-    public void ActivityDefaultsToTheClusterAndMayFollow()
+    public void MeasureDefaultsToTheClusterAndMayFollow()
     {
-        Invocation? parsed = Invocation.Parse(["activity", "--follow"], out _);
+        Invocation? parsed = Invocation.Parse(["measure", "--follow"], out _);
 
         Assert.NotNull(parsed);
-        Assert.Equal(Command.Activity, parsed.Command);
+        Assert.Equal(Command.Measure, parsed.Command);
         Assert.Empty(parsed.Argument);
         Assert.True(parsed.Follow);
     }
 
     [Fact]
-    public void ActivityAcceptsOneScope()
+    public void MeasureAcceptsOneScope()
     {
-        Invocation? parsed = Invocation.Parse(["activity", "xmip:///edge-01"], out _);
+        Invocation? parsed = Invocation.Parse(["measure", "xmip:///edge-01"], out _);
 
         Assert.NotNull(parsed);
         Assert.Equal("xmip:///edge-01", parsed.Argument);
@@ -152,9 +152,6 @@ public sealed class InvocationTests
     [InlineData("show")]
     [InlineData("pause")]
     [InlineData("resume")]
-    [InlineData("start")]
-    [InlineData("stop")]
-    [InlineData("restart")]
     public void ACommandThatTakesAnArgumentRefusesToGoWithout(string word)
     {
         Invocation? parsed = Invocation.Parse([word], out string problem);

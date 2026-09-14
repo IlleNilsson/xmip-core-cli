@@ -12,29 +12,27 @@ namespace Xmip.Cli;
 /// path, a scope, a configuration path — or empty for the ones without.</param>
 /// <param name="Json">Emit one JSON document instead of text for a person.
 /// ADR-0014 clause 10.</param>
-/// <param name="Follow">Emit JSON Lines of health or activity as it changes, until
-/// interrupted. Implies <see cref="Json"/>.</param>
+/// <param name="Follow">Emit JSON Lines of health or figures as they change,
+/// until interrupted. Implies <see cref="Json"/>.</param>
 /// <param name="Runtime">An explicit runtime library, overriding discovery.
 /// Null when the discovery rule decides.</param>
 public sealed record Invocation(
     Command Command, string Argument, bool Json, bool Follow, string? Runtime)
 {
-    private static readonly Dictionary<string, (Command Command, int Minimum, int Maximum)> Known =
-        new(StringComparer.Ordinal)
+    // Each command, and how many arguments it takes: none, one, or one at most.
+    private static readonly Dictionary<string, (Command Command, int Minimum, int Maximum)>
+        Known = new(StringComparer.Ordinal)
         {
             ["help"] = (Command.Help, 0, 0),
             ["abi"] = (Command.Abi, 0, 0),
             ["status"] = (Command.Status, 1, 1),
             ["probe"] = (Command.Probe, 1, 1),
             ["health"] = (Command.Health, 1, 1),
-            ["activity"] = (Command.Activity, 0, 1),
+            ["measure"] = (Command.Measure, 0, 1),
             ["list"] = (Command.List, 0, 1),
             ["show"] = (Command.Show, 1, 1),
             ["pause"] = (Command.Pause, 1, 1),
             ["resume"] = (Command.Resume, 1, 1),
-            ["start"] = (Command.Start, 1, 1),
-            ["stop"] = (Command.Stop, 1, 1),
-            ["restart"] = (Command.Restart, 1, 1),
             ["validate"] = (Command.Validate, 1, 1),
         };
 
@@ -114,9 +112,9 @@ public sealed record Invocation(
             return null;
         }
 
-        if (follow && known.Command is not (Command.Health or Command.Activity))
+        if (follow && known.Command is not (Command.Health or Command.Measure))
         {
-            problem = "--follow only applies to 'health' or 'activity'.";
+            problem = "--follow only applies to 'health' or 'measure'.";
             return null;
         }
 

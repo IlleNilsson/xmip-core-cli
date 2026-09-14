@@ -1,12 +1,18 @@
-using System.Globalization;
 using System.Text.Json;
 using Xmip.Surface;
 
 namespace Xmip.Cli;
 
-/// <summary>CLI navigation and actions over the same scopes PowerShell exposes.</summary>
+/// <summary>
+/// <c>xmip list</c>, <c>xmip show</c>, <c>xmip pause</c> and
+/// <c>xmip resume</c>: the rows of the scope tree, and the two acts the
+/// boundary carries (ADR-0027 clause 5). Every row is the one
+/// <see cref="ScopeItem"/> shape the PowerShell module and the GUI read
+/// (ADR-0052); only the rendering is here.
+/// </summary>
 public static class ScopeCommand
 {
+    /// <summary>The direct children of a scope, one row each.</summary>
     public static int List(
         IOperatorSurface surface, string scope, bool json, TextWriter output, TextWriter error)
     {
@@ -25,26 +31,29 @@ public static class ScopeCommand
                 writer.WriteString("scope", scope);
                 writer.WriteString("source", surface.Source);
                 writer.WriteStartArray("items");
+
                 foreach (ScopeItem item in children)
                 {
                     writer.WriteStartObject();
                     WriteItem(writer, item);
                     writer.WriteEndObject();
                 }
+
                 writer.WriteEndArray();
             }));
+
+            return 0;
         }
-        else
+
+        foreach (ScopeItem item in children)
         {
-            foreach (ScopeItem item in children)
-            {
-                output.WriteLine(Row(item));
-            }
+            output.WriteLine(Row(item));
         }
 
         return 0;
     }
 
+    /// <summary>One scope as a row, with its evidence beneath.</summary>
     public static int Show(
         IOperatorSurface surface, string scope, bool json, TextWriter output, TextWriter error)
     {
@@ -59,32 +68,33 @@ public static class ScopeCommand
         if (json)
         {
             output.WriteLine(JsonText.Document(writer => WriteItem(writer, item)));
+            return 0;
         }
-        else
+
+        output.WriteLine(Row(item));
+
+        if (!string.IsNullOrEmpty(item.Evidence))
         {
-            output.WriteLine(Row(item));
-            if (!string.IsNullOrEmpty(item.Evidence))
-            {
-                output.WriteLine($"  {item.Evidence}");
-            }
+            output.WriteLine($"  {item.Evidence}");
         }
 
         return 0;
     }
 
+    /// <summary>Pause or resume a scope and say what the runtime said. Exit 1
+    /// when the runtime did not apply it.</summary>
     public static int Apply(
-        IOperatorSurface surface, string scope, string action, string who,
+        IOperatorSurface surface, string scope, ScopeAction action, string who,
         bool json, TextWriter output, TextWriter error)
     {
-        ScopeAction parsed = Enum.Parse<ScopeAction>(action, ignoreCase: true);
-        ScopeOperation operation = surface.ControlScope(scope, parsed, who);
+        ScopeOperation operation = surface.Control(scope, action, who);
 
         if (json)
         {
             output.WriteLine(JsonText.Document(writer =>
             {
                 writer.WriteString("scope", scope);
-                writer.WriteString("action", action);
+                writer.WriteString("action", action.ToString().ToLowerInvariant());
                 writer.WriteBoolean("applied", operation.Applied);
                 writer.WriteString("result", operation.Result);
             }));
@@ -101,10 +111,12 @@ public static class ScopeCommand
         return operation.Applied ? 0 : 1;
     }
 
-    private static string Row(ScopeItem item) =>
-        $"{item.Health?.ToString() ?? "Unknown",-9}  {item.Scope}  " +
-        $"Rcv {Figure(item.Received)}  Prc {Figure(item.Processed)}  " +
-        $"Snt {Figure(item.Sent)}  Retry {Figure(item.Retrying)}  Fail {Figure(item.Failed)}";
+    private static string Row(ScopeItem item)
+    {
+        string mood = item.Health?.ToString().ToLowerInvariant() ?? "unknown";
+
+        return $"{mood,-9}  {item.Scope}  {MeasureCommand.Text(item.Figures)}";
+    }
 
     private static void WriteItem(Utf8JsonWriter writer, ScopeItem item)
     {
@@ -112,29 +124,17 @@ public static class ScopeCommand
         writer.WriteString("scope", item.Scope);
         writer.WriteBoolean("container", item.IsContainer);
         writer.WriteString("health", item.Health?.ToString().ToLowerInvariant());
-        WriteNullable(writer, "severity", item.Severity);
+
+        if (item.Severity is { } severity)
+        {
+            writer.WriteNumber("severity", severity);
+        }
+        else
+        {
+            writer.WriteNull("severity");
+        }
+
         writer.WriteString("evidence", item.Evidence);
-        WriteNullable(writer, "received", item.Received);
-        WriteNullable(writer, "processed", item.Processed);
-        WriteNullable(writer, "sent", item.Sent);
-        WriteNullable(writer, "retrying", item.Retrying);
-        WriteNullable(writer, "failed", item.Failed);
-        if (item.Observed is { } observed) writer.WriteString("observed", observed);
-        else writer.WriteNull("observed");
-    }
-
-    private static string Figure(ulong? value) =>
-        value?.ToString("N0", CultureInfo.InvariantCulture) ?? "–";
-
-    private static void WriteNullable(Utf8JsonWriter writer, string name, ulong? value)
-    {
-        if (value.HasValue) writer.WriteNumber(name, value.Value);
-        else writer.WriteNull(name);
-    }
-
-    private static void WriteNullable(Utf8JsonWriter writer, string name, byte? value)
-    {
-        if (value.HasValue) writer.WriteNumber(name, value.Value);
-        else writer.WriteNull(name);
+        MeasureCommand.Write(writer, item.Figures);
     }
 }
