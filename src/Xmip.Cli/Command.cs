@@ -19,29 +19,21 @@ public enum Command
     /// <summary>Health at and beneath a scope, from the runtime.</summary>
     Health,
 
-    /// <summary>Received, processed, sent, retrying and failed.</summary>
-    Activity,
+    /// <summary>The six figures at a scope: Streams, Messages, Journeys,
+    /// bytes, Retrying and Failed.</summary>
+    Measure,
 
-    /// <summary>Direct children of a scope.</summary>
+    /// <summary>The direct children of a scope, one row each.</summary>
     List,
 
-    /// <summary>One scope with health and activity.</summary>
+    /// <summary>One scope as a row: its mood, its evidence, its figures.</summary>
     Show,
 
-    /// <summary>Pause a scope.</summary>
+    /// <summary>Pause everything at and beneath a scope.</summary>
     Pause,
 
-    /// <summary>Resume a scope.</summary>
+    /// <summary>Resume everything at and beneath a scope.</summary>
     Resume,
-
-    /// <summary>Start a scope.</summary>
-    Start,
-
-    /// <summary>Stop a scope.</summary>
-    Stop,
-
-    /// <summary>Restart a scope.</summary>
-    Restart,
 
     /// <summary>Check a node configuration without starting it.</summary>
     Validate,

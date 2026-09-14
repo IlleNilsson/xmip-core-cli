@@ -75,6 +75,14 @@ public sealed class FakeSurface(IReadOnlyList<HealthRecord> records) : IOperator
         return "a fake cannot be resumed";
     }
 
+    /// <inheritdoc />
+    public ScopeOperation Control(string scope, ScopeAction action, string who)
+    {
+        string said = action == ScopeAction.Pause ? PauseScope(scope, who) : ResumeScope(scope);
+
+        return new ScopeOperation(scope, action, false, said);
+    }
+
     /// <summary>One leaf at <paramref name="scope"/>.</summary>
     public static HealthRecord Leaf(
         string scope, HealthState state, byte severity = 0, string evidence = "")
