@@ -1,13 +1,14 @@
 using System.Text.Json;
 using Xmip.Abi.Module;
 using Xmip.Abi.Operate;
+using Xmip.Surface;
 
 namespace Xmip.Cli.Test;
 
 /// <summary>
-/// <c>xmip validate</c> over a fake runtime answer: the shared sentence for a
-/// person, the record for a program, and exit 1 for a document the runtime
-/// refused.
+/// <c>xmip validate</c> over a verdict the test wrote: the shared sentence for
+/// a person, the record for a program, and exit 1 for a document the runtime
+/// refused — decided from the record, never from the sentence.
 /// </summary>
 public sealed class ValidateCommandTests
 {
@@ -19,7 +20,7 @@ public sealed class ValidateCommandTests
         StringWriter output = new();
 
         int exit = ValidateCommand.Run(
-            Toml, "[node]", _ => new ValidationRecord(XmipStatus.Ok, []),
+            ConfigurationVerdict.Validated(Toml, new ValidationRecord(XmipStatus.Ok, [])),
             json: false, output, new StringWriter());
 
         Assert.Equal(0, exit);
@@ -32,9 +33,8 @@ public sealed class ValidateCommandTests
         StringWriter error = new();
 
         int exit = ValidateCommand.Run(
-            Toml,
-            "[node]",
-            _ => new ValidationRecord(XmipStatus.Invalid, ["no name", "no receive location"]),
+            ConfigurationVerdict.Validated(
+                Toml, new ValidationRecord(XmipStatus.Invalid, ["no name", "no receive location"])),
             json: false,
             new StringWriter(),
             error);
@@ -50,13 +50,10 @@ public sealed class ValidateCommandTests
     {
         StringWriter output = new();
 
+        ValidationRecord answer = new(XmipStatus.Invalid, ["no name"]);
+
         int exit = ValidateCommand.Run(
-            Toml,
-            "[node]",
-            _ => new ValidationRecord(XmipStatus.Invalid, ["no name"]),
-            json: true,
-            output,
-            new StringWriter());
+            ConfigurationVerdict.Validated(Toml, answer), json: true, output, new StringWriter());
 
         Assert.Equal(1, exit);
         using JsonDocument document = JsonDocument.Parse(output.ToString());
@@ -67,22 +64,16 @@ public sealed class ValidateCommandTests
     }
 
     [Fact]
-    public void TheTextIsWhatWasHanded()
+    public void TheExitIsTheRecordsNotTheSentences()
     {
-        string? crossed = null;
+        // A verdict whose sentence happens to contain "is valid" but whose
+        // status says otherwise exits 1: ADR-0052 clause 4.
+        ConfigurationVerdict misleading = new(
+            Toml, XmipStatus.Invalid, [], $"{Toml} is valid, said nobody");
 
-        ValidateCommand.Run(
-            Toml,
-            "[node]\nname = \"edge-01\"",
-            text =>
-            {
-                crossed = text;
-                return new ValidationRecord(XmipStatus.Ok, []);
-            },
-            json: true,
-            new StringWriter(),
-            new StringWriter());
+        int exit = ValidateCommand.Run(
+            misleading, json: false, new StringWriter(), new StringWriter());
 
-        Assert.Equal("[node]\nname = \"edge-01\"", crossed);
+        Assert.Equal(1, exit);
     }
 }

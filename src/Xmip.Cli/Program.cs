@@ -1,4 +1,3 @@
-using Xmip.Abi.Operate;
 using Xmip.Cli;
 using Xmip.Surface;
 
@@ -114,25 +113,19 @@ static int Validate(Invocation invocation)
         return 2;
     }
 
-    // The binding's Operator rather than NativeOperator: the surface's
-    // Validate answers in English only, and a document for a program needs
-    // the record — the status and each problem — as well as the sentence.
-    using Operator? runtime = Operator.Load(
-        RuntimeChoice.Find(invocation.Runtime), out string reason);
+    // The shared surface answers with the record and the sentence together
+    // (ADR-0052 clause 4), so the command renders the same verdict the
+    // desktop's Configure page decides from.
+    using NativeOperator surface = new(RuntimeChoice.Find(invocation.Runtime));
 
-    if (runtime is null)
+    if (!surface.IsLoaded)
     {
-        Console.Error.WriteLine(reason);
+        Console.Error.WriteLine(surface.Reason);
         return 1;
     }
 
     return ValidateCommand.Run(
-        configurationPath,
-        File.ReadAllText(configurationPath),
-        runtime.Validate,
-        invocation.Json,
-        Console.Out,
-        Console.Error);
+        surface.Validate(configurationPath), invocation.Json, Console.Out, Console.Error);
 }
 
 static int ScopeRead(Invocation invocation, bool list)
