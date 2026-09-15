@@ -39,11 +39,12 @@ return invocation.Command switch
 
 static async Task<int> HealthAsync(Invocation invocation)
 {
-    using NativeOperator surface = new(RuntimeChoice.Find(invocation.Runtime));
+    IOperatorSurface? surface = SurfaceOpen.Open(invocation, out string reason);
+    using IDisposable? release = surface as IDisposable;
 
-    if (!surface.IsLoaded)
+    if (surface is null)
     {
-        Console.Error.WriteLine(surface.Reason);
+        Console.Error.WriteLine(reason);
         return 1;
     }
 
@@ -70,11 +71,12 @@ static async Task<int> HealthAsync(Invocation invocation)
 
 static async Task<int> MeasureAsync(Invocation invocation)
 {
-    using NativeOperator surface = new(RuntimeChoice.Find(invocation.Runtime));
+    IOperatorSurface? surface = SurfaceOpen.Open(invocation, out string reason);
+    using IDisposable? release = surface as IDisposable;
 
-    if (!surface.IsLoaded)
+    if (surface is null)
     {
-        Console.Error.WriteLine(surface.Reason);
+        Console.Error.WriteLine(reason);
         return 1;
     }
 
@@ -130,11 +132,12 @@ static int Validate(Invocation invocation)
 
 static int ScopeRead(Invocation invocation, bool list)
 {
-    using NativeOperator surface = new(RuntimeChoice.Find(invocation.Runtime));
+    IOperatorSurface? surface = SurfaceOpen.Open(invocation, out string reason);
+    using IDisposable? release = surface as IDisposable;
 
-    if (!surface.IsLoaded)
+    if (surface is null)
     {
-        Console.Error.WriteLine(surface.Reason);
+        Console.Error.WriteLine(reason);
         return 1;
     }
 
@@ -147,11 +150,12 @@ static int ScopeRead(Invocation invocation, bool list)
 
 static int Act(Invocation invocation, ScopeAction action)
 {
-    using NativeOperator surface = new(RuntimeChoice.Find(invocation.Runtime));
+    IOperatorSurface? surface = SurfaceOpen.Open(invocation, out string reason);
+    using IDisposable? release = surface as IDisposable;
 
-    if (!surface.IsLoaded)
+    if (surface is null)
     {
-        Console.Error.WriteLine(surface.Reason);
+        Console.Error.WriteLine(reason);
         return 1;
     }
 

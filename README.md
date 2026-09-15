@@ -28,12 +28,17 @@ xmip help                 this text
 --json                    one JSON document instead of text
 --follow                  with health or measure: JSON Lines as they change
 --runtime <path>          the runtime library, instead of finding it
+--remote <url>            a web host to follow, instead of a runtime here
 ```
 
 The runtime library is found by the one rule every surface uses:
 `Xmip:RuntimeLibrary` in the configuration, else the `XMIP_RUNTIME_LIBRARY`
 environment variable, else the library beside the executable. `--runtime`
-overrides all three. Text goes to stdout for a person, column-aligned;
+overrides all three. `--remote http://host:5087` reads no library at all: it
+follows that web host's surface hub over SignalR and is told when the host's
+surface changes, so `--follow` on another machine never polls (ADR-0052,
+amendment 2026-09-15); `validate` stays local, since it asks a runtime. Text
+goes to stdout for a person, column-aligned;
 `--json` emits one document; `--follow` subscribes to the shared operator
 change stream and emits one JSON Lines record each time the snapshot it reads
 changes, until interrupted (ADR-0014 clause 10). Complaints go to stderr with a

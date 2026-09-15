@@ -105,6 +105,29 @@ public sealed class InvocationTests
     }
 
     [Fact]
+    public void RemoteNamesAWebHost()
+    {
+        Invocation? parsed = Invocation.Parse(
+            ["health", "xmip:///", "--remote", "http://host:5087", "--follow"], out _);
+
+        Assert.NotNull(parsed);
+        Assert.Equal("http://host:5087", parsed.Remote);
+        Assert.Null(parsed.Runtime);
+        Assert.True(parsed.Follow);
+    }
+
+    [Fact]
+    public void RemoteNeedsAnAbsoluteUrl()
+    {
+        Assert.Null(Invocation.Parse(["health", "xmip:///", "--remote"], out string bare));
+        Assert.Contains("--remote", bare, StringComparison.Ordinal);
+
+        Assert.Null(Invocation.Parse(
+            ["health", "xmip:///", "--remote", "host:5087"], out string relative));
+        Assert.Contains("http://host:5087", relative, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void RuntimeNeedsAPath()
     {
         Invocation? parsed = Invocation.Parse(

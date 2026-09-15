@@ -1,4 +1,5 @@
 using System.Globalization;
+using Xmip.Surface;
 
 namespace Xmip.Cli;
 
@@ -16,8 +17,16 @@ namespace Xmip.Cli;
 /// until interrupted. Implies <see cref="Json"/>.</param>
 /// <param name="Runtime">An explicit runtime library, overriding discovery.
 /// Null when the discovery rule decides.</param>
+/// <param name="Remote">A web host on another machine to follow instead of a
+/// runtime here (ADR-0052, amendment 2026-09-15). Null when the surface is
+/// local.</param>
 public sealed record Invocation(
-    Command Command, string Argument, bool Json, bool Follow, string? Runtime)
+    Command Command,
+    string Argument,
+    bool Json,
+    bool Follow,
+    string? Runtime,
+    string? Remote)
 {
     // Each command, and how many arguments it takes: none, one, or one at most.
     private static readonly Dictionary<string, (Command Command, int Minimum, int Maximum)>
@@ -48,6 +57,7 @@ public sealed record Invocation(
         bool json = false;
         bool follow = false;
         string? runtime = null;
+        string? remote = null;
 
         for (int i = 0; i < args.Count; i++)
         {
@@ -70,6 +80,15 @@ public sealed record Invocation(
 
                     runtime = args[++i];
                     break;
+                case "--remote":
+                    if (i + 1 >= args.Count || !RemoteOperator.IsWebHost(args[i + 1]))
+                    {
+                        problem = "--remote needs a web host, like http://host:5087.";
+                        return null;
+                    }
+
+                    remote = args[++i];
+                    break;
                 case "--help" or "-h":
                     words.Insert(0, "help");
                     break;
@@ -91,7 +110,7 @@ public sealed record Invocation(
         if (words.Count == 0)
         {
             problem = string.Empty;
-            return new Invocation(Command.Help, string.Empty, json, follow, runtime);
+            return new Invocation(Command.Help, string.Empty, json, follow, runtime, remote);
         }
 
         if (!Known.TryGetValue(words[0], out (Command Command, int Minimum, int Maximum) known))
@@ -125,6 +144,7 @@ public sealed record Invocation(
             arguments == 1 ? words[1] : string.Empty,
             json || follow,
             follow,
-            runtime);
+            runtime,
+            remote);
     }
 }

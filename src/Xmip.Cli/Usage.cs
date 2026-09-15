@@ -22,6 +22,7 @@ public static class Usage
           --json                    one JSON document instead of text
           --follow                  with health or measure: JSON Lines as they change
           --runtime <path>          the runtime library, instead of finding it
+          --remote <url>            a web host to follow, instead of a runtime here
 
         The runtime is found by one rule, the same for every surface:
         Xmip:RuntimeLibrary in the configuration, else XMIP_RUNTIME_LIBRARY,
