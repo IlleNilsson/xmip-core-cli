@@ -31,13 +31,21 @@ xmip help                 this text
 --remote <url>            a web host to follow, instead of a runtime here
 ```
 
-The runtime library is found by the one rule every surface uses:
-`Xmip:RuntimeLibrary` in the configuration, else the `XMIP_RUNTIME_LIBRARY`
-environment variable, else the library beside the executable. `--runtime`
-overrides all three. `--remote http://host:5087` reads no library at all: it
-follows that web host's surface hub over SignalR and is told when the host's
-surface changes, so `--follow` on another machine never polls (ADR-0052,
-amendment 2026-09-15); `validate` stays local, since it asks a runtime. Text
+Which surface a command reads is stated in `xmip.cli.toml` beside the
+executable, with the same `[Xmip]` keys as the GUI hosts and the PowerShell
+module — `Surface = "native" | "snapshot" | "remote"`, `RuntimeLibrary`,
+`Snapshot`, `Url` — and never guessed (ADR-0052 clause 3). As shipped, in a
+developer's clone, it follows the Playground roll started as cluster C1, the
+same file the PowerShell prompt follows, so `xmip show xmip:///C1` answers
+while a roll runs and says `SNAPSHOT — no file at ...` before one has. With
+no surface named, the runtime library is found by the one rule every surface
+uses: `Xmip:RuntimeLibrary` in the document, else the `XMIP_RUNTIME_LIBRARY`
+environment variable, else the library beside the executable. The line wins
+over the document: `--runtime` loads that library, and `--remote
+http://host:5087` reads no library at all: it follows that web host's surface
+hub over SignalR and is told when the host's surface changes, so `--follow` on
+another machine never polls (ADR-0052, amendment 2026-09-15); `validate`
+stays local, since it asks a runtime. Text
 goes to stdout for a person, column-aligned;
 `--json` emits one document; `--follow` subscribes to the shared operator
 change stream and emits one JSON Lines record each time the snapshot it reads
