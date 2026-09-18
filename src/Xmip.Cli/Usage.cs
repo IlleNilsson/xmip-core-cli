@@ -1,23 +1,23 @@
 namespace Xmip.Cli;
 
-/// <summary>The text behind <c>xmip help</c>.</summary>
+/// <summary>The text behind <c>xmip-cli help</c>.</summary>
 public static class Usage
 {
     /// <summary>The usage text, one line per command and one per option.</summary>
     public const string Text = """
-        xmip — the Xmip command line
+        xmip-cli — the Xmip command line
 
-          xmip abi                  the two boundaries this build speaks
-          xmip status <code>        what a status code means
-          xmip probe <library>      load a module and report what it says it is
-          xmip health <scope>       health at and beneath a scope, from the runtime
-          xmip measure [scope]      streams, messages, journeys, bytes, retrying, failed
-          xmip list [scope]         the direct children of a scope, the cluster by default
-          xmip show <scope>         one scope: its mood, its evidence, its figures
-          xmip pause <scope>        pause everything at and beneath a scope
-          xmip resume <scope>       resume everything at and beneath a scope
-          xmip validate <toml>      check a node configuration without starting it
-          xmip help                 this text
+          xmip-cli abi              the two boundaries this build speaks
+          xmip-cli status <code>    what a status code means
+          xmip-cli probe <library>  load a module and report what it says it is
+          xmip-cli health <scope>   health at and beneath a scope, from the runtime
+          xmip-cli measure [scope]  streams, messages, journeys, bytes, retrying, failed
+          xmip-cli list [scope]     the direct children of a scope, the cluster by default
+          xmip-cli show <scope>     one scope: its mood, its evidence, its figures
+          xmip-cli pause <scope>    pause everything at and beneath a scope
+          xmip-cli resume <scope>   resume everything at and beneath a scope
+          xmip-cli validate <toml>  check a node configuration without starting it
+          xmip-cli help             this text
 
           --json                    one JSON document instead of text
           --follow                  with health or measure: JSON Lines as they change

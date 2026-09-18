@@ -1,6 +1,7 @@
 # xmip-core-cli
 
-The .NET 11 `xmip` executable — the command line over a running Xmip. A
+The .NET 11 `xmip-cli` executable — the command line over a running Xmip,
+named as every System Process Xmip owns is named (ADR-0053). A
 surface module (ADR-0011, ADR-0012 clause 11) among the operator surfaces
 ADR-0014 names, and the executable ADR-0052 clause 5 describes: text for a
 person, `--json` for a program, `--follow` as JSON Lines, the runtime found by
@@ -10,20 +11,20 @@ It is argument parsing and rendering over two libraries in xmip-core-abi:
 `Xmip.Abi`, the one .NET declaration of `xmip_module.h` and `xmip_operate.h`,
 and `Xmip.Surface`, the model every .NET operator surface shares (ADR-0052).
 The PowerShell module and the two GUI hosts read the same surface, so what
-`xmip` says and what a screen says cannot disagree.
+`xmip-cli` says and what a screen says cannot disagree.
 
 ```text
-xmip abi                  the two boundaries this build speaks
-xmip status <code>        what a status code means
-xmip probe <library>      load a module and report what it says it is
-xmip health <scope>       health at and beneath a scope, from the runtime
-xmip measure [scope]      streams, messages, journeys, bytes, retrying, failed
-xmip list [scope]         the direct children of a scope, the cluster by default
-xmip show <scope>         one scope: its mood, its evidence, its figures
-xmip pause <scope>        pause everything at and beneath a scope
-xmip resume <scope>       resume everything at and beneath a scope
-xmip validate <toml>      check a node configuration without starting it
-xmip help                 this text
+xmip-cli abi              the two boundaries this build speaks
+xmip-cli status <code>    what a status code means
+xmip-cli probe <library>  load a module and report what it says it is
+xmip-cli health <scope>   health at and beneath a scope, from the runtime
+xmip-cli measure [scope]  streams, messages, journeys, bytes, retrying, failed
+xmip-cli list [scope]     the direct children of a scope, the cluster by default
+xmip-cli show <scope>     one scope: its mood, its evidence, its figures
+xmip-cli pause <scope>    pause everything at and beneath a scope
+xmip-cli resume <scope>   resume everything at and beneath a scope
+xmip-cli validate <toml>  check a node configuration without starting it
+xmip-cli help             this text
 
 --json                    one JSON document instead of text
 --follow                  with health or measure: JSON Lines as they change
@@ -36,7 +37,7 @@ executable, with the same `[Xmip]` keys as the GUI hosts and the PowerShell
 module — `Surface = "native" | "snapshot" | "remote"`, `RuntimeLibrary`,
 `Snapshot`, `Url` — and never guessed (ADR-0052 clause 3). As shipped, in a
 developer's clone, it follows the Playground roll started as cluster C1, the
-same file the PowerShell prompt follows, so `xmip show xmip:///C1` answers
+same file the PowerShell prompt follows, so `xmip-cli show xmip:///C1` answers
 while a roll runs and says `SNAPSHOT — no file at ...` before one has. With
 no surface named, the runtime library is found by the one rule every surface
 uses: `Xmip:RuntimeLibrary` in the document, else the `XMIP_RUNTIME_LIBRARY`
@@ -117,7 +118,7 @@ compiles without a single Xmip source file is the test.
 
 `dotnet build` and `dotnet test` on `src/Xmip.Cli.Test`; the workflow in
 `.github/workflows/verify.yml` does the same with `xmip-core-abi` checked out
-beside this repository. `xmip probe` against a conforming module is the first
+beside this repository. `xmip-cli probe` against a conforming module is the first
 of the seven conformance rules in section 11 of `doc/specification.md` in
 xmip-core-abi.
 
