@@ -11,7 +11,10 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <RootNamespace>Xmip.Cli</RootNamespace>
-    <AssemblyName>xmip</AssemblyName>
+    <!-- xmip-cli, not xmip: every System Process Xmip owns matches xmip-*, the
+         executable included, so a forgotten follow session is found and
+         stopped with the rest (ADR-0053; the owner, 2026-09-18). -->
+    <AssemblyName>xmip-cli</AssemblyName>
     <PublishAot>true</PublishAot>
   </PropertyGroup>
 

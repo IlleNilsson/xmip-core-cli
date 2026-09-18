@@ -98,7 +98,7 @@ public sealed record Invocation(
                     if (arg.StartsWith('-') && !int.TryParse(
                         arg, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out _))
                     {
-                        problem = $"'{arg}' is not an xmip option. Try 'xmip help'.";
+                        problem = $"'{arg}' is not an xmip-cli option. Try 'xmip-cli help'.";
                         return null;
                     }
 
@@ -115,7 +115,7 @@ public sealed record Invocation(
 
         if (!Known.TryGetValue(words[0], out (Command Command, int Minimum, int Maximum) known))
         {
-            problem = $"'{words[0]}' is not an xmip command. Try 'xmip help'.";
+            problem = $"'{words[0]}' is not an xmip-cli command. Try 'xmip-cli help'.";
             return null;
         }
 
@@ -124,10 +124,10 @@ public sealed record Invocation(
         if (arguments < known.Minimum || arguments > known.Maximum)
         {
             problem = known.Minimum == 0 && known.Maximum == 0
-                ? $"'{words[0]}' takes no argument. Try 'xmip help'."
+                ? $"'{words[0]}' takes no argument. Try 'xmip-cli help'."
                 : known.Minimum == 0
-                    ? $"'{words[0]}' takes at most one argument. Try 'xmip help'."
-                    : $"'{words[0]}' takes exactly one argument. Try 'xmip help'.";
+                    ? $"'{words[0]}' takes at most one argument. Try 'xmip-cli help'."
+                    : $"'{words[0]}' takes exactly one argument. Try 'xmip-cli help'.";
             return null;
         }
 

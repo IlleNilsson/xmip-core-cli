@@ -212,7 +212,7 @@
           "xunit.extensibility.core": "[2.9.3]"
         }
       },
-      "xmip": {
+      "xmip-cli": {
         "type": "Project",
         "dependencies": {
           "Xmip.Abi": "[1.0.0, )",
