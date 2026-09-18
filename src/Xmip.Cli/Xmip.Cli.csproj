@@ -25,4 +25,10 @@
     <ProjectReference Include="..\..\..\..\foundation\abi\dotnet\Xmip.Surface\Xmip.Surface.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- The surface a command reads is stated here, beside the executable,
+         never guessed (ADR-0052 clause 3). -->
+    <None Update="xmip.cli.toml" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

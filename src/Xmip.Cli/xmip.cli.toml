@@ -1,0 +1,35 @@
+# The executable's configuration, beside it. TOML, like everything Xmip
+# configures — Xmip uses no JSON for configuration anywhere. The same keys as
+# the GUI hosts' xmip.gui.toml and the PowerShell module's
+# xmip.powershell.toml, read by the same reader (ADR-0052).
+#
+# Paths are relative to this file's directory. The line wins over this
+# document: --remote <url> follows a web host and --runtime <path> loads a
+# library, whatever is written here.
+
+[Xmip]
+# Which surface a command reads (ADR-0052 clause 3): "native", the runtime's
+# library loaded into this process, "snapshot", a file a node or the
+# Playground publishes, or "remote", a web host followed over its surface hub
+# at Url. Stated here and never guessed. With no surface named, a command
+# loads whatever library the one discovery rule finds — RuntimeLibrary below,
+# else XMIP_RUNTIME_LIBRARY, else the library beside the executable — and
+# validate always does, since it asks a runtime.
+#
+# As shipped, in a developer's clone: the Playground roll started as cluster
+# C1 (Start-XmipTest -Suite Playground -Cluster C1 ...), the same file the
+# PowerShell prompt follows. A deployment writes its own.
+Surface = "snapshot"
+
+# The runtime's native library, exporting xmip_operate_v1.
+# RuntimeLibrary = "../../../../platform/runtime/target/debug/xmip_core_runtime.dll"
+
+# The file to read when Surface = "snapshot". A path with no file behind it
+# is said so — SNAPSHOT — no file at ... — not silently replaced. A relative
+# path is from the directory the executable runs from, bin/Debug/net11.0
+# under this project: eight levels up is the estate root, where a roll
+# publishes under .local-work/playground.
+Snapshot = "../../../../../../../../.local-work/playground/C1-snapshot.toml"
+
+# The web host to follow when Surface = "remote".
+# Url = "http://another-host:5087"
