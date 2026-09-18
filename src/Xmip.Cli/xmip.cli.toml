@@ -21,6 +21,11 @@
 # PowerShell prompt follows. A deployment writes its own.
 Surface = "snapshot"
 
+# What this process is for, said in its declaration (ADR-0053): "test" or
+# "runtime". As shipped it follows a Playground roll, which is test; a
+# deployment leaves it out or says runtime.
+Purpose = "test"
+
 # The runtime's native library, exporting xmip_operate_v1.
 # RuntimeLibrary = "../../../../platform/runtime/target/debug/xmip_core_runtime.dll"
 

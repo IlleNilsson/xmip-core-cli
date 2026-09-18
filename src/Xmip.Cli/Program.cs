@@ -19,6 +19,16 @@ if (invocation is null)
     return 2;
 }
 
+// What this process says of itself while it runs (ADR-0053): the scope it was
+// asked about, or the whole tree, and the purpose its document states.
+using ProcessDeclaration? declared = ProcessDeclaration.Declare(
+    "xmip-cli",
+    invocation.Argument.StartsWith("xmip:", StringComparison.Ordinal)
+        ? invocation.Argument
+        : invocation.Remote ?? ScopeTree.Root,
+    ProcessDeclaration.PurposeOf(TomlDocument.Read(
+        Path.Combine(AppContext.BaseDirectory, RuntimeChoice.ConfigurationFile))));
+
 return invocation.Command switch
 {
     Command.Help => Usage.Print(Console.Out),
