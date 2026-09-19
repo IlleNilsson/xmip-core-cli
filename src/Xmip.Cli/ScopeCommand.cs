@@ -12,6 +12,166 @@ namespace Xmip.Cli;
 /// </summary>
 public static class ScopeCommand
 {
+    /// <summary>
+    /// The direct children of what the argument selected. A wildcard lists the
+    /// children of every scope it named, in one list: every row already names
+    /// its own scope, so nothing is lost by running them together and an
+    /// operator reads one list rather than several.
+    /// </summary>
+    public static int ListOver(
+        IOperatorSurface surface, ScopeSelection chosen, bool json, TextWriter output,
+        TextWriter error)
+    {
+        if (!chosen.Patterned)
+        {
+            return List(surface, chosen.Scopes[0], json, output, error);
+        }
+
+        if (json)
+        {
+            output.WriteLine(JsonText.Document(writer =>
+            {
+                writer.WriteString("pattern", chosen.Argument);
+                writer.WriteString("source", surface.Source);
+                writer.WriteNumber("matched", chosen.Scopes.Count);
+                writer.WriteStartArray("scopes");
+
+                foreach (string scope in chosen.Scopes)
+                {
+                    writer.WriteStartObject();
+                    writer.WriteString("scope", scope);
+                    writer.WriteStartArray("items");
+
+                    foreach (ScopeItem item in surface.Children(scope))
+                    {
+                        writer.WriteStartObject();
+                        WriteItem(writer, item);
+                        writer.WriteEndObject();
+                    }
+
+                    writer.WriteEndArray();
+                    writer.WriteEndObject();
+                }
+
+                writer.WriteEndArray();
+            }));
+
+            return 0;
+        }
+
+        int rows = 0;
+
+        foreach (ScopeItem item in chosen.Scopes.SelectMany(surface.Children))
+        {
+            output.WriteLine(Row(item));
+            rows++;
+        }
+
+        if (rows == 0)
+        {
+            error.WriteLine($"Nothing beneath {chosen.Argument} ({surface.Source}).");
+        }
+
+        return rows == 0 ? 1 : 0;
+    }
+
+    /// <summary>One row per scope the argument selected.</summary>
+    public static int ShowOver(
+        IOperatorSurface surface, ScopeSelection chosen, bool json, TextWriter output,
+        TextWriter error)
+    {
+        if (!chosen.Patterned)
+        {
+            return Show(surface, chosen.Scopes[0], json, output, error);
+        }
+
+        if (json)
+        {
+            output.WriteLine(JsonText.Document(writer =>
+            {
+                writer.WriteString("pattern", chosen.Argument);
+                writer.WriteString("source", surface.Source);
+                writer.WriteNumber("matched", chosen.Scopes.Count);
+                writer.WriteStartArray("items");
+
+                foreach (string scope in chosen.Scopes)
+                {
+                    writer.WriteStartObject();
+                    WriteItem(writer, surface.Describe(scope));
+                    writer.WriteEndObject();
+                }
+
+                writer.WriteEndArray();
+            }));
+
+            return 0;
+        }
+
+        foreach (ScopeItem item in chosen.Scopes.Select(surface.Describe))
+        {
+            output.WriteLine(Row(item));
+
+            if (!string.IsNullOrEmpty(item.Evidence))
+            {
+                output.WriteLine($"  {item.Evidence}");
+            }
+        }
+
+        return 0;
+    }
+
+    /// <summary>
+    /// Pause or resume every scope the argument selected. A wildcard adds no
+    /// reach an operator did not have: one act already reaches everything
+    /// beneath the scope it names (ADR-0027), so a pattern names several
+    /// subtrees rather than opening a wider one. The exit is non-zero unless
+    /// every one of them was applied.
+    /// </summary>
+    public static int ApplyOver(
+        IOperatorSurface surface, ScopeSelection chosen, ScopeAction action, string who,
+        bool json, TextWriter output, TextWriter error)
+    {
+        if (!chosen.Patterned)
+        {
+            return Apply(surface, chosen.Scopes[0], action, who, json, output, error);
+        }
+
+        List<ScopeOperation> done =
+            [.. chosen.Scopes.Select(scope => surface.Control(scope, action, who))];
+
+        if (json)
+        {
+            output.WriteLine(JsonText.Document(writer =>
+            {
+                writer.WriteString("pattern", chosen.Argument);
+                writer.WriteString("action", action.ToString().ToLowerInvariant());
+                writer.WriteNumber("matched", done.Count);
+                writer.WriteStartArray("scopes");
+
+                foreach (ScopeOperation operation in done)
+                {
+                    writer.WriteStartObject();
+                    writer.WriteString("scope", operation.Scope);
+                    writer.WriteBoolean("applied", operation.Applied);
+                    writer.WriteString("result", operation.Result);
+                    writer.WriteEndObject();
+                }
+
+                writer.WriteEndArray();
+            }));
+        }
+        else
+        {
+            foreach (ScopeOperation operation in done)
+            {
+                TextWriter said = operation.Applied ? output : error;
+                said.WriteLine(operation.Result);
+            }
+        }
+
+        return done.TrueForAll(operation => operation.Applied) ? 0 : 1;
+    }
+
     /// <summary>The direct children of a scope, one row each.</summary>
     public static int List(
         IOperatorSurface surface, string scope, bool json, TextWriter output, TextWriter error)

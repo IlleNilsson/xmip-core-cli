@@ -58,10 +58,19 @@ static async Task<int> HealthAsync(Invocation invocation)
         return 1;
     }
 
+    // A scope that selects among scopes that exist may be a wildcard (ADR-0059
+    // clause 7, read for every surface). A pattern that names nothing is
+    // REFUSED here and nowhere else, so every command refuses it the same way.
+    ScopeSelection? chosen = ScopeSelection.Of(surface, invocation.Argument, out string unmatched);
+
+    if (chosen is null)
+    {
+        return Unmatched(invocation, unmatched);
+    }
+
     if (!invocation.Follow)
     {
-        return HealthCommand.Run(
-            surface, invocation.Argument, invocation.Json, Console.Out, Console.Error);
+        return HealthCommand.Over(surface, chosen, invocation.Json, Console.Out, Console.Error);
     }
 
     using CancellationTokenSource stop = new();
@@ -74,8 +83,7 @@ static async Task<int> HealthAsync(Invocation invocation)
         stop.Cancel();
     };
 
-    return await HealthCommand.FollowAsync(
-        surface, invocation.Argument, Console.Out, HealthCommand.Interval, stop.Token)
+    return await HealthCommand.FollowAsync(surface, chosen, Console.Out, stop.Token)
         .ConfigureAwait(false);
 }
 
@@ -90,11 +98,16 @@ static async Task<int> MeasureAsync(Invocation invocation)
         return 1;
     }
 
-    string scope = ScopeOrCluster(invocation);
+    ScopeSelection? chosen = ScopeSelection.Of(surface, invocation.Argument, out string unmatched);
+
+    if (chosen is null)
+    {
+        return Unmatched(invocation, unmatched);
+    }
 
     if (!invocation.Follow)
     {
-        return MeasureCommand.Run(surface, scope, invocation.Json, Console.Out, Console.Error);
+        return MeasureCommand.Over(surface, chosen, invocation.Json, Console.Out, Console.Error);
     }
 
     using CancellationTokenSource stop = new();
@@ -105,14 +118,8 @@ static async Task<int> MeasureAsync(Invocation invocation)
         stop.Cancel();
     };
 
-    return await MeasureCommand.FollowAsync(surface, scope, Console.Out, stop.Token)
+    return await MeasureCommand.FollowAsync(surface, chosen, Console.Out, stop.Token)
         .ConfigureAwait(false);
-}
-
-// 'measure' and 'list' take the cluster when no scope is named.
-static string ScopeOrCluster(Invocation invocation)
-{
-    return string.IsNullOrEmpty(invocation.Argument) ? ScopeTree.Root : invocation.Argument;
 }
 
 static int Validate(Invocation invocation)
@@ -151,11 +158,14 @@ static int ScopeRead(Invocation invocation, bool list)
         return 1;
     }
 
-    string scope = ScopeOrCluster(invocation);
+    // 'list' takes the cluster when no scope is named; either takes a pattern.
+    ScopeSelection? chosen = ScopeSelection.Of(surface, invocation.Argument, out string unmatched);
 
-    return list
-        ? ScopeCommand.List(surface, scope, invocation.Json, Console.Out, Console.Error)
-        : ScopeCommand.Show(surface, scope, invocation.Json, Console.Out, Console.Error);
+    return chosen is null
+        ? Unmatched(invocation, unmatched)
+        : list
+            ? ScopeCommand.ListOver(surface, chosen, invocation.Json, Console.Out, Console.Error)
+            : ScopeCommand.ShowOver(surface, chosen, invocation.Json, Console.Out, Console.Error);
 }
 
 static int Act(Invocation invocation, ScopeAction action)
@@ -169,7 +179,23 @@ static int Act(Invocation invocation, ScopeAction action)
         return 1;
     }
 
-    return ScopeCommand.Apply(
-        surface, invocation.Argument, action, Environment.UserName,
-        invocation.Json, Console.Out, Console.Error);
+    ScopeSelection? chosen = ScopeSelection.Of(surface, invocation.Argument, out string unmatched);
+
+    return chosen is null
+        ? Unmatched(invocation, unmatched)
+        : ScopeCommand.ApplyOver(
+            surface, chosen, action, Environment.UserName,
+            invocation.Json, Console.Out, Console.Error);
+}
+
+// A pattern that named nothing, said once for every command: the words for a
+// person, the same refusal as a document for --json, on stderr and never
+// exit 0 (ADR-0059 clause 7).
+static int Unmatched(Invocation invocation, string refusal)
+{
+    Console.Error.WriteLine(invocation.Json
+        ? ScopeSelection.Document(invocation.Argument, refusal)
+        : refusal);
+
+    return 1;
 }

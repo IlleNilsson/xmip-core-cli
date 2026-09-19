@@ -13,6 +13,44 @@ namespace Xmip.Cli;
 /// </summary>
 public static class MeasureCommand
 {
+    /// <summary>
+    /// Read once and render what the argument selected. A wildcard says one
+    /// line per scope it named, each line naming its own scope; the figures are
+    /// not added together, because a sum over several scopes is a figure at a
+    /// scope that does not exist, and no surface invents one.
+    /// </summary>
+    public static int Over(
+        IOperatorSurface surface, ScopeSelection chosen, bool json, TextWriter output,
+        TextWriter error)
+    {
+        if (!chosen.Patterned)
+        {
+            return Run(surface, chosen.Scopes[0], json, output, error);
+        }
+
+        if (json)
+        {
+            output.WriteLine(Documents(surface, chosen));
+            return 0;
+        }
+
+        bool measured = false;
+
+        foreach (string scope in chosen.Scopes)
+        {
+            Figures figures = surface.Figures(scope);
+            measured |= figures.HasValues;
+            output.WriteLine($"{scope}  {Text(figures)}");
+        }
+
+        if (!measured)
+        {
+            error.WriteLine($"Nothing measured at {chosen.Argument} ({surface.Source}).");
+        }
+
+        return measured ? 0 : 1;
+    }
+
     /// <summary>Read once and render.</summary>
     public static int Run(
         IOperatorSurface surface, string scope, bool json, TextWriter output, TextWriter error)
@@ -29,9 +67,10 @@ public static class MeasureCommand
         return 0;
     }
 
-    /// <summary>Emit a record now and whenever the published figures change.</summary>
+    /// <summary>Emit a record now and whenever the published figures change.
+    /// A wildcard is matched again at every notice, as health's follow is.</summary>
     public static async Task<int> FollowAsync(
-        IOperatorSurface surface, string scope, TextWriter output, CancellationToken stop)
+        IOperatorSurface surface, ScopeSelection chosen, TextWriter output, CancellationToken stop)
     {
         string? last = null;
 
@@ -39,7 +78,11 @@ public static class MeasureCommand
         {
             await foreach (SurfaceChange _ in surface.WatchAsync(stop).ConfigureAwait(false))
             {
-                string document = Document(surface, surface.Figures(scope));
+                ScopeSelection now = ScopeSelection.Of(surface, chosen.Argument, out string gone)
+                    ?? chosen with { Scopes = [] };
+                string document = now.Patterned
+                    ? Documents(surface, now)
+                    : Document(surface, surface.Figures(now.Scopes[0]));
 
                 if (string.Equals(document, last, StringComparison.Ordinal))
                 {
@@ -57,6 +100,37 @@ public static class MeasureCommand
         }
 
         return 0;
+    }
+
+    /// <summary>Follow one scope, the shape every caller had before a scope
+    /// could be a pattern.</summary>
+    public static Task<int> FollowAsync(
+        IOperatorSurface surface, string scope, TextWriter output, CancellationToken stop)
+    {
+        return FollowAsync(surface, new ScopeSelection(scope, false, [scope]), output, stop);
+    }
+
+    /// <summary>What a wildcard measured, as one document: the pattern, how
+    /// many scopes it named, and the six figures at each of them.</summary>
+    public static string Documents(IOperatorSurface surface, ScopeSelection chosen)
+    {
+        return JsonText.Document(writer =>
+        {
+            writer.WriteString("pattern", chosen.Argument);
+            writer.WriteString("source", surface.Source);
+            writer.WriteNumber("matched", chosen.Scopes.Count);
+            writer.WriteStartArray("scopes");
+
+            foreach (string scope in chosen.Scopes)
+            {
+                writer.WriteStartObject();
+                writer.WriteString("scope", scope);
+                Write(writer, surface.Figures(scope));
+                writer.WriteEndObject();
+            }
+
+            writer.WriteEndArray();
+        });
     }
 
     /// <summary>The six figures on one line, for a person.</summary>
