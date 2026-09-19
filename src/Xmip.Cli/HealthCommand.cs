@@ -20,6 +20,46 @@ public static class HealthCommand
     /// </summary>
     public static readonly TimeSpan Interval = TimeSpan.FromSeconds(1);
 
+    /// <summary>
+    /// Read once and render what the argument selected. One scope is what it
+    /// always was; a wildcard answers for every scope it named, one banner and
+    /// one list each, because a rollup over several scopes would be a rollup of
+    /// a scope that is not in the tree (ADR-0041), and inventing one is what no
+    /// surface does.
+    /// </summary>
+    public static int Over(
+        IOperatorSurface surface, ScopeSelection chosen, bool json, TextWriter output,
+        TextWriter error)
+    {
+        if (!chosen.Patterned)
+        {
+            return Run(surface, chosen.Scopes[0], json, output, error);
+        }
+
+        if (json)
+        {
+            output.WriteLine(Documents(surface, chosen));
+            return 0;
+        }
+
+        foreach (string scope in chosen.Scopes)
+        {
+            IReadOnlyList<HealthRecord> records = surface.Health(scope);
+
+            // A publication that advanced between the match and the read can
+            // have lost a scope; what is gone is not said, and what is left is.
+            if (records.Count == 0)
+            {
+                continue;
+            }
+
+            WriteText(surface, scope, records, output);
+            output.WriteLine();
+        }
+
+        return 0;
+    }
+
     /// <summary>Read once and render.</summary>
     public static int Run(
         IOperatorSurface surface, string scope, bool json, TextWriter output, TextWriter error)
@@ -46,27 +86,29 @@ public static class HealthCommand
 
     /// <summary>
     /// Emit one JSON Lines record for the current snapshot, then whenever the
-    /// surface says its published snapshot advanced. Notifications may be
-    /// coalesced; each record is the latest immutable truth.
+    /// surface says its published snapshot advanced. A wildcard is matched
+    /// again at every notice, so a scope that appears is followed and one that
+    /// goes leaves the document rather than the operator's memory.
     /// </summary>
     public static async Task<int> FollowAsync(
         IOperatorSurface surface,
-        string scope,
+        ScopeSelection chosen,
         TextWriter output,
-        TimeSpan interval,
         CancellationToken stop)
     {
-        // Kept in the signature so existing callers remain source-compatible.
-        // Production surfaces do not use it; their change stream wakes us.
-        _ = interval;
         string? last = null;
 
         try
         {
             await foreach (SurfaceChange _ in surface.WatchAsync(stop).ConfigureAwait(false))
             {
-                IReadOnlyList<HealthRecord> records = surface.Health(scope);
-                string document = Document(surface, scope, records);
+                // A pattern that now names nothing says so as an empty
+                // document; the refusal belongs to a command that ends.
+                ScopeSelection now = ScopeSelection.Of(surface, chosen.Argument, out string gone)
+                    ?? chosen with { Scopes = [] };
+                string document = now.Patterned
+                    ? Documents(surface, now)
+                    : Document(surface, now.Scopes[0], surface.Health(now.Scopes[0]));
 
                 if (string.Equals(document, last, StringComparison.Ordinal))
                 {
@@ -86,46 +128,98 @@ public static class HealthCommand
         return 0;
     }
 
-    /// <summary>The scope, its rollup, the worst leaf and every leaf, as one
-    /// document: the same shape a single read and a follow record share.</summary>
-    public static string Document(
-        IOperatorSurface surface, string scope, IReadOnlyList<HealthRecord> records)
+    /// <summary>
+    /// Emit one JSON Lines record for the current snapshot, then whenever the
+    /// surface says its published snapshot advanced. Notifications may be
+    /// coalesced; each record is the latest immutable truth.
+    /// </summary>
+    public static Task<int> FollowAsync(
+        IOperatorSurface surface,
+        string scope,
+        TextWriter output,
+        TimeSpan interval,
+        CancellationToken stop)
     {
-        HealthRecord? worst = ScopeTree.Worst(records);
+        // Kept in the signature so existing callers remain source-compatible.
+        // Production surfaces do not use it; their change stream wakes us.
+        _ = interval;
 
+        return FollowAsync(surface, new ScopeSelection(scope, false, [scope]), output, stop);
+    }
+
+    /// <summary>
+    /// What a wildcard answered, as one document: the pattern, how many scopes
+    /// it named, and the same object per scope that a single read emits. A
+    /// program reads one shape or the other by the key it finds, and a pattern
+    /// that named nothing is a document saying nothing was named — never an
+    /// empty line.
+    /// </summary>
+    public static string Documents(IOperatorSurface surface, ScopeSelection chosen)
+    {
         return JsonText.Document(writer =>
         {
-            writer.WriteString("scope", scope);
+            writer.WriteString("pattern", chosen.Argument);
             writer.WriteString("source", surface.Source);
-            writer.WriteString("state", English.Rollup(records));
+            writer.WriteNumber("matched", chosen.Scopes.Count);
+            writer.WriteStartArray("scopes");
 
-            // What the run was started with, where its publisher says — the
-            // same line the GUI puts at the top of every view, including what
-            // each node declared it can do (ADR-0056). A surface that says
-            // nothing of a run writes no key at all.
-            if (surface.Run() is { Said: true } run)
-            {
-                writer.WriteString("run", run.Line());
-            }
-
-            if (worst is not null)
-            {
-                writer.WriteStartObject("worst");
-                WriteRecord(writer, worst);
-                writer.WriteEndObject();
-            }
-
-            writer.WriteStartArray("records");
-
-            foreach (HealthRecord record in records)
+            foreach (string scope in chosen.Scopes)
             {
                 writer.WriteStartObject();
-                WriteRecord(writer, record);
+                Body(writer, surface, scope, surface.Health(scope));
                 writer.WriteEndObject();
             }
 
             writer.WriteEndArray();
         });
+    }
+
+    /// <summary>The scope, its rollup, the worst leaf and every leaf, as one
+    /// document: the same shape a single read and a follow record share.</summary>
+    public static string Document(
+        IOperatorSurface surface, string scope, IReadOnlyList<HealthRecord> records)
+    {
+        return JsonText.Document(writer => Body(writer, surface, scope, records));
+    }
+
+    private static void Body(
+        Utf8JsonWriter writer,
+        IOperatorSurface surface,
+        string scope,
+        IReadOnlyList<HealthRecord> records)
+    {
+        HealthRecord? worst = ScopeTree.Worst(records);
+
+        writer.WriteString("scope", scope);
+        writer.WriteString("source", surface.Source);
+        writer.WriteString("state", English.Rollup(records));
+
+        // What the run was started with, where its publisher says — the same
+        // line the GUI puts at the top of every view, including what each node
+        // declared it can do (ADR-0056). A surface that says nothing of a run
+        // writes no key at all.
+        if (surface.Run() is { Said: true } run)
+        {
+            writer.WriteString("run", run.Line());
+        }
+
+        if (worst is not null)
+        {
+            writer.WriteStartObject("worst");
+            WriteRecord(writer, worst);
+            writer.WriteEndObject();
+        }
+
+        writer.WriteStartArray("records");
+
+        foreach (HealthRecord record in records)
+        {
+            writer.WriteStartObject();
+            WriteRecord(writer, record);
+            writer.WriteEndObject();
+        }
+
+        writer.WriteEndArray();
     }
 
     private static void WriteRecord(Utf8JsonWriter writer, HealthRecord record)

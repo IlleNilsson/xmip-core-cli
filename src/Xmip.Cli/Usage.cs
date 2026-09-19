@@ -24,6 +24,21 @@ public static class Usage
           --runtime <path>          the runtime library, instead of finding it
           --remote <url>            a web host to follow, instead of a runtime here
 
+        A <scope> is one scope, or a wildcard over the scopes that exist:
+        * for any run of characters, ? for exactly one, everything else
+        literal, case-insensitive — what PowerShell's -like matches and what
+        the GUI's filter box matches (ADR-0059 clauses 7 and 8).
+
+          xmip-cli health "xmip:///C1/node/R*"   every node whose name starts R
+          xmip-cli list "xmip:///C1/*/receive"   what is beneath every receive
+
+        health, measure, list and show answer for each scope a pattern names,
+        one after the other, and never add them together; pause and resume act
+        on each. A pattern that matches nothing is REFUSED, naming the pattern
+        and what there is, and exits 1 — never 0, which would read as all
+        clear. <toml>, <library> and <code> name a thing, not a selection, and
+        take no wildcard.
+
         The runtime is found by one rule, the same for every surface:
         Xmip:RuntimeLibrary in the configuration, else XMIP_RUNTIME_LIBRARY,
         else the library beside this executable. Every command answers over

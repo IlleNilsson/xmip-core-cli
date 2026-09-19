@@ -17,7 +17,7 @@
 # validate always does, since it asks a runtime.
 #
 # As shipped, in a developer's clone: the Playground roll started as cluster
-# C1 (Start-XmipTest -Suite Core.Playground -Cluster C1 ...), the same file the
+# C1 (Start-XmipTest -Suite Playground -Cluster C1 ...), the same file the
 # PowerShell prompt follows. A deployment writes its own.
 Surface = "snapshot"
 
