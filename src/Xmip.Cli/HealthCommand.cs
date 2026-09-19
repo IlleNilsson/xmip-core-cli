@@ -99,6 +99,15 @@ public static class HealthCommand
             writer.WriteString("source", surface.Source);
             writer.WriteString("state", English.Rollup(records));
 
+            // What the run was started with, where its publisher says — the
+            // same line the GUI puts at the top of every view, including what
+            // each node declared it can do (ADR-0056). A surface that says
+            // nothing of a run writes no key at all.
+            if (surface.Run() is { Said: true } run)
+            {
+                writer.WriteString("run", run.Line());
+            }
+
             if (worst is not null)
             {
                 writer.WriteStartObject("worst");
@@ -152,6 +161,12 @@ public static class HealthCommand
         }
 
         output.WriteLine($"{"",14} source {surface.Source}");
+
+        if (surface.Run() is { Said: true } run)
+        {
+            output.WriteLine($"{"",14} run {run.Line()}");
+        }
+
         output.WriteLine();
 
         foreach (HealthRecord record in records)

@@ -28,6 +28,10 @@ public sealed class FakeSurface(IReadOnlyList<HealthRecord> records) : IOperator
     /// stop a follow.</summary>
     public Action<int>? OnRead { get; init; }
 
+    /// <summary>What the run behind this surface was started with. None
+    /// unless a test says one, as a surface with no run says nothing.</summary>
+    public RunHeader Started { get; set; } = RunHeader.None;
+
     /// <inheritdoc />
     public string Source => "FAKE — a test wrote these";
 
@@ -53,6 +57,12 @@ public sealed class FakeSurface(IReadOnlyList<HealthRecord> records) : IOperator
                 revision++, SurfaceChangeKind.All, DateTimeOffset.UtcNow, Source);
             await Task.Yield();
         }
+    }
+
+    /// <inheritdoc />
+    public RunHeader Run()
+    {
+        return Started;
     }
 
     /// <inheritdoc />

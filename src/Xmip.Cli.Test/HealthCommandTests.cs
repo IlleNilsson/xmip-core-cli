@@ -51,6 +51,41 @@ public sealed class HealthCommandTests
         Assert.Equal("Working    30  xmip:///edge-02/receive/orders", lines[first + 3]);
     }
 
+    /// <summary>
+    /// The run reaches the command line too (ADR-0014, amendment 2026-09-19):
+    /// the same line the GUI puts at the top of every view, naming each node
+    /// with what it declared it can do (ADR-0056). A surface with no run says
+    /// nothing of one, in text and in JSON alike.
+    /// </summary>
+    [Fact]
+    public void HealthSaysWhatTheRunWasStartedWithWhereASurfaceSaysOne()
+    {
+        FakeSurface surface = Estate();
+        surface.Started = new Xmip.Surface.RunHeader(
+            "Z6", ["RoundTrip"], ["R1", "P1"], ["R1=receive", "P1=process+send"], ["R1"], "calm");
+        StringWriter output = new();
+
+        HealthCommand.Run(surface, "xmip:///", json: false, output, new StringWriter());
+
+        Assert.Contains(
+            "               run RoundTrip · Z6 · nodes R1=receive P1=process+send · "
+                + "online R1 · calm",
+            output.ToString(),
+            StringComparison.Ordinal);
+
+        StringWriter asJson = new();
+        HealthCommand.Run(surface, "xmip:///", json: true, asJson, new StringWriter());
+        using JsonDocument document = JsonDocument.Parse(asJson.ToString());
+        Assert.Equal(
+            "RoundTrip · Z6 · nodes R1=receive P1=process+send · online R1 · calm",
+            document.RootElement.GetProperty("run").GetString());
+
+        StringWriter silent = new();
+        HealthCommand.Run(Estate(), "xmip:///", json: true, silent, new StringWriter());
+        using JsonDocument nothing = JsonDocument.Parse(silent.ToString());
+        Assert.False(nothing.RootElement.TryGetProperty("run", out _));
+    }
+
     [Fact]
     public void AFineScopeSaysNothingMore()
     {
