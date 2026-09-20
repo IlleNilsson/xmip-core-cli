@@ -23,6 +23,7 @@ public static class Usage
           --follow                  with health or measure: JSON Lines as they change
           --runtime <path>          the runtime library, instead of finding it
           --remote <url>            a web host to follow, instead of a runtime here
+          --snapshot <path>         a published snapshot to read, instead of the document's
 
         A <scope> is one scope, or a wildcard over the scopes that exist:
         * for any run of characters, ? for exactly one, everything else
@@ -38,6 +39,11 @@ public static class Usage
         and what there is, and exits 1 — never 0, which would read as all
         clear. <toml>, <library> and <code> name a thing, not a selection, and
         take no wildcard.
+
+        One invocation reads one cluster. Two rolls are two clusters, each
+        publishing its own snapshot, and a rollup or a sum over both would be
+        at a scope in neither tree — so --snapshot names which one, and the
+        web monitor is where an operator moves between them.
 
         The runtime is found by one rule, the same for every surface:
         Xmip:RuntimeLibrary in the configuration, else XMIP_RUNTIME_LIBRARY,

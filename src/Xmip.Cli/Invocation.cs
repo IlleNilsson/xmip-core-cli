@@ -20,13 +20,19 @@ namespace Xmip.Cli;
 /// <param name="Remote">A web host on another machine to follow instead of a
 /// runtime here (ADR-0052, amendment 2026-09-15). Null when the surface is
 /// local.</param>
+/// <param name="Snapshot">One published snapshot to read, overriding the
+/// document. One and never several: a command answers at one scope, and a
+/// rollup or a sum over two clusters would be a figure at a scope that is in
+/// neither tree (ADR-0052, amendment 2026-09-20). Null when the document
+/// decides.</param>
 public sealed record Invocation(
     Command Command,
     string Argument,
     bool Json,
     bool Follow,
     string? Runtime,
-    string? Remote)
+    string? Remote,
+    string? Snapshot = null)
 {
     // Each command, and how many arguments it takes: none, one, or one at most.
     private static readonly Dictionary<string, (Command Command, int Minimum, int Maximum)>
@@ -58,6 +64,7 @@ public sealed record Invocation(
         bool follow = false;
         string? runtime = null;
         string? remote = null;
+        string? snapshot = null;
 
         for (int i = 0; i < args.Count; i++)
         {
@@ -89,6 +96,15 @@ public sealed record Invocation(
 
                     remote = args[++i];
                     break;
+                case "--snapshot":
+                    if (i + 1 >= args.Count)
+                    {
+                        problem = "--snapshot needs a path.";
+                        return null;
+                    }
+
+                    snapshot = args[++i];
+                    break;
                 case "--help" or "-h":
                     words.Insert(0, "help");
                     break;
@@ -110,7 +126,9 @@ public sealed record Invocation(
         if (words.Count == 0)
         {
             problem = string.Empty;
-            return new Invocation(Command.Help, string.Empty, json, follow, runtime, remote);
+
+            return new Invocation(
+                Command.Help, string.Empty, json, follow, runtime, remote, snapshot);
         }
 
         if (!Known.TryGetValue(words[0], out (Command Command, int Minimum, int Maximum) known))
@@ -145,6 +163,7 @@ public sealed record Invocation(
             json || follow,
             follow,
             runtime,
-            remote);
+            remote,
+            snapshot);
     }
 }
