@@ -11,6 +11,21 @@ namespace Xmip.Cli;
 /// runtime has not published is a dash, never a zero. With <c>--follow</c>,
 /// one JSON Lines record each time the figures change.
 /// </summary>
+/// <remarks>
+/// <b>Totals here, a rate in the prompt, and that is deliberate</b> (ADR-0052,
+/// amendment 2026-09-20; ADR-0014's amendment asks that a change either reach
+/// every surface or name the one it did not). An invocation is one sample: it
+/// has no interval to divide by, and a rate taken from a single reading would
+/// be the average over the whole of the publisher's uptime — the very number
+/// the owner retired from the prompt. The prompt is a line that is always
+/// there and reads two publications; a command is a question asked once. With
+/// <c>--follow</c> there are samples, and the JSON Lines records already carry
+/// the figures and the scope for each one, so a program computes the rate
+/// exactly from two documents rather than being handed a rounded one (ADR-0014
+/// clause 10: <c>--json</c> is for a program). The web board already says a
+/// rate in words beside each tile (<c>English.Flow</c>), so the executable is
+/// the one surface showing a total alone, and it says so here.
+/// </remarks>
 public static class MeasureCommand
 {
     /// <summary>

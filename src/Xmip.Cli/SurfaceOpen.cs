@@ -6,14 +6,26 @@ namespace Xmip.Cli;
 /// <summary>
 /// Which surface a command reads. The line wins: a web host on another
 /// machine when <c>--remote</c> names one, followed over its surface hub
-/// (ADR-0052, amendment 2026-09-15), or the library <c>--runtime</c> names.
-/// Else the document beside the executable, <c>xmip.cli.toml</c>, chooses
-/// with the same <c>[Xmip]</c> keys as every other host's document — native,
-/// snapshot or remote (ADR-0052 clause 3); until 2026-09-18 the executable
-/// read that document for the runtime library alone and could not follow a
-/// snapshot at all. Else the runtime library <see cref="RuntimeChoice"/>
-/// finds. A surface that answers nothing is not returned; the reason is.
+/// (ADR-0052, amendment 2026-09-15), the published snapshot <c>--snapshot</c>
+/// names, or the library <c>--runtime</c> names. Else the document beside the
+/// executable, <c>xmip.cli.toml</c>, chooses with the same <c>[Xmip]</c> keys
+/// as every other host's document — native, snapshot or remote (ADR-0052
+/// clause 3); until 2026-09-18 the executable read that document for the
+/// runtime library alone and could not follow a snapshot at all. Else the
+/// runtime library <see cref="RuntimeChoice"/> finds. A surface that answers
+/// nothing is not returned; the reason is.
 /// </summary>
+/// <remarks>
+/// One surface, never a set of them (ADR-0052, amendment 2026-09-20). A web
+/// page holds several clusters because an operator moves between them in one
+/// session; an invocation of the executable answers one question at one scope
+/// and ends, and a rollup or a sum over two clusters would be a figure at a
+/// scope that is in neither tree. What the executable lacked over two rolls
+/// was a way to say *which*, without editing its document; that is
+/// <c>--snapshot</c>, and the document keeps naming the one it follows by
+/// default. Where the document names several — the web host's shape — the
+/// first is read and the line names another.
+/// </remarks>
 public static class SurfaceOpen
 {
     /// <summary>The surface the line and the document choose, not yet asked
@@ -27,9 +39,11 @@ public static class SurfaceOpen
     {
         return invocation.Remote is { } host && !string.IsNullOrWhiteSpace(host)
             ? new RemoteOperator(new Uri(host, UriKind.Absolute))
-            : string.IsNullOrWhiteSpace(invocation.Runtime) && SurfaceChoice.IsChosen(document)
-                ? SurfaceChoice.Open(document, beside)
-                : Native(invocation.Runtime, document, beside);
+            : invocation.Snapshot is { } named && !string.IsNullOrWhiteSpace(named)
+                ? new SnapshotOperator(TomlDocument.Resolve(named, beside))
+                : string.IsNullOrWhiteSpace(invocation.Runtime) && SurfaceChoice.IsChosen(document)
+                    ? SurfaceChoice.OpenFirst(document, beside)
+                    : Native(invocation.Runtime, document, beside);
     }
 
     private static NativeOperator Native(string? overridden, IConfiguration document, string beside)
