@@ -36,9 +36,11 @@ Which surface a command reads is stated in `xmip.cli.toml` beside the
 executable, with the same `[Xmip]` keys as the GUI hosts and the PowerShell
 module — `Surface = "native" | "snapshot" | "remote"`, `RuntimeLibrary`,
 `Snapshot`, `Url` — and never guessed (ADR-0052 clause 3). As shipped, in a
-developer's clone, it follows the Playground roll started as cluster C1, the
-same file the PowerShell prompt follows, so `xmip-cli show xmip:///C1` answers
-while a roll runs and says `SNAPSHOT — no file at ...` before one has. With
+developer's clone, it follows the Playground roll started as cluster C1 — a
+name the walkthrough picked, and nothing Xmip knows — the same file the
+PowerShell prompt follows, so `xmip-cli show xmip:///C1` answers while a roll
+runs and says `SNAPSHOT — no file at ...` before one has. Roll under another
+name and `Snapshot` names that file instead. With
 no surface named, the runtime library is found by the one rule every surface
 uses: `Xmip:RuntimeLibrary` in the document, else the `XMIP_RUNTIME_LIBRARY`
 environment variable, else the library beside the executable. The line wins

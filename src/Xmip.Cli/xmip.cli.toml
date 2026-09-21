@@ -16,9 +16,10 @@
 # else XMIP_RUNTIME_LIBRARY, else the library beside the executable — and
 # validate always does, since it asks a runtime.
 #
-# As shipped, in a developer's clone: the Playground roll started as cluster
-# C1 (Start-XmipTest -Suite Playground -Cluster C1 ...), the same file the
-# PowerShell prompt follows. A deployment writes its own.
+# As shipped, in a developer's clone: the Playground roll the estate's own
+# walkthrough starts, which names its cluster C1 only because a roll must be
+# given some name — the same file the PowerShell prompt follows. Roll under
+# another name and name that file below. A deployment writes its own.
 Surface = "snapshot"
 
 # What this process is for, said in its declaration (ADR-0053): "test" or
@@ -33,7 +34,8 @@ Purpose = "test"
 # is said so — SNAPSHOT — no file at ... — not silently replaced. A relative
 # path is from the directory the executable runs from, bin/Debug/net11.0
 # under this project: eight levels up is the estate root, where a roll
-# publishes under .local-work/playground.
+# publishes under .local-work/playground. The file is named for the cluster
+# the roll was started as, so this line follows one roll and no other.
 Snapshot = "../../../../../../../../.local-work/playground/C1-snapshot.toml"
 
 # The web host to follow when Surface = "remote".

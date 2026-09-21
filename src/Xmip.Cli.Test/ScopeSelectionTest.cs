@@ -254,7 +254,7 @@ public sealed class ScopeSelectionTest
     {
         Assert.Contains("wildcard", Usage.Text, StringComparison.Ordinal);
         Assert.Contains("REFUSED", Usage.Text, StringComparison.Ordinal);
-        Assert.Contains("xmip-cli health \"xmip:///C1/node/R*\"", Usage.Text,
+        Assert.Contains("xmip-cli health \"xmip:///orders/node/edge-*\"", Usage.Text,
             StringComparison.Ordinal);
     }
 }
