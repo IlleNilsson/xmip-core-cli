@@ -30,8 +30,8 @@ public static class Usage
         literal, case-insensitive — what PowerShell's -like matches and what
         the GUI's filter box matches (ADR-0059 clauses 7 and 8).
 
-          xmip-cli health "xmip:///C1/node/R*"   every node whose name starts R
-          xmip-cli list "xmip:///C1/*/receive"   what is beneath every receive
+          xmip-cli health "xmip:///orders/node/edge-*"  every node named edge-…
+          xmip-cli list "xmip:///orders/*/receive"      beneath every receive
 
         health, measure, list and show answer for each scope a pattern names,
         one after the other, and never add them together; pause and resume act
