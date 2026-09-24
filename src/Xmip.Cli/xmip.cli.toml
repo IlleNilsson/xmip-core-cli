@@ -28,7 +28,7 @@ Surface = "snapshot"
 Purpose = "test"
 
 # The runtime's native library, exporting xmip_operate_v1.
-# RuntimeLibrary = "../../../../platform/runtime/target/debug/xmip_core_runtime.dll"
+# RuntimeLibrary = "../../../../../platform/runtime/target/debug/xmip_core_runtime.dll"
 
 # The file to read when Surface = "snapshot". A path with no file behind it
 # is said so — SNAPSHOT — no file at ... — not silently replaced. A relative
@@ -36,7 +36,7 @@ Purpose = "test"
 # under this project: eight levels up is the estate root, where a roll
 # publishes under .local-work/playground. The file is named for the cluster
 # the roll was started as, so this line follows one roll and no other.
-Snapshot = "../../../../../../../../.local-work/playground/C1-snapshot.toml"
+Snapshot = "../../../../../../../../../.local-work/playground/C1-snapshot.toml"
 
 # The web host to follow when Surface = "remote".
 # Url = "http://another-host:5087"
