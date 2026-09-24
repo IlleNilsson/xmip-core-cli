@@ -7,7 +7,7 @@ namespace Xmip.Cli;
 /// <c>xmip validate &lt;toml&gt;</c>: the runtime's answer on a node
 /// configuration file, without starting it. The file's text crosses, not its
 /// path — the runtime validates a proposed document and publishes nothing
-/// (ADR-0027 clause 9). The verdict is <see cref="NativeOperator.Validate"/>'s,
+/// (ADR-0027 clause 9). The verdict is <see cref="NativeOperator.Validate(string)"/>'s,
 /// the same record and sentence the desktop shows (ADR-0052 clause 4); the
 /// document carries the record, and the exit code is decided from it.
 /// </summary>

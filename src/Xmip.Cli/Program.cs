@@ -27,7 +27,7 @@ using ProcessDeclaration? declared = ProcessDeclaration.Declare(
         ? invocation.Argument
         : invocation.Remote ?? ScopeTree.Root,
     ProcessDeclaration.PurposeOf(TomlDocument.Read(
-        Path.Combine(AppContext.BaseDirectory, RuntimeChoice.ConfigurationFile))));
+        Path.Combine(AppContext.BaseDirectory, SurfaceOpen.ConfigurationFile))));
 
 return invocation.Command switch
 {
@@ -135,7 +135,7 @@ static int Validate(Invocation invocation)
     // The shared surface answers with the record and the sentence together
     // (ADR-0052 clause 4), so the command renders the same verdict the
     // desktop's Configure page decides from.
-    using NativeOperator surface = new(RuntimeChoice.Find(invocation.Runtime));
+    using NativeOperator surface = new(SurfaceOpen.Runtime(invocation));
 
     if (!surface.IsLoaded)
     {
@@ -194,7 +194,7 @@ static int Act(Invocation invocation, ScopeAction action)
 static int Unmatched(Invocation invocation, string refusal)
 {
     Console.Error.WriteLine(invocation.Json
-        ? ScopeSelection.Document(invocation.Argument, refusal)
+        ? ScopeCommand.Unmatched(invocation.Argument, refusal)
         : refusal);
 
     return 1;

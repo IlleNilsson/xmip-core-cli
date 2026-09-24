@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text.Json;
 using Xmip.Surface;
 
@@ -122,7 +121,7 @@ public static class MeasureCommand
     public static Task<int> FollowAsync(
         IOperatorSurface surface, string scope, TextWriter output, CancellationToken stop)
     {
-        return FollowAsync(surface, new ScopeSelection(scope, false, [scope]), output, stop);
+        return FollowAsync(surface, ScopeSelection.Exactly(scope), output, stop);
     }
 
     /// <summary>What a wildcard measured, as one document: the pattern, how
@@ -151,9 +150,14 @@ public static class MeasureCommand
     /// <summary>The six figures on one line, for a person.</summary>
     public static string Text(Figures figures)
     {
-        return $"Streams {Figure(figures.Streams)}  Messages {Figure(figures.Messages)}  " +
-            $"Journeys {Figure(figures.Journeys)}  Bytes {Figure(figures.Bytes)}  " +
-            $"Retrying {Figure(figures.Retrying)}  Failed {Figure(figures.Failed)}";
+        ArgumentNullException.ThrowIfNull(figures);
+
+        return $"Streams {English.Figure(figures.Streams)}  " +
+            $"Messages {English.Figure(figures.Messages)}  " +
+            $"Journeys {English.Figure(figures.Journeys)}  " +
+            $"Bytes {English.Figure(figures.Bytes)}  " +
+            $"Retrying {English.Figure(figures.Retrying)}  " +
+            $"Failed {English.Figure(figures.Failed)}";
     }
 
     /// <summary>The six figures as one JSON document, for a program.</summary>
@@ -185,12 +189,6 @@ public static class MeasureCommand
         {
             writer.WriteNull("observed");
         }
-    }
-
-    /// <summary>A figure for a person: grouped digits, or a dash when unpublished.</summary>
-    public static string Figure(ulong? value)
-    {
-        return value?.ToString("N0", CultureInfo.InvariantCulture) ?? "–";
     }
 
     private static void WriteNullable(Utf8JsonWriter writer, string name, ulong? value)

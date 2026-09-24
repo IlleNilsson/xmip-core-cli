@@ -30,8 +30,8 @@ public sealed class HealthCommandTests
 
         Assert.Equal(0, exit);
         string[] lines = output.ToString().Split(Environment.NewLine);
-        Assert.Equal("Holding        xmip:///", lines[0]);
-        Assert.Equal("               Done at xmip:///edge-01/send/invoices", lines[1]);
+        Assert.Equal("holding        xmip:///", lines[0]);
+        Assert.Equal("               done at xmip:///edge-01/send/invoices", lines[1]);
         Assert.Equal("               certificate expired", lines[2]);
     }
 
@@ -44,11 +44,11 @@ public sealed class HealthCommandTests
 
         string[] lines = output.ToString().Split(Environment.NewLine);
         int first = Array.IndexOf(lines, string.Empty) + 1;
-        Assert.Equal("Done       90  xmip:///edge-01/send/invoices", lines[first]);
+        Assert.Equal("done       90  xmip:///edge-01/send/invoices", lines[first]);
         Assert.Equal("               certificate expired", lines[first + 1]);
         Assert.Equal(
             $"               observed {FakeSurface.Seen:O}", lines[first + 2]);
-        Assert.Equal("Working    30  xmip:///edge-02/receive/orders", lines[first + 3]);
+        Assert.Equal("working    30  xmip:///edge-02/receive/orders", lines[first + 3]);
     }
 
     /// <summary>
@@ -95,7 +95,7 @@ public sealed class HealthCommandTests
             Estate(), "xmip:///edge-01/receive", json: false, output, new StringWriter());
 
         string[] lines = output.ToString().Split(Environment.NewLine);
-        Assert.Equal("Fine           xmip:///edge-01/receive", lines[0]);
+        Assert.Equal("fine           xmip:///edge-01/receive", lines[0]);
         Assert.StartsWith("               source ", lines[1], StringComparison.Ordinal);
     }
 

@@ -6,7 +6,9 @@ namespace Xmip.Cli;
 /// <c>xmip probe &lt;library&gt;</c>: load a module through the C ABI and
 /// report what it says it is. The first of the seven conformance rules in
 /// section 11 of the ABI's specification, driven from outside the module. A
-/// module's log lines go to stderr as they arrive.
+/// module's log lines go to stderr as they arrive. Whether it conforms is
+/// <see cref="ModuleProbe.Result.Complaint"/>'s judgement, the one
+/// <c>Get-XmipModuleDescriptor</c> reports too.
 /// </summary>
 public static class ProbeCommand
 {
@@ -50,7 +52,7 @@ public static class ProbeCommand
             return 1;
         }
 
-        string? complaint = Complaint(result);
+        string complaint = result.Complaint;
 
         if (json)
         {
@@ -63,7 +65,7 @@ public static class ProbeCommand
                 writer.WriteNumber("abi_version", result.AbiVersion);
                 writer.WriteString("trait_version", result.TraitVersion);
                 writer.WriteString("module_version", result.ModuleVersion);
-                writer.WriteBoolean("conforms", complaint is null);
+                writer.WriteBoolean("conforms", result.Conforms);
             }));
         }
         else
@@ -76,32 +78,13 @@ public static class ProbeCommand
             output.WriteLine($"{"module version",-20}{result.ModuleVersion}");
         }
 
-        if (complaint is null)
+        if (result.Conforms)
         {
             return 0;
         }
 
         error.WriteLine(complaint);
         return 1;
-    }
-
-    /// <summary>What a loaded module got wrong, or null when it conforms.</summary>
-    private static string? Complaint(ModuleProbe.Result result)
-    {
-        if (result.AbiVersion != ModuleAbi.AbiVersion)
-        {
-            return $"Loaded, and disagrees: the module says {result.AbiVersion}, " +
-                $"this build speaks {ModuleAbi.AbiVersion}.";
-        }
-
-        if (result.Provider == "core" && result.Standard.Length > 0)
-        {
-            // Section 4: standard is empty only when provider is "core".
-            return $"A core module named a standard ('{result.Standard}'). " +
-                "ADR-0011 leaves that slot empty for core.";
-        }
-
-        return null;
     }
 
     private static string Shown(string value, string whenEmpty = "(empty)")

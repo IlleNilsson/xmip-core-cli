@@ -34,6 +34,10 @@ public sealed record Invocation(
     string? Remote,
     string? Snapshot = null)
 {
+    /// <summary>What this line states about the surface to read, for the one
+    /// precedence every surface shares (<see cref="SurfaceChoice.Stated"/>).</summary>
+    public SurfaceLine Line => new(Remote, Snapshot, Runtime);
+
     // Each command, and how many arguments it takes: none, one, or one at most.
     private static readonly Dictionary<string, (Command Command, int Minimum, int Maximum)>
         Known = new(StringComparer.Ordinal)

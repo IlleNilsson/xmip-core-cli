@@ -68,7 +68,7 @@ public static class HealthCommand
 
         if (records.Count == 0)
         {
-            error.WriteLine($"Nothing at {scope} ({surface.Source}).");
+            error.WriteLine(English.NothingAt(scope, surface.Source));
             return 1;
         }
 
@@ -144,7 +144,7 @@ public static class HealthCommand
         // Production surfaces do not use it; their change stream wakes us.
         _ = interval;
 
-        return FollowAsync(surface, new ScopeSelection(scope, false, [scope]), output, stop);
+        return FollowAsync(surface, ScopeSelection.Exactly(scope), output, stop);
     }
 
     /// <summary>
@@ -242,11 +242,11 @@ public static class HealthCommand
 
         // The banner: the scope, its rollup, and — when Holding — why, on the
         // spot. The word alone is not a state an operator can act on.
-        output.WriteLine($"{rollup,-9} {"",3}  {scope}");
+        output.WriteLine($"{English.Mood(rollup),-9} {"",3}  {scope}");
 
         if (rollup == HealthState.Holding)
         {
-            output.WriteLine($"{"",14} {worst.State} at {worst.Scope}");
+            output.WriteLine($"{"",14} {English.Mood(worst.State)} at {worst.Scope}");
 
             if (worst.Evidence.Length > 0)
             {
@@ -265,7 +265,8 @@ public static class HealthCommand
 
         foreach (HealthRecord record in records)
         {
-            output.WriteLine($"{record.State,-9} {record.Severity,3}  {record.Scope}");
+            string mood = English.Mood(record.State);
+            output.WriteLine($"{mood,-9} {record.Severity,3}  {record.Scope}");
 
             if (record.Evidence.Length > 0)
             {
