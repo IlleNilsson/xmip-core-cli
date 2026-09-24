@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Xmip.Abi.Operate;
 using Xmip.Surface;
 
 namespace Xmip.Cli;
@@ -174,12 +175,13 @@ public static class MeasureCommand
     /// <summary>The six figures and when they were observed, into an open object.</summary>
     public static void Write(Utf8JsonWriter writer, Figures figures)
     {
-        WriteNullable(writer, "streams", figures.Streams);
-        WriteNullable(writer, "messages", figures.Messages);
-        WriteNullable(writer, "journeys", figures.Journeys);
-        WriteNullable(writer, "bytes", figures.Bytes);
-        WriteNullable(writer, "retrying", figures.Retrying);
-        WriteNullable(writer, "failed", figures.Failed);
+        // Each figure named by its kind's word, observe::Counted::word.
+        WriteNullable(writer, English.Kind(Counted.Streams), figures.Streams);
+        WriteNullable(writer, English.Kind(Counted.Messages), figures.Messages);
+        WriteNullable(writer, English.Kind(Counted.Journeys), figures.Journeys);
+        WriteNullable(writer, English.Kind(Counted.Bytes), figures.Bytes);
+        WriteNullable(writer, English.Kind(Counted.Retrying), figures.Retrying);
+        WriteNullable(writer, English.Kind(Counted.Failed), figures.Failed);
 
         if (figures.Observed is { } observed)
         {
