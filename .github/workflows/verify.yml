@@ -12,9 +12,9 @@ permissions:
 # Cargo.toml in it.
 #
 # The executable references Xmip.Abi and Xmip.Surface by path inside the
-# composed estate (ADR-0014, amendment of 2026-09-09), four levels up from
+# composed estate (ADR-0014, amendment of 2026-09-09), five levels up from
 # its project, so the binding's repository is checked out where the path
-# expects it: module/foundation/abi beside module/operation/cli. Its main is
+# expects it: module/foundation/abi beside module/core/operation/cli. Its main is
 # what the estate tracks (ADR-0005).
 jobs:
   verify:
@@ -23,7 +23,7 @@ jobs:
       - name: Check out this repository
         uses: actions/checkout@v4
         with:
-          path: module/operation/cli
+          path: module/core/operation/cli
 
       - name: Check out xmip-core-abi beside it
         uses: actions/checkout@v4
@@ -35,12 +35,12 @@ jobs:
       - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
-          global-json-file: module/operation/cli/global.json
+          global-json-file: module/core/operation/cli/global.json
 
       - name: Build
-        run: dotnet build module/operation/cli/src/Xmip.Cli.Test/Xmip.Cli.Test.csproj
+        run: dotnet build module/core/operation/cli/src/Xmip.Cli.Test/Xmip.Cli.Test.csproj
 
       - name: Test
         run: >-
-          dotnet test module/operation/cli/src/Xmip.Cli.Test/Xmip.Cli.Test.csproj
+          dotnet test module/core/operation/cli/src/Xmip.Cli.Test/Xmip.Cli.Test.csproj
           --no-build

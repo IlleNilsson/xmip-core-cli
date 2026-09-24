@@ -271,9 +271,26 @@ public static class ScopeCommand
         return operation.Applied ? 0 : 1;
     }
 
+    /// <summary>
+    /// A pattern that named nothing, for a program: <c>--json</c> promises
+    /// structure, and the refusal <see cref="ScopeSelection.Of"/> gave is an
+    /// answer like any other. It goes to stderr with the same non-zero exit
+    /// the words do, so a script that reads stdout alone still learns nothing
+    /// it could mistake for all clear.
+    /// </summary>
+    public static string Unmatched(string pattern, string refusal)
+    {
+        return JsonText.Document(writer =>
+        {
+            writer.WriteString("pattern", pattern);
+            writer.WriteNumber("matched", 0);
+            writer.WriteString("refused", refusal);
+        });
+    }
+
     private static string Row(ScopeItem item)
     {
-        string mood = item.Health?.ToString().ToLowerInvariant() ?? "unknown";
+        string mood = item.Health is { } health ? English.Mood(health) : "unknown";
 
         return $"{mood,-9}  {item.Scope}  {MeasureCommand.Text(item.Figures)}";
     }
@@ -283,7 +300,7 @@ public static class ScopeCommand
         writer.WriteString("name", item.Name);
         writer.WriteString("scope", item.Scope);
         writer.WriteBoolean("container", item.IsContainer);
-        writer.WriteString("health", item.Health?.ToString().ToLowerInvariant());
+        writer.WriteString("health", item.Health is { } health ? English.Mood(health) : null);
 
         if (item.Severity is { } severity)
         {

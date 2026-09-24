@@ -30,6 +30,7 @@ xmip-cli help             this text
 --follow                  with health or measure: JSON Lines as they change
 --runtime <path>          the runtime library, instead of finding it
 --remote <url>            a web host to follow, instead of a runtime here
+--snapshot <path>         a published snapshot to read, instead of the document's
 ```
 
 Which surface a command reads is stated in `xmip.cli.toml` beside the
@@ -44,7 +45,11 @@ name and `Snapshot` names that file instead. With
 no surface named, the runtime library is found by the one rule every surface
 uses: `Xmip:RuntimeLibrary` in the document, else the `XMIP_RUNTIME_LIBRARY`
 environment variable, else the library beside the executable. The line wins
-over the document: `--runtime` loads that library, and `--remote
+over the document, in one order — `--remote`, then `--snapshot`, then
+`--runtime` — which is `SurfaceChoice.Stated` in `Xmip.Surface`, the same
+precedence `Get-XmipHealth -Remote -Snapshot -Library` follows in PowerShell.
+`--snapshot` reads one cluster's publication, `--runtime` loads that library,
+and `--remote
 http://host:5087` reads no library at all: it follows that web host's surface
 hub over SignalR and is told when the host's surface changes, so `--follow` on
 another machine never polls (ADR-0052, amendment 2026-09-15); `validate`
@@ -58,8 +63,14 @@ about is wrong.
 
 `measure`, `list`, `show`, `pause` and `resume` render the `Figures`,
 `ScopeItem` and `ScopeOperation` shapes of `Xmip.Surface`, the same ones the
-PowerShell module emits as objects. A figure the runtime has not published is a
-dash, never a zero. Pause and resume are the two acts the operator boundary
+PowerShell module emits as objects; `validate` renders its
+`ConfigurationVerdict`, `status` the `StatusMeaning` and `abi` the
+`AbiBoundaries` of `Xmip.Abi`, and `probe` says whether a module conforms by
+`ModuleProbe.Result.Complaint` — each the object the matching cmdlet emits. A
+mood is the word `English.Mood` gives it, lower case, in text and JSON alike;
+a figure is `English.Figure`'s, and one the runtime has not published is a
+dash, never a zero. A wildcard scope selects through `ScopeSelection`, the
+one the cmdlets use. Pause and resume are the two acts the operator boundary
 carries (ADR-0027 clause 5); there is no start, stop or restart, because the
 thing that watches must not be able to stop the thing it watches.
 
@@ -80,8 +91,10 @@ its one argument and the three options; one class per command renders over a
 wires the console, the runtime and Ctrl+C, and nothing else.
 
 `src/Xmip.Cli.Test` is xunit, over a fake `IOperatorSurface`: argument
-parsing, the text and JSON renderings, and which runtime wins when several are
-named. Nothing in this repository loads a native library under test; what
+parsing, what the line states about the surface, and the text and JSON
+renderings. The rules the renderings rest on — which surface and runtime win
+when several are named, what a wildcard selects, what a status means, whether
+a module conforms — are tested once, beside them in `xmip-core-abi`. Nothing in this repository loads a native library under test; what
 crosses the C ABI is the binding's to verify.
 
 ## Public contracts and compatibility
@@ -113,8 +126,10 @@ compiles without a single Xmip source file is the test.
   not belong in a subcommand.
 - Not the PowerShell surface. `xmip-core-powershell` reads the same
   `Xmip.Surface` directly; it does not shell out to this.
-- Not where the scope tree, the discovery rule or the English live. A fix to
-  any of those goes to `Xmip.Surface` and reaches every surface at once.
+- Not where the scope tree, the discovery rule, the surface precedence, the
+  wildcard selection or the English live, nor what a status code means or
+  whether a module conforms. A fix to any of those goes to `Xmip.Surface` or
+  `Xmip.Abi` and reaches every surface at once.
 
 ## Verification
 

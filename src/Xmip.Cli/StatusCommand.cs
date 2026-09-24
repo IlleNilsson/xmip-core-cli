@@ -5,8 +5,9 @@ namespace Xmip.Cli;
 
 /// <summary>
 /// <c>xmip status &lt;code&gt;</c>: what a status code means, in the header's
-/// name and the binding's one line of English. A code the header does not
-/// define is reported as unknown and exits 1.
+/// name and the binding's one line of English — <see cref="StatusMeaning"/>,
+/// the answer <c>ConvertFrom-XmipStatus</c> emits too; only the rendering is
+/// here. A code the header does not define is reported as unknown and exits 1.
 /// </summary>
 public static class StatusCommand
 {
@@ -21,34 +22,33 @@ public static class StatusCommand
             return 2;
         }
 
-        XmipStatus status = (XmipStatus)value;
-        bool known = Enum.IsDefined(status);
+        StatusMeaning meaning = StatusMeaning.Of(value);
 
         if (json)
         {
             output.WriteLine(JsonText.Document(writer =>
             {
-                writer.WriteNumber("code", value);
-                writer.WriteBoolean("known", known);
-                writer.WriteString("name", known ? status.ToString() : "unknown");
-                writer.WriteString("meaning", status.Explain());
-                writer.WriteBoolean("retryable", known && status.IsRetryable());
-                writer.WriteBoolean("terminal", known && status.IsTerminal());
+                writer.WriteNumber("code", meaning.Code);
+                writer.WriteBoolean("known", meaning.Known);
+                writer.WriteString("name", meaning.Name);
+                writer.WriteString("meaning", meaning.Meaning);
+                writer.WriteBoolean("retryable", meaning.Retryable);
+                writer.WriteBoolean("terminal", meaning.Terminal);
             }));
 
-            return known ? 0 : 1;
+            return meaning.Known ? 0 : 1;
         }
 
-        output.WriteLine($"{value,5}  {(known ? status.ToString() : "unknown")}");
-        output.WriteLine($"       {status.Explain()}");
+        output.WriteLine($"{meaning.Code,5}  {meaning.Name}");
+        output.WriteLine($"       {meaning.Meaning}");
 
-        if (!known)
+        if (!meaning.Known)
         {
             return 1;
         }
 
-        string retryable = Yes(status.IsRetryable());
-        string terminal = Yes(status.IsTerminal());
+        string retryable = Yes(meaning.Retryable);
+        string terminal = Yes(meaning.Terminal);
         output.WriteLine($"       retryable: {retryable}   terminal: {terminal}");
 
         return 0;

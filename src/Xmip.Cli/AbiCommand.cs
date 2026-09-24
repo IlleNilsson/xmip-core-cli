@@ -1,45 +1,46 @@
-using Xmip.Abi.Module;
-using Xmip.Abi.Operate;
+using Xmip.Abi;
 
 namespace Xmip.Cli;
 
 /// <summary>
 /// <c>xmip abi</c>: the two boundaries this build speaks — the module boundary
 /// a Module plugs into and the operator boundary a surface drives from
-/// (ADR-0027 clause 2, versioned apart). Answered from the binding's
-/// constants; nothing is loaded.
+/// (ADR-0027 clause 2, versioned apart). <see cref="AbiBoundaries"/> is the
+/// answer, the one <c>Get-XmipAbi</c> emits too; only the rendering is here.
+/// Nothing is loaded.
 /// </summary>
 public static class AbiCommand
 {
-    /// <summary>The module name shown as the example of platform naming.</summary>
-    private const string Example = "xmip_core_transport_file";
-
     /// <summary>Print the boundaries.</summary>
     public static int Run(bool json, TextWriter output)
     {
+        ArgumentNullException.ThrowIfNull(output);
+
+        AbiBoundaries abi = AbiBoundaries.Current;
+
         if (json)
         {
             output.WriteLine(JsonText.Document(writer =>
             {
                 writer.WriteStartObject("module");
-                writer.WriteNumber("version", ModuleAbi.AbiVersion);
-                writer.WriteString("entrypoint", ModuleAbi.Entrypoint);
-                writer.WriteString("library_file_name", ModuleAbi.LibraryFileName(Example));
+                writer.WriteNumber("version", abi.ModuleVersion);
+                writer.WriteString("entrypoint", abi.ModuleEntrypoint);
+                writer.WriteString("library_file_name", abi.ModuleLibraryFileName);
                 writer.WriteEndObject();
                 writer.WriteStartObject("operate");
-                writer.WriteNumber("version", OperateAbi.Version);
-                writer.WriteString("entrypoint", OperateAbi.Entrypoint);
+                writer.WriteNumber("version", abi.OperateVersion);
+                writer.WriteString("entrypoint", abi.OperateEntrypoint);
                 writer.WriteEndObject();
             }));
 
             return 0;
         }
 
-        output.WriteLine($"{"module version",-20}{ModuleAbi.AbiVersion}");
-        output.WriteLine($"{"module entrypoint",-20}{ModuleAbi.Entrypoint}");
-        output.WriteLine($"{"module file name",-20}{ModuleAbi.LibraryFileName(Example)}");
-        output.WriteLine($"{"operate version",-20}{OperateAbi.Version}");
-        output.WriteLine($"{"operate entrypoint",-20}{OperateAbi.Entrypoint}");
+        output.WriteLine($"{"module version",-20}{abi.ModuleVersion}");
+        output.WriteLine($"{"module entrypoint",-20}{abi.ModuleEntrypoint}");
+        output.WriteLine($"{"module file name",-20}{abi.ModuleLibraryFileName}");
+        output.WriteLine($"{"operate version",-20}{abi.OperateVersion}");
+        output.WriteLine($"{"operate entrypoint",-20}{abi.OperateEntrypoint}");
 
         return 0;
     }
