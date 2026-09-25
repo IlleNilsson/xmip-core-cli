@@ -94,7 +94,7 @@ public sealed record Invocation(
                 case "--remote":
                     if (i + 1 >= args.Count || !RemoteOperator.IsWebHost(args[i + 1]))
                     {
-                        problem = "--remote needs a web host, like http://host:5087.";
+                        problem = "--remote needs a web host, like https://host:5443.";
                         return null;
                     }
 

@@ -124,7 +124,7 @@ public sealed class InvocationTests
 
         Assert.Null(Invocation.Parse(
             ["health", "xmip:///", "--remote", "host:5087"], out string relative));
-        Assert.Contains("http://host:5087", relative, StringComparison.Ordinal);
+        Assert.Contains("https://host:5443", relative, StringComparison.Ordinal);
     }
 
     [Fact]
