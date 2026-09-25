@@ -50,9 +50,13 @@ over the document, in one order — `--remote`, then `--snapshot`, then
 precedence `Get-XmipHealth -Remote -Snapshot -Library` follows in PowerShell.
 `--snapshot` reads one cluster's publication, `--runtime` loads that library,
 and `--remote
-http://host:5087` reads no library at all: it follows that web host's surface
+https://host:5443` reads no library at all: it follows that web host's surface
 hub over SignalR and is told when the host's surface changes, so `--follow` on
-another machine never polls (ADR-0052, amendment 2026-09-15); `validate`
+another machine never polls (ADR-0052, amendment 2026-09-15). It is TLS,
+presenting the certificate the document's `Certificate` and `PrivateKey` name
+and checking the host's against `TrustAnchor` (else `XMIP_CERTIFICATE`,
+`XMIP_PRIVATE_KEY`, `XMIP_TRUST_ANCHOR`); plain http is refused to anything
+but this machine (ADR-0063 clause 1). `validate`
 stays local, since it asks a runtime. Text
 goes to stdout for a person, column-aligned;
 `--json` emits one document; `--follow` subscribes to the shared operator
