@@ -40,3 +40,8 @@ Snapshot = "../../../../../../../../../.local-work/playground/C1-snapshot.toml"
 
 # The web host to follow when Surface = "remote".
 # Url = "http://another-host:5087"
+
+# Where this executable's audit records go (ADR-0062): each command, its end
+# and every failure, as <AuditDirectory>/audit.toml. Unset, the audit
+# capability decides — XMIP_AUDIT_DIRECTORY, else the operating system's log.
+# AuditDirectory = "../../../../../../../../../.local-work/audit"
