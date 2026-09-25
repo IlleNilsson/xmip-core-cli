@@ -74,6 +74,22 @@ one the cmdlets use. Pause and resume are the two acts the operator boundary
 carries (ADR-0027 clause 5); there is no start, stop or restart, because the
 thing that watches must not be able to stop the thing it watches.
 
+## What it audits
+
+Every invocation is audited as program `xmip-cli` through the audit
+capability, reached through the runtime's library (ADR-0062; `CommandAudit`
+over `ProgramAudit` in `Xmip.Surface`): the command as it begins (action the
+command's word, phase `begin`, the arguments and options as properties — a
+web host's user and password are left out by the capability, as they are
+from every program's record), its end (`finished`, with `exit`), a
+non-zero exit as a `failure` with its exit code and what it said on stderr, a
+line that could not be obeyed as `refused`, and anything unhandled as
+`unhandled` before the process ends as it would have. Records go to
+`<AuditDirectory>/audit.toml`, `AuditDirectory` in `xmip.cli.toml`'s `[Xmip]`
+table resolved from beside the executable; unset, the capability decides —
+`XMIP_AUDIT_DIRECTORY`, else the operating system's log, which also takes a
+record the directory cannot.
+
 ## Why this is .NET and not Rust
 
 ADR-0014, amended 2026-08-26: every user-interfacing module is .NET 11, and
@@ -94,8 +110,11 @@ wires the console, the runtime and Ctrl+C, and nothing else.
 parsing, what the line states about the surface, and the text and JSON
 renderings. The rules the renderings rest on — which surface and runtime win
 when several are named, what a wildcard selects, what a status means, whether
-a module conforms — are tested once, beside them in `xmip-core-abi`. Nothing in this repository loads a native library under test; what
-crosses the C ABI is the binding's to verify.
+a module conforms — are tested once, beside them in `xmip-core-abi`, and
+what crosses the C ABI is the binding's to verify. The one exception is the
+audit: `CommandAuditTests` records through the runtime's library, which
+`Xmip.Abi` copies beside the tests, and runs the executable once to prove a
+refused line lands as a record.
 
 ## Public contracts and compatibility
 

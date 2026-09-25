@@ -3,8 +3,9 @@
   <!--
     The executable's tests (ADR-0052 clauses 5 and 6): argument parsing, the
     text and JSON renderings over a fake operator surface, and which runtime
-    library wins when several are named. Nothing here loads a native library;
-    what crosses the C ABI is the binding's to test.
+    library wins when several are named. What crosses the C ABI is the
+    binding's to test; only the audit records through the runtime's library,
+    which Xmip.Abi copies beside these tests (ADR-0062).
 
     Target framework and the rest come from Directory.Build.props.
   -->

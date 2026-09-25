@@ -37,15 +37,15 @@ public static class SurfaceOpen
     }
 
     /// <summary>The runtime library <c>validate</c> loads: <c>--runtime</c>,
-    /// else the document, the environment and beside the executable.</summary>
-    public static string Runtime(Invocation invocation)
+    /// else the document, the environment and beside the executable. The
+    /// audit records through the same library, and a line that could not be
+    /// parsed (null) states none.</summary>
+    public static string Runtime(Invocation? invocation)
     {
-        ArgumentNullException.ThrowIfNull(invocation);
-
         string beside = AppContext.BaseDirectory;
 
         return RuntimeLibrary.Stated(
-            invocation.Runtime,
+            invocation?.Runtime,
             TomlDocument.Read(Path.Combine(beside, ConfigurationFile)),
             beside,
             beside);

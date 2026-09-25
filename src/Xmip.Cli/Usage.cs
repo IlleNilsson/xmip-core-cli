@@ -49,6 +49,12 @@ public static class Usage
         Xmip:RuntimeLibrary in the configuration, else XMIP_RUNTIME_LIBRARY,
         else the library beside this executable. Every command answers over
         the C ABI in xmip-core-abi; nothing here links Xmip's Rust.
+
+        Every invocation is audited as program xmip-cli (ADR-0062): the
+        command as it begins and ends, a non-zero exit as a failure with what
+        it said here, a line that could not be obeyed, anything unhandled.
+        Records go to Xmip:AuditDirectory in the configuration, else
+        XMIP_AUDIT_DIRECTORY, else the operating system's log.
         """;
 
     /// <summary>Print the usage text.</summary>

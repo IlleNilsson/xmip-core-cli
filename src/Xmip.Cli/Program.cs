@@ -9,43 +9,64 @@ using Xmip.Surface;
 // Text for a person on stdout; --json one document, --follow JSON Lines
 // (ADR-0014 clause 10). Every complaint goes to stderr with a non-zero exit:
 // 2 when the line could not be obeyed, 1 when the thing asked about is wrong.
-// The console, the runtime and Ctrl+C are wired here and nowhere else.
+// The console, the runtime, Ctrl+C and the audit are wired here and nowhere
+// else.
+//
+// Every invocation is audited through the capability (ADR-0062): the command
+// as it begins, its end, a non-zero exit as a failure with what it said on
+// stderr, a line that could not be obeyed, and anything unhandled — which
+// then ends the process exactly as it would have. CommandAudit says what.
+
+EchoedWriter complaints = new(Console.Error);
+Console.SetError(TextWriter.Synchronized(complaints));
 
 Invocation? invocation = Invocation.Parse(args, out string problem);
+ProgramAudit audit = CommandAudit.Open(invocation);
+audit.WatchUnhandled();
 
 if (invocation is null)
 {
     Console.Error.WriteLine(problem);
+    CommandAudit.Refused(audit, problem);
     return 2;
 }
 
-// What this process says of itself while it runs (ADR-0053): the scope it was
-// asked about, or the whole tree, and the purpose its document states.
-using ProcessDeclaration? declared = ProcessDeclaration.Declare(
-    "xmip-cli",
-    invocation.Argument.StartsWith("xmip:", StringComparison.Ordinal)
-        ? invocation.Argument
-        : invocation.Remote ?? ScopeTree.Root,
-    ProcessDeclaration.PurposeOf(TomlDocument.Read(
-        Path.Combine(AppContext.BaseDirectory, SurfaceOpen.ConfigurationFile))));
+CommandAudit.Begun(audit, invocation);
+int exit = await RunAsync(invocation).ConfigureAwait(false);
+CommandAudit.Ended(audit, invocation, exit, complaints.Said);
 
-return invocation.Command switch
+return exit;
+
+static async Task<int> RunAsync(Invocation invocation)
 {
-    Command.Help => Usage.Print(Console.Out),
-    Command.Abi => AbiCommand.Run(invocation.Json, Console.Out),
-    Command.Status => StatusCommand.Run(
-        invocation.Argument, invocation.Json, Console.Out, Console.Error),
-    Command.Probe => ProbeCommand.Run(
-        invocation.Argument, invocation.Json, Console.Out, Console.Error),
-    Command.Health => await HealthAsync(invocation).ConfigureAwait(false),
-    Command.Measure => await MeasureAsync(invocation).ConfigureAwait(false),
-    Command.List => ScopeRead(invocation, list: true),
-    Command.Show => ScopeRead(invocation, list: false),
-    Command.Pause => Act(invocation, ScopeAction.Pause),
-    Command.Resume => Act(invocation, ScopeAction.Resume),
-    Command.Validate => Validate(invocation),
-    _ => Usage.Print(Console.Out),
-};
+    // What this process says of itself while it runs (ADR-0053): the scope it was
+    // asked about, or the whole tree, and the purpose its document states.
+    using ProcessDeclaration? declared = ProcessDeclaration.Declare(
+        "xmip-cli",
+        invocation.Argument.StartsWith("xmip:", StringComparison.Ordinal)
+            ? invocation.Argument
+            : invocation.Remote ?? ScopeTree.Root,
+        ProcessDeclaration.PurposeOf(TomlDocument.Read(
+            Path.Combine(AppContext.BaseDirectory, SurfaceOpen.ConfigurationFile))));
+
+    return invocation.Command switch
+    {
+        Command.Help => Usage.Print(Console.Out),
+        Command.Abi => AbiCommand.Run(invocation.Json, Console.Out),
+        Command.Status => StatusCommand.Run(
+            invocation.Argument, invocation.Json, Console.Out, Console.Error),
+        Command.Probe => ProbeCommand.Run(
+            invocation.Argument, invocation.Json, Console.Out, Console.Error),
+        Command.Health => await HealthAsync(invocation).ConfigureAwait(false),
+        Command.Measure => await MeasureAsync(invocation).ConfigureAwait(false),
+        Command.List => ScopeRead(invocation, list: true),
+        Command.Show => ScopeRead(invocation, list: false),
+        Command.Pause => Act(invocation, ScopeAction.Pause),
+        Command.Resume => Act(invocation, ScopeAction.Resume),
+        Command.Validate => Validate(invocation),
+        _ => Usage.Print(Console.Out),
+    };
+}
 
 static async Task<int> HealthAsync(Invocation invocation)
 {
