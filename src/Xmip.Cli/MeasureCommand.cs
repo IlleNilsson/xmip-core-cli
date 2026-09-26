@@ -55,7 +55,7 @@ public static class MeasureCommand
         {
             Figures figures = surface.Figures(scope);
             measured |= figures.HasValues;
-            output.WriteLine($"{scope}  {Text(figures)}");
+            output.WriteLine($"{scope}  {English.Figures(figures)}");
         }
 
         if (!measured)
@@ -78,7 +78,7 @@ public static class MeasureCommand
             return 1;
         }
 
-        output.WriteLine(json ? Document(surface, figures) : Text(figures));
+        output.WriteLine(json ? Document(surface, figures) : English.Figures(figures));
         return 0;
     }
 
@@ -146,19 +146,6 @@ public static class MeasureCommand
 
             writer.WriteEndArray();
         });
-    }
-
-    /// <summary>The six figures on one line, for a person.</summary>
-    public static string Text(Figures figures)
-    {
-        ArgumentNullException.ThrowIfNull(figures);
-
-        return $"Streams {English.Figure(figures.Streams)}  " +
-            $"Messages {English.Figure(figures.Messages)}  " +
-            $"Journeys {English.Figure(figures.Journeys)}  " +
-            $"Bytes {English.Figure(figures.Bytes)}  " +
-            $"Retrying {English.Figure(figures.Retrying)}  " +
-            $"Failed {English.Figure(figures.Failed)}";
     }
 
     /// <summary>The six figures as one JSON document, for a program.</summary>

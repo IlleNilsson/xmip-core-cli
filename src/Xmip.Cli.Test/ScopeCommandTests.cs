@@ -46,6 +46,36 @@ public sealed class ScopeCommandTests
         Assert.Contains("  disk full", output.ToString(), StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// A row that is not fine says which leaf explains it, so the next scope to
+    /// type is on the screen. Until 2026-09-26 <c>list</c> said "holding" and
+    /// nothing else, and <c>show</c> said the evidence and never whose it was.
+    /// </summary>
+    [Fact]
+    public void ARowThatIsNotFineNamesTheLeafToDrillTo()
+    {
+        FakeSurface surface = new(
+        [
+            FakeSurface.Leaf("xmip:///C1/node/alpha/receive/http/json", HealthState.Fine),
+            FakeSurface.Leaf(
+                "xmip:///C1/node/alpha/receive/sftp/xml", HealthState.Done, 90, "refused: key"),
+        ]);
+        StringWriter listed = new();
+        StringWriter shown = new();
+
+        ScopeCommand.List(surface, "xmip:///C1/node", false, listed, TextWriter.Null);
+        ScopeCommand.Show(surface, "xmip:///C1", false, shown, TextWriter.Null);
+
+        Assert.Contains(
+            "  worst xmip:///C1/node/alpha/receive/sftp/xml: refused: key",
+            listed.ToString(),
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "  worst xmip:///C1/node/alpha/receive/sftp/xml: refused: key",
+            shown.ToString(),
+            StringComparison.Ordinal);
+    }
+
     [Fact]
     public void ARefusedPauseGoesToStderrWithExitOne()
     {
