@@ -20,7 +20,7 @@ xmip-cli probe <library>  load a module and report what it says it is
 xmip-cli health <scope>   health at and beneath a scope, from the runtime
 xmip-cli measure [scope]  streams, messages, journeys, bytes, retrying, failed
 xmip-cli list [scope]     the direct children of a scope, the cluster by default
-xmip-cli show <scope>     one scope: its mood, its evidence, its figures
+xmip-cli show <scope>     one scope: its mood, its worst leaf and why, its figures
 xmip-cli pause <scope>    pause everything at and beneath a scope
 xmip-cli resume <scope>   resume everything at and beneath a scope
 xmip-cli validate <toml>  check a node configuration without starting it
@@ -77,6 +77,15 @@ dash, never a zero. A wildcard scope selects through `ScopeSelection`, the
 one the cmdlets use. Pause and resume are the two acts the operator boundary
 carries (ADR-0027 clause 5); there is no start, stop or restart, because the
 thing that watches must not be able to stop the thing it watches.
+
+**The drill.** `list` with no scope lists what is beneath the cluster the
+surface publishes at (`IOperatorSurface.Root`), never the one row of the
+cluster itself, and every row carries its figures; a node and a stage have
+figures of their own. A row that is not fine says on the line beneath it
+which leaf explains it and why — `worst <scope>: <evidence>`, the next scope
+to type — and `show` always does, so `list`, `list <that scope>`, … reaches
+the cause the way the web's drill and `Get-XmipScope` do (ADR-0052; the
+owner, 2026-09-26: *drill-down does not work*). JSON carries it as `worst`.
 
 ## What it audits
 

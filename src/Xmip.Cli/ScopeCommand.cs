@@ -63,7 +63,7 @@ public static class ScopeCommand
 
         foreach (ScopeItem item in chosen.Scopes.SelectMany(surface.Children))
         {
-            output.WriteLine(Row(item));
+            Write(output, item, why: item.Troubled);
             rows++;
         }
 
@@ -109,12 +109,7 @@ public static class ScopeCommand
 
         foreach (ScopeItem item in chosen.Scopes.Select(surface.Describe))
         {
-            output.WriteLine(Row(item));
-
-            if (!string.IsNullOrEmpty(item.Evidence))
-            {
-                output.WriteLine($"  {item.Evidence}");
-            }
+            Write(output, item, why: true);
         }
 
         return 0;
@@ -207,7 +202,7 @@ public static class ScopeCommand
 
         foreach (ScopeItem item in children)
         {
-            output.WriteLine(Row(item));
+            Write(output, item, why: item.Troubled);
         }
 
         return 0;
@@ -231,12 +226,7 @@ public static class ScopeCommand
             return 0;
         }
 
-        output.WriteLine(Row(item));
-
-        if (!string.IsNullOrEmpty(item.Evidence))
-        {
-            output.WriteLine($"  {item.Evidence}");
-        }
+        Write(output, item, why: true);
 
         return 0;
     }
@@ -288,11 +278,24 @@ public static class ScopeCommand
         });
     }
 
-    private static string Row(ScopeItem item)
+    // One row: the mood, the scope, the figures; and, where asked, why — for a
+    // container the leaf that explains it and its evidence, which is the next
+    // scope to drill to, and for a leaf its own evidence (ADR-0052 clause 2).
+    // A list says why on the rows that are not fine; show always does.
+    private static void Write(TextWriter output, ScopeItem item, bool why)
     {
         string mood = item.Health is { } health ? English.Mood(health) : "unknown";
 
-        return $"{mood,-9}  {item.Scope}  {MeasureCommand.Text(item.Figures)}";
+        output.WriteLine($"{mood,-9}  {item.Scope}  {English.Figures(item.Figures)}");
+
+        if (!why || string.IsNullOrEmpty(item.Evidence))
+        {
+            return;
+        }
+
+        output.WriteLine(item.IsContainer && item.Worst is { } worst
+            ? $"  worst {worst}: {item.Evidence}"
+            : $"  {item.Evidence}");
     }
 
     private static void WriteItem(Utf8JsonWriter writer, ScopeItem item)
@@ -312,6 +315,7 @@ public static class ScopeCommand
         }
 
         writer.WriteString("evidence", item.Evidence);
+        writer.WriteString("worst", item.Worst);
         MeasureCommand.Write(writer, item.Figures);
     }
 }
