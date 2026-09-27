@@ -7,7 +7,8 @@ namespace Xmip.Cli;
 /// report what it says it is. The first of the seven conformance rules in
 /// section 11 of the ABI's specification, driven from outside the module. A
 /// module's log lines go to stderr as they arrive. Whether it conforms is
-/// <see cref="ModuleProbe.Result.Complaint"/>'s judgement, the one
+/// <see cref="ModuleProbe.Result.Complaint"/>'s judgement, and whether it loaded
+/// at all <see cref="ModuleProbe.Result.Unloadable"/>'s, the ones
 /// <c>Get-XmipModuleDescriptor</c> reports too.
 /// </summary>
 public static class ProbeCommand
@@ -21,19 +22,14 @@ public static class ProbeCommand
             return 2;
         }
 
-        ModuleProbe.Result result;
+        ModuleProbe.Result result = ModuleProbe.Probe(
+            Path.GetFullPath(library), line => error.WriteLine($"  {line}"));
 
-        try
+        // Whether it loaded at all is the probe's answer too, the one the
+        // cmdlet refuses on.
+        if (!result.Loaded)
         {
-            result = ModuleProbe.Probe(
-                Path.GetFullPath(library), line => error.WriteLine($"  {line}"));
-        }
-        catch (Exception failure) when (failure
-            is DllNotFoundException or EntryPointNotFoundException or BadImageFormatException)
-        {
-            // The three ways loading fails that say something specific about
-            // the module rather than about this process.
-            error.WriteLine(failure.Message);
+            error.WriteLine(result.Unloadable);
             return 1;
         }
 

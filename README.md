@@ -31,6 +31,7 @@ xmip-cli help             this text
 --runtime <path>          the runtime library, instead of finding it
 --remote <url>            a web host to follow, instead of a runtime here
 --snapshot <path>         a published snapshot to read, instead of the document's
+--who <name>              with pause: who is pausing, instead of the current user
 ```
 
 Which surface a command reads is stated in `xmip.cli.toml` beside the
@@ -69,14 +70,23 @@ about is wrong.
 `ScopeItem` and `ScopeOperation` shapes of `Xmip.Surface`, the same ones the
 PowerShell module emits as objects; `validate` renders its
 `ConfigurationVerdict`, `status` the `StatusMeaning` and `abi` the
-`AbiBoundaries` of `Xmip.Abi`, and `probe` says whether a module conforms by
-`ModuleProbe.Result.Complaint` — each the object the matching cmdlet emits. A
-mood is the word `English.Mood` gives it, lower case, in text and JSON alike;
-a figure is `English.Figure`'s, and one the runtime has not published is a
-dash, never a zero. A wildcard scope selects through `ScopeSelection`, the
-one the cmdlets use. Pause and resume are the two acts the operator boundary
-carries (ADR-0027 clause 5); there is no start, stop or restart, because the
-thing that watches must not be able to stop the thing it watches.
+`AbiBoundaries` of `Xmip.Abi`, and `probe` says whether a module loaded and
+conforms by `ModuleProbe.Result.Unloadable` and `Complaint` — each the object
+the matching cmdlet emits. A mood is the word `English.Mood` gives it, lower
+case, in text and JSON alike, and a row with no health recorded is `nothing
+recorded`; a figure is `English.Figure`'s, and one the runtime has not
+published is a dash, never a zero; `Nothing at`, `Nothing beneath` and
+`Nothing measured at` are `English`'s sentences too. A wildcard scope selects
+through `ScopeSelection`, the one the cmdlets use, and which rows `show`
+gives — the scopes that exist, worst first under a wildcard — is
+`ScopeItem.Selected`, the one `Get-XmipScope` calls. Whatever a wildcard
+answered is one JSON document of one shape for every command: `pattern`,
+`source`, `matched`, and `scopes`, an object per scope. Pause and resume are
+the two acts the operator boundary carries (ADR-0027 clause 5); there is no
+start, stop or restart, because the thing that watches must not be able to
+stop the thing it watches. Who paused is `--who`, else the user the command
+runs as — `ScopeOperation.Who`, the rule `Suspend-XmipScope -Who` and the GUI
+follow.
 
 **The drill.** `list` with no scope lists what is beneath the cluster the
 surface publishes at (`IOperatorSurface.Root`), never the one row of the
@@ -97,7 +107,9 @@ web host's user and password are left out by the capability, as they are
 from every program's record), its end (`finished`, with `exit`), a
 non-zero exit as a `failure` with its exit code and what it said on stderr, a
 line that could not be obeyed as `refused`, and anything unhandled as
-`unhandled` before the process ends as it would have. Records go to
+`unhandled` before the process ends as it would have. The records go through
+the runtime library the line states — `--runtime` reaches the audit as it
+reaches `validate` (`ProgramAudit.Library`). Records go to
 `<AuditDirectory>/audit.toml`, `AuditDirectory` in `xmip.cli.toml`'s `[Xmip]`
 table resolved from beside the executable; unset, the capability decides —
 `XMIP_AUDIT_DIRECTORY`, else the operating system's log, which also takes a

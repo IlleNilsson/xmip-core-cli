@@ -7,7 +7,9 @@ namespace Xmip.Cli;
 /// <c>xmip list</c>, <c>xmip show</c>, <c>xmip pause</c> and
 /// <c>xmip resume</c>: the rows of the scope tree, and the two acts the
 /// boundary carries (ADR-0027 clause 5). Every row is the one
-/// <see cref="ScopeItem"/> shape the PowerShell module and the GUI read
+/// <see cref="ScopeItem"/> shape the PowerShell module and the GUI read, and
+/// which rows a selection names, in what order, is
+/// <see cref="ScopeItem.Selected"/>, the one <c>Get-XmipScope</c> calls
 /// (ADR-0052); only the rendering is here.
 /// </summary>
 public static class ScopeCommand
@@ -29,16 +31,12 @@ public static class ScopeCommand
 
         if (json)
         {
-            output.WriteLine(JsonText.Document(writer =>
-            {
-                writer.WriteString("pattern", chosen.Argument);
-                writer.WriteString("source", surface.Source);
-                writer.WriteNumber("matched", chosen.Scopes.Count);
-                writer.WriteStartArray("scopes");
-
-                foreach (string scope in chosen.Scopes)
+            output.WriteLine(JsonText.Selection(
+                surface,
+                chosen,
+                chosen.Scopes,
+                (writer, scope) =>
                 {
-                    writer.WriteStartObject();
                     writer.WriteString("scope", scope);
                     writer.WriteStartArray("items");
 
@@ -50,11 +48,7 @@ public static class ScopeCommand
                     }
 
                     writer.WriteEndArray();
-                    writer.WriteEndObject();
-                }
-
-                writer.WriteEndArray();
-            }));
+                }));
 
             return 0;
         }
@@ -69,50 +63,51 @@ public static class ScopeCommand
 
         if (rows == 0)
         {
-            error.WriteLine($"Nothing beneath {chosen.Argument} ({surface.Source}).");
+            error.WriteLine(English.NothingBeneath(chosen.Argument, surface.Source));
         }
 
         return rows == 0 ? 1 : 0;
     }
 
-    /// <summary>One row per scope the argument selected.</summary>
+    /// <summary>
+    /// One row per scope the argument selected that exists, worst first where
+    /// a wildcard named several (<see cref="ScopeItem.Selected"/>). None at all
+    /// is a complaint on stderr and exit 1.
+    /// </summary>
     public static int ShowOver(
         IOperatorSurface surface, ScopeSelection chosen, bool json, TextWriter output,
         TextWriter error)
     {
-        if (!chosen.Patterned)
+        IReadOnlyList<ScopeItem> rows = ScopeItem.Selected(surface, chosen);
+
+        if (rows.Count == 0)
         {
-            return Show(surface, chosen.Scopes[0], json, output, error);
+            error.WriteLine(English.NothingAt(chosen.Argument, surface.Source));
+            return 1;
         }
 
         if (json)
         {
-            output.WriteLine(JsonText.Document(writer =>
-            {
-                writer.WriteString("pattern", chosen.Argument);
-                writer.WriteString("source", surface.Source);
-                writer.WriteNumber("matched", chosen.Scopes.Count);
-                writer.WriteStartArray("items");
-
-                foreach (string scope in chosen.Scopes)
-                {
-                    writer.WriteStartObject();
-                    WriteItem(writer, surface.Describe(scope));
-                    writer.WriteEndObject();
-                }
-
-                writer.WriteEndArray();
-            }));
+            output.WriteLine(chosen.Patterned
+                ? JsonText.Selection(surface, chosen, rows, WriteItem)
+                : JsonText.Document(writer => WriteItem(writer, rows[0])));
 
             return 0;
         }
 
-        foreach (ScopeItem item in chosen.Scopes.Select(surface.Describe))
+        foreach (ScopeItem item in rows)
         {
             Write(output, item, why: true);
         }
 
         return 0;
+    }
+
+    /// <summary>One scope as a row, with its evidence beneath.</summary>
+    public static int Show(
+        IOperatorSurface surface, string scope, bool json, TextWriter output, TextWriter error)
+    {
+        return ShowOver(surface, ScopeSelection.Exactly(scope), json, output, error);
     }
 
     /// <summary>
@@ -136,24 +131,17 @@ public static class ScopeCommand
 
         if (json)
         {
-            output.WriteLine(JsonText.Document(writer =>
-            {
-                writer.WriteString("pattern", chosen.Argument);
-                writer.WriteString("action", action.ToString().ToLowerInvariant());
-                writer.WriteNumber("matched", done.Count);
-                writer.WriteStartArray("scopes");
-
-                foreach (ScopeOperation operation in done)
+            output.WriteLine(JsonText.Selection(
+                surface,
+                chosen,
+                done,
+                (writer, operation) =>
                 {
-                    writer.WriteStartObject();
                     writer.WriteString("scope", operation.Scope);
                     writer.WriteBoolean("applied", operation.Applied);
                     writer.WriteString("result", operation.Result);
-                    writer.WriteEndObject();
-                }
-
-                writer.WriteEndArray();
-            }));
+                },
+                writer => writer.WriteString("action", Word(action))));
         }
         else
         {
@@ -175,7 +163,7 @@ public static class ScopeCommand
 
         if (children.Count == 0)
         {
-            error.WriteLine($"Nothing beneath {scope} ({surface.Source}).");
+            error.WriteLine(English.NothingBeneath(scope, surface.Source));
             return 1;
         }
 
@@ -208,29 +196,6 @@ public static class ScopeCommand
         return 0;
     }
 
-    /// <summary>One scope as a row, with its evidence beneath.</summary>
-    public static int Show(
-        IOperatorSurface surface, string scope, bool json, TextWriter output, TextWriter error)
-    {
-        ScopeItem item = surface.Describe(scope);
-
-        if (item.Health is null && item.Observed is null)
-        {
-            error.WriteLine($"Nothing at {scope} ({surface.Source}).");
-            return 1;
-        }
-
-        if (json)
-        {
-            output.WriteLine(JsonText.Document(writer => WriteItem(writer, item)));
-            return 0;
-        }
-
-        Write(output, item, why: true);
-
-        return 0;
-    }
-
     /// <summary>Pause or resume a scope and say what the runtime said. Exit 1
     /// when the runtime did not apply it.</summary>
     public static int Apply(
@@ -244,7 +209,7 @@ public static class ScopeCommand
             output.WriteLine(JsonText.Document(writer =>
             {
                 writer.WriteString("scope", scope);
-                writer.WriteString("action", action.ToString().ToLowerInvariant());
+                writer.WriteString("action", Word(action));
                 writer.WriteBoolean("applied", operation.Applied);
                 writer.WriteString("result", operation.Result);
             }));
@@ -284,7 +249,7 @@ public static class ScopeCommand
     // A list says why on the rows that are not fine; show always does.
     private static void Write(TextWriter output, ScopeItem item, bool why)
     {
-        string mood = item.Health is { } health ? English.Mood(health) : "unknown";
+        string mood = English.Mood(item.Health);
 
         output.WriteLine($"{mood,-9}  {item.Scope}  {English.Figures(item.Figures)}");
 
@@ -317,5 +282,11 @@ public static class ScopeCommand
         writer.WriteString("evidence", item.Evidence);
         writer.WriteString("worst", item.Worst);
         MeasureCommand.Write(writer, item.Figures);
+    }
+
+    // The act as the word a document names it by: pause, resume.
+    private static string Word(ScopeAction action)
+    {
+        return action.ToString().ToLowerInvariant();
     }
 }

@@ -60,6 +60,18 @@ public sealed class CommandAuditTests
     }
 
     [Fact]
+    public void TheAuditRecordsThroughTheLibraryTheLineStates()
+    {
+        // --runtime reaches the audit: the library the line names is the one
+        // the audit is handed, not one the rule would find without it.
+        string stated = Path.Combine(Path.GetTempPath(), "stated-runtime.dll");
+
+        ProgramAudit audit = CommandAudit.Open(Line("abi", "--runtime", stated));
+
+        Assert.Equal(Path.GetFullPath(stated), audit.Library);
+    }
+
+    [Fact]
     public void AWebHostsUserAndPasswordAreNeverRecorded()
     {
         // Handed over as typed; the audit capability leaves the secret out of
