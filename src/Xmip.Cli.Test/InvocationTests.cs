@@ -1,3 +1,5 @@
+using Xmip.Surface;
+
 namespace Xmip.Cli.Test;
 
 /// <summary>
@@ -119,12 +121,30 @@ public sealed class InvocationTests
     [Fact]
     public void RemoteNeedsAnAbsoluteUrl()
     {
+        // The sentence is the one every surface says (RemoteOperator.Refusal).
         Assert.Null(Invocation.Parse(["health", "xmip:///", "--remote"], out string bare));
-        Assert.Contains("--remote", bare, StringComparison.Ordinal);
+        Assert.Equal(RemoteOperator.Refusal(null), bare);
 
         Assert.Null(Invocation.Parse(
             ["health", "xmip:///", "--remote", "host:5087"], out string relative));
+        Assert.Equal(RemoteOperator.Refusal("host:5087"), relative);
         Assert.Contains("https://host:5443", relative, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void WhoNamesThePauserAndOnlyForPause()
+    {
+        Invocation? parsed = Invocation.Parse(
+            ["pause", "xmip:///C1", "--who", "ilian"], out _);
+
+        Assert.NotNull(parsed);
+        Assert.Equal("ilian", parsed.Who);
+        Assert.Equal("ilian", ScopeOperation.Who(parsed.Who));
+        Assert.Equal(Environment.UserName, ScopeOperation.Who(null));
+
+        Assert.Null(Invocation.Parse(["resume", "xmip:///C1", "--who", "ilian"], out string not));
+        Assert.Contains("--who", not, StringComparison.Ordinal);
+        Assert.Null(Invocation.Parse(["pause", "xmip:///C1", "--who"], out _));
     }
 
     [Fact]

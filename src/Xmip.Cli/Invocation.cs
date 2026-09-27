@@ -4,7 +4,7 @@ using Xmip.Surface;
 namespace Xmip.Cli;
 
 /// <summary>
-/// One command line, parsed: the command, its one argument, and the three
+/// One command line, parsed: the command, its one argument, and its
 /// options. Parsing knows nothing about the runtime or the console, which is
 /// what lets it be tested with a string array and nothing else.
 /// </summary>
@@ -25,6 +25,8 @@ namespace Xmip.Cli;
 /// rollup or a sum over two clusters would be a figure at a scope that is in
 /// neither tree (ADR-0052, amendment 2026-09-20). Null when the document
 /// decides.</param>
+/// <param name="Who">Who is pausing, as the runtime records it; null for the
+/// user this process runs as (<see cref="ScopeOperation.Who"/>).</param>
 public sealed record Invocation(
     Command Command,
     string Argument,
@@ -32,7 +34,8 @@ public sealed record Invocation(
     bool Follow,
     string? Runtime,
     string? Remote,
-    string? Snapshot = null)
+    string? Snapshot = null,
+    string? Who = null)
 {
     /// <summary>What this line states about the surface to read, for the one
     /// precedence every surface shares (<see cref="SurfaceChoice.Stated"/>).</summary>
@@ -69,6 +72,7 @@ public sealed record Invocation(
         string? runtime = null;
         string? remote = null;
         string? snapshot = null;
+        string? who = null;
 
         for (int i = 0; i < args.Count; i++)
         {
@@ -92,13 +96,23 @@ public sealed record Invocation(
                     runtime = args[++i];
                     break;
                 case "--remote":
-                    if (i + 1 >= args.Count || !RemoteOperator.IsWebHost(args[i + 1]))
+                    if (RemoteOperator.Refusal(i + 1 < args.Count ? args[i + 1] : null)
+                        is { } notAWebHost)
                     {
-                        problem = "--remote needs a web host, like https://host:5443.";
+                        problem = notAWebHost;
                         return null;
                     }
 
                     remote = args[++i];
+                    break;
+                case "--who":
+                    if (i + 1 >= args.Count || string.IsNullOrWhiteSpace(args[i + 1]))
+                    {
+                        problem = "--who needs a name.";
+                        return null;
+                    }
+
+                    who = args[++i];
                     break;
                 case "--snapshot":
                     if (i + 1 >= args.Count)
@@ -132,7 +146,7 @@ public sealed record Invocation(
             problem = string.Empty;
 
             return new Invocation(
-                Command.Help, string.Empty, json, follow, runtime, remote, snapshot);
+                Command.Help, string.Empty, json, follow, runtime, remote, snapshot, who);
         }
 
         if (!Known.TryGetValue(words[0], out (Command Command, int Minimum, int Maximum) known))
@@ -159,6 +173,12 @@ public sealed record Invocation(
             return null;
         }
 
+        if (who is not null && known.Command is not Command.Pause)
+        {
+            problem = "--who only applies to 'pause'.";
+            return null;
+        }
+
         problem = string.Empty;
 
         return new Invocation(
@@ -168,6 +188,7 @@ public sealed record Invocation(
             follow,
             runtime,
             remote,
-            snapshot);
+            snapshot,
+            who);
     }
 }

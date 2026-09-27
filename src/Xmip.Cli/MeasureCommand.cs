@@ -60,7 +60,7 @@ public static class MeasureCommand
 
         if (!measured)
         {
-            error.WriteLine($"Nothing measured at {chosen.Argument} ({surface.Source}).");
+            error.WriteLine(English.NothingMeasured(chosen.Argument, surface.Source));
         }
 
         return measured ? 0 : 1;
@@ -74,7 +74,7 @@ public static class MeasureCommand
 
         if (!figures.HasValues)
         {
-            error.WriteLine($"Nothing measured at {scope} ({surface.Source}).");
+            error.WriteLine(English.NothingMeasured(scope, surface.Source));
             return 1;
         }
 
@@ -82,70 +82,35 @@ public static class MeasureCommand
         return 0;
     }
 
-    /// <summary>Emit a record now and whenever the published figures change.
-    /// A wildcard is matched again at every notice, as health's follow is.</summary>
-    public static async Task<int> FollowAsync(
-        IOperatorSurface surface, ScopeSelection chosen, TextWriter output, CancellationToken stop)
+    /// <summary>What the argument selected, as one document: a single scope's
+    /// <see cref="Document"/>, or for a wildcard <see cref="Documents"/>.</summary>
+    public static string Answer(IOperatorSurface surface, ScopeSelection chosen)
     {
-        string? last = null;
+        ArgumentNullException.ThrowIfNull(surface);
+        ArgumentNullException.ThrowIfNull(chosen);
 
-        try
-        {
-            await foreach (SurfaceChange _ in surface.WatchAsync(stop).ConfigureAwait(false))
-            {
-                ScopeSelection now = ScopeSelection.Of(surface, chosen.Argument, out string gone)
-                    ?? chosen with { Scopes = [] };
-                string document = now.Patterned
-                    ? Documents(surface, now)
-                    : Document(surface, surface.Figures(now.Scopes[0]));
-
-                if (string.Equals(document, last, StringComparison.Ordinal))
-                {
-                    continue;
-                }
-
-                output.WriteLine(document);
-                await output.FlushAsync(stop).ConfigureAwait(false);
-                last = document;
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            // Ctrl+C is the normal end of --follow.
-        }
-
-        return 0;
+        return chosen.Patterned
+            ? Documents(surface, chosen)
+            : Document(surface, surface.Figures(chosen.Scopes[0]));
     }
 
-    /// <summary>Follow one scope, the shape every caller had before a scope
-    /// could be a pattern.</summary>
-    public static Task<int> FollowAsync(
-        IOperatorSurface surface, string scope, TextWriter output, CancellationToken stop)
-    {
-        return FollowAsync(surface, ScopeSelection.Exactly(scope), output, stop);
-    }
-
-    /// <summary>What a wildcard measured, as one document: the pattern, how
-    /// many scopes it named, and the six figures at each of them.</summary>
+    /// <summary>What a wildcard measured, as one document
+    /// (<see cref="JsonText.Selection{T}"/>): the six figures at each scope it
+    /// named.</summary>
     public static string Documents(IOperatorSurface surface, ScopeSelection chosen)
     {
-        return JsonText.Document(writer =>
-        {
-            writer.WriteString("pattern", chosen.Argument);
-            writer.WriteString("source", surface.Source);
-            writer.WriteNumber("matched", chosen.Scopes.Count);
-            writer.WriteStartArray("scopes");
+        ArgumentNullException.ThrowIfNull(surface);
+        ArgumentNullException.ThrowIfNull(chosen);
 
-            foreach (string scope in chosen.Scopes)
+        return JsonText.Selection(
+            surface,
+            chosen,
+            chosen.Scopes,
+            (writer, scope) =>
             {
-                writer.WriteStartObject();
                 writer.WriteString("scope", scope);
                 Write(writer, surface.Figures(scope));
-                writer.WriteEndObject();
-            }
-
-            writer.WriteEndArray();
-        });
+            });
     }
 
     /// <summary>The six figures as one JSON document, for a program.</summary>

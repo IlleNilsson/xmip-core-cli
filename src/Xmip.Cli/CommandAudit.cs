@@ -26,18 +26,19 @@ public static class CommandAudit
     /// <c>AuditDirectory</c>, resolved from beside the executable, else where
     /// the capability decides — <c>XMIP_AUDIT_DIRECTORY</c>, else the
     /// operating system's log. The runtime library it records through is the
-    /// one this invocation states (<see cref="SurfaceOpen.Runtime"/>).
+    /// one this invocation states (<see cref="SurfaceOpen.Runtime"/>), handed
+    /// to the audit as <see cref="ProgramAudit.Library"/> before its first
+    /// record, so <c>--runtime</c> reaches the audit too.
     /// </summary>
     public static ProgramAudit Open(Invocation? invocation)
     {
         string beside = AppContext.BaseDirectory;
 
-        SurfaceOpen.Runtime(invocation);
-
         return new ProgramAudit(
             Program,
             ProgramAudit.Stated(
-                TomlDocument.Read(Path.Combine(beside, SurfaceOpen.ConfigurationFile)), beside));
+                TomlDocument.Read(Path.Combine(beside, SurfaceOpen.ConfigurationFile)), beside),
+            SurfaceOpen.Runtime(invocation));
     }
 
     /// <summary>The action a command is recorded as: its word on the line.</summary>
@@ -91,6 +92,11 @@ public static class CommandAudit
         if (invocation.Snapshot is { } snapshot)
         {
             said["snapshot"] = snapshot;
+        }
+
+        if (invocation.Who is { } who)
+        {
+            said["who"] = who;
         }
 
         return said;

@@ -24,6 +24,7 @@ public static class Usage
           --runtime <path>          the runtime library, instead of finding it
           --remote <url>            a web host to follow, instead of a runtime here
           --snapshot <path>         a published snapshot to read, instead of the document's
+          --who <name>              with pause: who is pausing, instead of the current user
 
         A <scope> is one scope, or a wildcard over the scopes that exist:
         * for any run of characters, ? for exactly one, everything else

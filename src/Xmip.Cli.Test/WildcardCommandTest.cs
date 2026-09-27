@@ -136,7 +136,7 @@ public sealed class WildcardCommandTest
     }
 
     [Fact]
-    public void ShowOverAPatternIsOneRowPerScopeAndInJsonOneItemEach()
+    public void ShowOverAPatternIsOneRowPerScopeAndInJsonOneEntryEach()
     {
         FakeSurface surface = Cluster();
         ScopeSelection chosen = ScopeSelection.Of(surface, "xmip:///C1/node/alpha*", out _)!;
@@ -149,10 +149,10 @@ public sealed class WildcardCommandTest
         ScopeCommand.ShowOver(surface, chosen, json: true, asJson, new StringWriter());
 
         using JsonDocument document = JsonDocument.Parse(asJson.ToString());
-        Assert.Equal(2, document.RootElement.GetProperty("items").GetArrayLength());
+        Assert.Equal(2, document.RootElement.GetProperty("scopes").GetArrayLength());
         Assert.Equal(
             "xmip:///C1/node/alpha2",
-            document.RootElement.GetProperty("items")[1].GetProperty("scope").GetString());
+            document.RootElement.GetProperty("scopes")[1].GetProperty("scope").GetString());
     }
 
     /// <summary>

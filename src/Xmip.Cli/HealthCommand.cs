@@ -9,17 +9,12 @@ namespace Xmip.Cli;
 /// first, with the rollup for the scope itself (ADR-0041). A scope that is
 /// Holding says why on the spot — the worst leaf beneath it and that leaf's
 /// evidence (ADR-0052 clause 2). Text for a person, one document with
-/// <c>--json</c>, and with <c>--follow</c> one JSON Lines record each time
+/// <c>--json</c>, and with <c>--follow</c> (<see cref="Follow"/> over
+/// <see cref="Answer"/>) one JSON Lines record each time
 /// the health changes, until the token is cancelled (ADR-0014 clause 10).
 /// </summary>
 public static class HealthCommand
 {
-    /// <summary>
-    /// Retained for source compatibility with callers compiled before change
-    /// notifications. Current surfaces wake the command and do not poll.
-    /// </summary>
-    public static readonly TimeSpan Interval = TimeSpan.FromSeconds(1);
-
     /// <summary>
     /// Read once and render what the argument selected. One scope is what it
     /// always was; a wildcard answers for every scope it named, one banner and
@@ -84,94 +79,31 @@ public static class HealthCommand
         return 0;
     }
 
-    /// <summary>
-    /// Emit one JSON Lines record for the current snapshot, then whenever the
-    /// surface says its published snapshot advanced. A wildcard is matched
-    /// again at every notice, so a scope that appears is followed and one that
-    /// goes leaves the document rather than the operator's memory.
-    /// </summary>
-    public static async Task<int> FollowAsync(
-        IOperatorSurface surface,
-        ScopeSelection chosen,
-        TextWriter output,
-        CancellationToken stop)
+    /// <summary>What the argument selected, as one document: a single scope's
+    /// <see cref="Document"/>, or for a wildcard <see cref="Documents"/>.</summary>
+    public static string Answer(IOperatorSurface surface, ScopeSelection chosen)
     {
-        string? last = null;
+        ArgumentNullException.ThrowIfNull(surface);
+        ArgumentNullException.ThrowIfNull(chosen);
 
-        try
-        {
-            await foreach (SurfaceChange _ in surface.WatchAsync(stop).ConfigureAwait(false))
-            {
-                // A pattern that now names nothing says so as an empty
-                // document; the refusal belongs to a command that ends.
-                ScopeSelection now = ScopeSelection.Of(surface, chosen.Argument, out string gone)
-                    ?? chosen with { Scopes = [] };
-                string document = now.Patterned
-                    ? Documents(surface, now)
-                    : Document(surface, now.Scopes[0], surface.Health(now.Scopes[0]));
-
-                if (string.Equals(document, last, StringComparison.Ordinal))
-                {
-                    continue;
-                }
-
-                output.WriteLine(document);
-                await output.FlushAsync(stop).ConfigureAwait(false);
-                last = document;
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            // Ctrl+C is the normal end of --follow.
-        }
-
-        return 0;
+        return chosen.Patterned
+            ? Documents(surface, chosen)
+            : Document(surface, chosen.Scopes[0], surface.Health(chosen.Scopes[0]));
     }
 
     /// <summary>
-    /// Emit one JSON Lines record for the current snapshot, then whenever the
-    /// surface says its published snapshot advanced. Notifications may be
-    /// coalesced; each record is the latest immutable truth.
-    /// </summary>
-    public static Task<int> FollowAsync(
-        IOperatorSurface surface,
-        string scope,
-        TextWriter output,
-        TimeSpan interval,
-        CancellationToken stop)
-    {
-        // Kept in the signature so existing callers remain source-compatible.
-        // Production surfaces do not use it; their change stream wakes us.
-        _ = interval;
-
-        return FollowAsync(surface, ScopeSelection.Exactly(scope), output, stop);
-    }
-
-    /// <summary>
-    /// What a wildcard answered, as one document: the pattern, how many scopes
-    /// it named, and the same object per scope that a single read emits. A
-    /// program reads one shape or the other by the key it finds, and a pattern
-    /// that named nothing is a document saying nothing was named — never an
-    /// empty line.
+    /// What a wildcard answered, as one document
+    /// (<see cref="JsonText.Selection{T}"/>), with the same object per scope that
+    /// a single read emits. A pattern that named nothing is a document saying
+    /// nothing was named — never an empty line.
     /// </summary>
     public static string Documents(IOperatorSurface surface, ScopeSelection chosen)
     {
-        return JsonText.Document(writer =>
-        {
-            writer.WriteString("pattern", chosen.Argument);
-            writer.WriteString("source", surface.Source);
-            writer.WriteNumber("matched", chosen.Scopes.Count);
-            writer.WriteStartArray("scopes");
-
-            foreach (string scope in chosen.Scopes)
-            {
-                writer.WriteStartObject();
-                Body(writer, surface, scope, surface.Health(scope));
-                writer.WriteEndObject();
-            }
-
-            writer.WriteEndArray();
-        });
+        return JsonText.Selection(
+            surface,
+            chosen,
+            chosen.Scopes,
+            (writer, scope) => Body(writer, surface, scope, surface.Health(scope)));
     }
 
     /// <summary>The scope, its rollup, the worst leaf and every leaf, as one

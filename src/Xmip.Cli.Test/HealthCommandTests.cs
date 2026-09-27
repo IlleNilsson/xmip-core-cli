@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Xmip.Abi.Operate;
+using Xmip.Surface;
 
 namespace Xmip.Cli.Test;
 
@@ -162,8 +163,8 @@ public sealed class HealthCommandTests
 
         StringWriter output = new();
 
-        int exit = await HealthCommand.FollowAsync(
-            surface, "xmip:///", output, TimeSpan.Zero, stop.Token);
+        int exit = await Follow.RunAsync(
+            surface, ScopeSelection.Exactly("xmip:///"), HealthCommand.Answer, output, stop.Token);
 
         Assert.Equal(0, exit);
         string[] lines = output.ToString().Split(
