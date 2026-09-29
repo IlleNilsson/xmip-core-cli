@@ -29,6 +29,11 @@ namespace Xmip.Cli;
 /// user this process runs as (<see cref="ScopeOperation.Who"/>).</param>
 /// <param name="Audit">What <c>audit</c> asks of the audit, its argument the
 /// pattern (<see cref="AuditArguments"/>); null for every other command.</param>
+/// <param name="Subscriptions">What <c>subscriptions</c> asks, its argument
+/// the pattern (<see cref="SubscriptionArguments"/>); null for every other
+/// command.</param>
+/// <param name="Act">The act <c>subscriptions</c> takes on the one
+/// subscription it names; null to list.</param>
 public sealed record Invocation(
     Command Command,
     string Argument,
@@ -38,7 +43,9 @@ public sealed record Invocation(
     string? Remote,
     string? Snapshot = null,
     string? Who = null,
-    AuditQuery? Audit = null)
+    AuditQuery? Audit = null,
+    SubscriptionQuery? Subscriptions = null,
+    SubscriptionAct? Act = null)
 {
     /// <summary>What this line states about the surface to read, for the one
     /// precedence every surface shares (<see cref="SurfaceChoice.Stated"/>).</summary>
@@ -60,6 +67,7 @@ public sealed record Invocation(
             ["resume"] = (Command.Resume, 1, 1),
             ["validate"] = (Command.Validate, 1, 1),
             ["audit"] = (Command.Audit, 0, 1),
+            ["subscriptions"] = (Command.Subscriptions, 0, 1),
         };
 
     /// <summary>
@@ -78,7 +86,10 @@ public sealed record Invocation(
         string? snapshot = null;
         string? who = null;
         AuditQuery? audit = null;
-        string? auditOption = null;
+        List<string> auditOptions = [];
+        ulong? id = null;
+        SubscriptionAct? act = null;
+        string? subscriptionOption = null;
 
         for (int i = 0; i < args.Count; i++)
         {
@@ -92,7 +103,19 @@ public sealed record Invocation(
                     return null;
                 }
 
-                auditOption ??= arg;
+                auditOptions.Add(arg);
+                continue;
+            }
+
+            if (SubscriptionArguments.Take(args, ref i, ref id, ref act, out unobeyed))
+            {
+                if (unobeyed is not null)
+                {
+                    problem = unobeyed;
+                    return null;
+                }
+
+                subscriptionOption ??= arg;
                 continue;
             }
 
@@ -191,15 +214,33 @@ public sealed record Invocation(
             return null;
         }
 
-        if (who is not null && known.Command is not Command.Pause)
+        if (who is not null
+            && known.Command is not Command.Pause
+            && !(known.Command is Command.Subscriptions && act is not null))
         {
-            problem = "--who only applies to 'pause'.";
+            problem = "--who only applies to 'pause' and to an act of 'subscriptions'.";
             return null;
         }
 
-        if (auditOption is not null && known.Command is not Command.Audit)
+        // subscriptions shares where it stands and its order with audit; the
+        // rest of audit's words are audit's.
+        string? foreign = known.Command switch
         {
-            problem = $"{auditOption} only applies to 'audit'.";
+            Command.Audit => null,
+            Command.Subscriptions => auditOptions.FirstOrDefault(
+                option => !SubscriptionArguments.Shared.Contains(option)),
+            _ => auditOptions.FirstOrDefault(),
+        };
+
+        if (foreign is not null)
+        {
+            problem = $"{foreign} only applies to 'audit'.";
+            return null;
+        }
+
+        if (subscriptionOption is not null && known.Command is not Command.Subscriptions)
+        {
+            problem = $"{subscriptionOption} only applies to 'subscriptions'.";
             return null;
         }
 
@@ -221,6 +262,17 @@ public sealed record Invocation(
                 {
                     Pattern = argument.Length > 0 ? argument : null,
                 }
-                : null);
+                : null,
+            known.Command is Command.Subscriptions
+                ? new SubscriptionQuery
+                {
+                    Pattern = argument.Length > 0 ? argument : null,
+                    Location = audit?.Location,
+                    Id = id,
+                    Sort = audit?.Sort,
+                    Order = audit?.Order,
+                }
+                : null,
+            act);
     }
 }
