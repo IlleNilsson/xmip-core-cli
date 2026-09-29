@@ -27,6 +27,8 @@ namespace Xmip.Cli;
 /// decides.</param>
 /// <param name="Who">Who is pausing, as the runtime records it; null for the
 /// user this process runs as (<see cref="ScopeOperation.Who"/>).</param>
+/// <param name="Audit">What <c>audit</c> asks of the audit, its argument the
+/// pattern (<see cref="AuditArguments"/>); null for every other command.</param>
 public sealed record Invocation(
     Command Command,
     string Argument,
@@ -35,7 +37,8 @@ public sealed record Invocation(
     string? Runtime,
     string? Remote,
     string? Snapshot = null,
-    string? Who = null)
+    string? Who = null,
+    AuditQuery? Audit = null)
 {
     /// <summary>What this line states about the surface to read, for the one
     /// precedence every surface shares (<see cref="SurfaceChoice.Stated"/>).</summary>
@@ -56,6 +59,7 @@ public sealed record Invocation(
             ["pause"] = (Command.Pause, 1, 1),
             ["resume"] = (Command.Resume, 1, 1),
             ["validate"] = (Command.Validate, 1, 1),
+            ["audit"] = (Command.Audit, 0, 1),
         };
 
     /// <summary>
@@ -73,10 +77,24 @@ public sealed record Invocation(
         string? remote = null;
         string? snapshot = null;
         string? who = null;
+        AuditQuery? audit = null;
+        string? auditOption = null;
 
         for (int i = 0; i < args.Count; i++)
         {
             string arg = args[i];
+
+            if (AuditArguments.Take(args, ref i, ref audit, out string? unobeyed))
+            {
+                if (unobeyed is not null)
+                {
+                    problem = unobeyed;
+                    return null;
+                }
+
+                auditOption ??= arg;
+                continue;
+            }
 
             switch (arg)
             {
@@ -179,16 +197,30 @@ public sealed record Invocation(
             return null;
         }
 
+        if (auditOption is not null && known.Command is not Command.Audit)
+        {
+            problem = $"{auditOption} only applies to 'audit'.";
+            return null;
+        }
+
+        string argument = arguments == 1 ? words[1] : string.Empty;
+
         problem = string.Empty;
 
         return new Invocation(
             known.Command,
-            arguments == 1 ? words[1] : string.Empty,
+            argument,
             json || follow,
             follow,
             runtime,
             remote,
             snapshot,
-            who);
+            who,
+            known.Command is Command.Audit
+                ? (audit ?? new AuditQuery()) with
+                {
+                    Pattern = argument.Length > 0 ? argument : null,
+                }
+                : null);
     }
 }

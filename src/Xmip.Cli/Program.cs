@@ -32,12 +32,12 @@ if (invocation is null)
 }
 
 CommandAudit.Begun(audit, invocation);
-int exit = await RunAsync(invocation).ConfigureAwait(false);
+int exit = await RunAsync(invocation, audit).ConfigureAwait(false);
 CommandAudit.Ended(audit, invocation, exit, complaints.Said);
 
 return exit;
 
-static async Task<int> RunAsync(Invocation invocation)
+static async Task<int> RunAsync(Invocation invocation, ProgramAudit audit)
 {
     // What this process says of itself while it runs (ADR-0053): the scope it was
     // asked about, or the whole tree, and the purpose its document states.
@@ -81,6 +81,10 @@ static async Task<int> RunAsync(Invocation invocation)
                 surface, chosen, ScopeAction.Resume, ScopeOperation.Who(null),
                 json, output, error))).ConfigureAwait(false),
         Command.Validate => Validate(invocation),
+
+        // The audit read back from where this executable's own records go.
+        Command.Audit => AuditCommand.Run(
+            audit, invocation.Audit ?? new AuditQuery(), json, output, error),
         _ => Usage.Print(output),
     };
 }

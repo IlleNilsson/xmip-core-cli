@@ -99,6 +99,15 @@ public static class CommandAudit
             said["who"] = who;
         }
 
+        // What audit asked, in the query's words; its pattern is the argument.
+        foreach ((string key, string value) in invocation.Audit?.Pairs() ?? [])
+        {
+            if (key != "pattern")
+            {
+                said[key] = value;
+            }
+        }
+
         return said;
     }
 
