@@ -24,6 +24,7 @@ xmip-cli show <scope>     one scope: its mood, its worst leaf and why, its figur
 xmip-cli pause <scope>    pause everything at and beneath a scope
 xmip-cli resume <scope>   resume everything at and beneath a scope
 xmip-cli validate <toml>  check a node configuration without starting it
+xmip-cli audit [pattern]  what the audit recorded, newest first
 xmip-cli help             this text
 
 --json                    one JSON document instead of text
@@ -115,6 +116,40 @@ table resolved from beside the executable; unset, the capability decides —
 `XMIP_AUDIT_DIRECTORY`, else the operating system's log, which also takes a
 record the directory cannot.
 
+## Reading the audit
+
+`xmip-cli audit` reads that file back — every program's records in it, not
+only this one's — through the audit capability's one reader
+(`ProgramAudit.Read` in `Xmip.Surface`, over `xmip_audit_read_v1`; ADR-0062,
+amendment 2026-09-29), the reader the web's Audit view and `Get-XmipAudit`
+call. Its argument and options are the query's words, and what each means is
+the capability's:
+
+```text
+xmip-cli audit [pattern] --location <scope> --host <name> --program <name>
+  --record <id> --severity <word> --action <word> --from <time> --to <time>
+  --sort <column> --order ascending|descending --offset <n> --limit <n> --json
+```
+
+The pattern is `*` and `?` over the location each record's process declared
+(ADR-0053 clause 3); a record with none is at the root, which only `*` names.
+`--location` is a scope and everything beneath it, `--host` the records of
+programs that declared no location on that machine, `--program` one program
+exactly: who a record is, is never read out of a program's name. `--from` and
+`--to` are RFC 3339, or a date and time with no zone, read as UTC. Newest
+first, 100 records a page and 1000 at most.
+
+Text is a header — `N of M records in <file>` — then the groups one step down
+the drill (clusters and hosts at the top, a location's nodes and its own
+programs, a node's programs), then a table: time, node, program, action,
+phase, severity, summary. `--record <id>` prints that record's every field,
+its scope and its properties. `--json` is the read whole: `file`, `read`,
+`matched`, `offset`, `limit`, `groups`, `records`, and the `actions`,
+`columns` and `severities` there are to choose from. A query the capability
+does not take is its REFUSED sentence on stderr, exit 2; with no audit
+directory stated the records went to the operating system's log, which is
+said, exit 1.
+
 ## Why this is .NET and not Rust
 
 ADR-0014, amended 2026-08-26: every user-interfacing module is .NET 11, and
@@ -139,7 +174,8 @@ a module conforms — are tested once, beside them in `xmip-core-abi`, and
 what crosses the C ABI is the binding's to verify. The one exception is the
 audit: `CommandAuditTests` records through the runtime's library, which
 `Xmip.Abi` copies beside the tests, and runs the executable once to prove a
-refused line lands as a record.
+refused line lands as a record; `AuditCommandTests` reads back, through the
+same library, records it wrote to a directory of its own.
 
 ## Public contracts and compatibility
 

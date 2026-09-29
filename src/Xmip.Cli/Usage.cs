@@ -17,6 +17,7 @@ public static class Usage
           xmip-cli pause <scope>    pause everything at and beneath a scope
           xmip-cli resume <scope>   resume everything at and beneath a scope
           xmip-cli validate <toml>  check a node configuration without starting it
+          xmip-cli audit [pattern]  what the audit recorded, newest first
           xmip-cli help             this text
 
           --json                    one JSON document instead of text
@@ -59,6 +60,35 @@ public static class Usage
         it said here, a line that could not be obeyed, anything unhandled.
         Records go to Xmip:AuditDirectory in the configuration, else
         XMIP_AUDIT_DIRECTORY, else the operating system's log.
+
+        audit reads that file back, every program's records in it, through
+        the audit capability's one reader — the one the web's Audit view and
+        Get-XmipAudit read. Its options are the query's words:
+
+          --location <scope>        at and beneath a scope a process declared
+          --host <name>             programs that declared no location, on that machine
+          --program <name>          one program, exactly
+          --record <id>             one record, every field and property
+          --severity <word>         information, warning or error
+          --action <word>           one action, exactly
+          --from <time>             at or after; RFC 3339, or a date and time read as UTC
+          --to <time>               at or before, the same
+          --sort <column>           at, location, node, program, host, action, phase,
+                                    severity or summary
+          --order <word>            ascending or descending, newest first by default
+          --offset <n>              where the page starts
+          --limit <n>               how long a page: 100 by default, 1000 at most
+
+          xmip-cli audit "xmip:///C1/*" --severity error
+          xmip-cli audit --location xmip:///C1 --from 2026-09-29
+
+        [pattern] is * and ? over the location each record's process declared;
+        a record with none is at the root, which only * names. Beneath the
+        header come the groups one step down — clusters and hosts, a
+        location's nodes and programs, a node's programs — then the records.
+        A query the capability does not take is REFUSED in its words and
+        exits 2; with no audit directory stated there is nothing to read,
+        which is said, and exits 1.
         """;
 
     /// <summary>Print the usage text.</summary>
