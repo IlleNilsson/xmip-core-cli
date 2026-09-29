@@ -85,6 +85,10 @@ static async Task<int> RunAsync(Invocation invocation, ProgramAudit audit)
         // The audit read back from where this executable's own records go.
         Command.Audit => AuditCommand.Run(
             audit, invocation.Audit ?? new AuditQuery(), json, output, error),
+
+        // The Event subscriptions, over the surface the line and the
+        // document choose; the pattern is SubscriptionQuery's, not a scope.
+        Command.Subscriptions => Subscriptions(invocation, output, error),
         _ => Usage.Print(output),
     };
 }
@@ -118,6 +122,28 @@ static async Task<int> OverAsync(
     }
 
     return await answer(surface, chosen).ConfigureAwait(false);
+}
+
+// The subscriptions a line asks for, listed or acted on.
+static int Subscriptions(Invocation invocation, TextWriter output, TextWriter error)
+{
+    IOperatorSurface? surface = SurfaceOpen.Open(invocation, out string reason);
+    using IDisposable? release = surface as IDisposable;
+
+    if (surface is null)
+    {
+        error.WriteLine(reason);
+        return 1;
+    }
+
+    return SubscriptionCommand.Over(
+        surface,
+        invocation.Subscriptions ?? new SubscriptionQuery(),
+        invocation.Act,
+        ScopeOperation.Who(invocation.Who),
+        invocation.Json,
+        output,
+        error);
 }
 
 // --follow (Follow) until Ctrl+C, which is ours to end: the loop stops, the

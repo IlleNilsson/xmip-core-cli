@@ -116,6 +116,35 @@ table resolved from beside the executable; unset, the capability decides —
 `XMIP_AUDIT_DIRECTORY`, else the operating system's log, which also takes a
 record the directory cannot.
 
+## Event subscriptions
+
+`xmip-cli subscriptions` lists the Event subscriptions the cluster's nodes
+hold (ADR-0065, amendment 2026-09-29): each one's number on its node, the
+subscriber (a Party), the cluster, the node, the action it subscribes to, its
+state, queued against capacity, delivered, missed and since. One command for
+the noun, and the act an option on it:
+
+```text
+xmip-cli subscriptions [pattern] --location <scope> --id <n>
+  --sort <column> --order ascending|descending --json
+xmip-cli subscriptions --location <node scope> --id <n> --pause|--resume|--remove
+  --who <name> --json
+```
+
+The pattern is `*` and `?` over each subscription's node and the scope it
+reaches; `--location`, `--sort` and `--order` mean what they mean for `audit`,
+and the columns are subscriber, cluster, node, action, state, queued,
+delivered, missed and since. Which subscriptions a line selects and in what
+order is `SubscriptionQuery`'s in `Xmip.Surface`, the one the web's
+Subscriptions view and `Get-XmipSubscription` ask. An act names one
+subscription, by `--location` at its node and `--id`, or it is REFUSED before
+any node is asked (exit 2); paused, a subscription keeps queuing and hands
+nothing over, resumed it hands over what queued, removed it is gone. Over a
+live node the act is applied in its process and audited in the subscriber's
+audit; over a snapshot it is left where the publication says, for the node to
+take within a round. `OK.` and exit 0 when it was applied or left, `REFUSED:`
+and exit 1 when it was not.
+
 ## Reading the audit
 
 `xmip-cli audit` reads that file back — every program's records in it, not

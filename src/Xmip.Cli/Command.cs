@@ -41,4 +41,8 @@ public enum Command
     /// <summary>What the audit recorded, as the audit capability reads it
     /// back (ADR-0062, amendment 2026-09-29).</summary>
     Audit,
+
+    /// <summary>The Event subscriptions the nodes hold, and pause, resume or
+    /// remove on one (ADR-0065, amendment 2026-09-29).</summary>
+    Subscriptions,
 }
