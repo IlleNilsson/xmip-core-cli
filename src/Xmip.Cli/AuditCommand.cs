@@ -103,6 +103,7 @@ public static class AuditCommand
                 writer.WriteNumber("warnings", group.Warnings);
                 writer.WriteNumber("errors", group.Errors);
                 writer.WriteString("latest", group.Latest);
+                writer.WriteBoolean("hidden", group.Hidden);
                 writer.WriteEndObject();
             }
 
@@ -145,7 +146,8 @@ public static class AuditCommand
                 output.WriteLine(
                     $"  {group.Kind.PadRight(kind)}  {group.Who.PadRight(who)}  " +
                     $"{group.Count} records, {group.Warnings} warnings, " +
-                    $"{group.Errors} errors, latest {English.ToTheSecond(group.Latest)}");
+                    $"{group.Errors} errors, latest {English.ToTheSecond(group.Latest)}" +
+                    English.Test(group.Hidden));
             }
         }
 
@@ -167,6 +169,7 @@ public static class AuditCommand
             ("host", entry.Host), ("process", entry.Process), ("location", entry.Location),
             ("node", entry.Node), ("cluster", entry.Cluster), ("action", entry.Action),
             ("phase", entry.Phase), ("severity", entry.Severity), ("message", entry.Message),
+            ("hidden", entry.Hidden ? "true" : null),
         ];
 
         foreach ((string name, string? value) in fields)
@@ -200,8 +203,8 @@ public static class AuditCommand
     {
         return
         [
-            English.ToTheSecond(entry.At), English.Value(entry.Node), entry.Program, entry.Action,
-            entry.Phase, entry.Severity, entry.Summary,
+            English.ToTheSecond(entry.At), English.Value(entry.Node) + English.Test(entry.Hidden),
+            entry.Program, entry.Action, entry.Phase, entry.Severity, entry.Summary,
         ];
     }
 
@@ -221,6 +224,7 @@ public static class AuditCommand
         writer.WriteString("severity", entry.Severity);
         writer.WriteString("message", entry.Message);
         writer.WriteString("summary", entry.Summary);
+        writer.WriteBoolean("hidden", entry.Hidden);
         Pairs(writer, "scope", entry.Scope);
         Pairs(writer, "properties", entry.Properties);
         writer.WriteEndObject();

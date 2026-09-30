@@ -200,7 +200,8 @@ the capability's:
 ```text
 xmip-cli audit [pattern] --location <scope> --host <name> --program <name>
   --record <id> --severity <word> --action <word> --from <time> --to <time>
-  --sort <column> --order ascending|descending --offset <n> --limit <n> --json
+  --sort <column> --order ascending|descending --offset <n> --limit <n>
+  --include-hidden --json
 ```
 
 The pattern is `*` and `?` over the location each record's process declared
@@ -209,7 +210,11 @@ The pattern is `*` and `?` over the location each record's process declared
 programs that declared no location on that machine, `--program` one program
 exactly: who a record is, is never read out of a program's name. `--from` and
 `--to` are RFC 3339, or a date and time with no zone, read as UTC. Newest
-first, 100 records a page and 1000 at most.
+first, 100 records a page and 1000 at most. What a run that declared itself
+hidden recorded — `Start-XmipTest -Hidden`, an assistant's test run — is left
+out unless `--include-hidden` is given, and then each such record and group
+says `· test` after its node or name, and `"hidden": true` in JSON (ADR-0028,
+amendment 2026-09-30).
 
 Text is a header — `N of M records in <file>` — then the groups one step down
 the drill (clusters and hosts at the top, a location's nodes and its own
