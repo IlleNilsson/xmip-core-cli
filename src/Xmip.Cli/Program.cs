@@ -86,9 +86,27 @@ static async Task<int> RunAsync(Invocation invocation, ProgramAudit audit)
         Command.Audit => AuditCommand.Run(
             audit, invocation.Audit ?? new AuditQuery(), json, output, error),
 
-        // The Event subscriptions, over the surface the line and the
-        // document choose; the pattern is SubscriptionQuery's, not a scope.
-        Command.Subscriptions => Subscriptions(invocation, output, error),
+        // The Event subscriptions and the Subscriptions, over the surface the
+        // line and the document choose; the pattern is each query's, not a
+        // scope.
+        Command.EventSubscriptions => OnSurface(invocation, error, surface =>
+            EventSubscriptionCommand.Over(
+                surface,
+                invocation.EventSubscriptions ?? new EventSubscriptionQuery(),
+                invocation.EventAct,
+                ScopeOperation.Who(invocation.Who),
+                json,
+                output,
+                error)),
+        Command.Subscriptions => OnSurface(invocation, error, surface =>
+            SubscriptionCommand.Over(
+                surface,
+                invocation.Subscriptions ?? new SubscriptionQuery(),
+                invocation.Act,
+                ScopeOperation.Who(invocation.Who),
+                json,
+                output,
+                error)),
         _ => Usage.Print(output),
     };
 }
@@ -124,8 +142,10 @@ static async Task<int> OverAsync(
     return await answer(surface, chosen).ConfigureAwait(false);
 }
 
-// The subscriptions a line asks for, listed or acted on.
-static int Subscriptions(Invocation invocation, TextWriter output, TextWriter error)
+// A command that answers over the surface itself, not over scopes: open the
+// surface the line and the document choose, answer, release it.
+static int OnSurface(
+    Invocation invocation, TextWriter error, Func<IOperatorSurface, int> answer)
 {
     IOperatorSurface? surface = SurfaceOpen.Open(invocation, out string reason);
     using IDisposable? release = surface as IDisposable;
@@ -136,14 +156,7 @@ static int Subscriptions(Invocation invocation, TextWriter output, TextWriter er
         return 1;
     }
 
-    return SubscriptionCommand.Over(
-        surface,
-        invocation.Subscriptions ?? new SubscriptionQuery(),
-        invocation.Act,
-        ScopeOperation.Who(invocation.Who),
-        invocation.Json,
-        output,
-        error);
+    return answer(surface);
 }
 
 // --follow (Follow) until Ctrl+C, which is ours to end: the loop stops, the
