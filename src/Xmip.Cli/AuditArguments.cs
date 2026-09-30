@@ -8,7 +8,9 @@ namespace Xmip.Cli;
 /// (<see cref="AuditQuery"/>, ADR-0062, amendment 2026-09-29), named as the
 /// query names it — <c>--location</c> is <c>location</c>. Only the line is
 /// read here; whether a severity, a time or a column is one the capability
-/// takes is the capability's to say.
+/// takes is the capability's to say. <c>--include-hidden</c> takes no value:
+/// it reads the records of a run that declared itself hidden too (ADR-0028,
+/// amendment 2026-09-30), <c>hidden=include</c> in the query's words.
 /// </summary>
 public static class AuditArguments
 {
@@ -18,6 +20,9 @@ public static class AuditArguments
         "--location", "--host", "--program", "--record", "--severity", "--action",
         "--from", "--to", "--sort", "--order", "--offset", "--limit",
     ];
+
+    /// <summary>The flag that reads what a hidden run recorded too.</summary>
+    public const string IncludeHidden = "--include-hidden";
 
     /// <summary>
     /// Take the option at <paramref name="index"/> into
@@ -33,6 +38,12 @@ public static class AuditArguments
 
         string option = args[index];
         problem = null;
+
+        if (string.Equals(option, IncludeHidden, StringComparison.Ordinal))
+        {
+            query = (query ?? new AuditQuery()) with { IncludeHidden = true };
+            return true;
+        }
 
         if (!Options.Contains(option, StringComparer.Ordinal))
         {

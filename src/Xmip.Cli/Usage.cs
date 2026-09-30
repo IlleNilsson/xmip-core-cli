@@ -86,6 +86,8 @@ public static class Usage
           --order <word>            ascending or descending, newest first by default
           --offset <n>              where the page starts
           --limit <n>               how long a page: 100 by default, 1000 at most
+          --include-hidden          the records of a run started hidden too, marked
+                                    test; left out unless given
 
           xmip-cli audit "xmip:///C1/*" --severity error
           xmip-cli audit --location xmip:///C1 --from 2026-09-29

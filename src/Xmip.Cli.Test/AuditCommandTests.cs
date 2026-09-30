@@ -63,10 +63,42 @@ public sealed class AuditCommandTests
         "--severity only applies to 'audit'.")]
     [InlineData(new[] { "audit", "--limit", "many" }, "--limit needs a whole number, not 'many'.")]
     [InlineData(new[] { "audit", "--location" }, "--location needs a value.")]
+    [InlineData(new[] { "health", "xmip:///", "--include-hidden" },
+        "--include-hidden only applies to 'audit'.")]
     public void ALineTheAuditCannotObeyIsRefusedAsAnyLine(string[] line, string expected)
     {
         Assert.Null(Invocation.Parse(line, out string problem));
         Assert.Equal(expected, problem);
+    }
+
+    [Fact]
+    public void AHiddenRunsRecordsAreLeftOutUntilIncludedAndThenMarkedTest()
+    {
+        // The owner, 2026-09-29, and ADR-0028, amendment 2026-09-30: what a
+        // run that declared itself hidden recorded is read only when asked.
+        Invocation? parsed = Invocation.Parse(["audit", "--include-hidden"], out string problem);
+        Assert.True(parsed is not null, problem);
+        Assert.True(parsed.Audit!.IncludeHidden);
+
+        string directory = Written();
+        File.AppendAllText(
+            Path.Combine(directory, "audit.toml"),
+            "[[record]]\naudit_id = \"h1\"\nat = \"2026-09-30T10:00:00.000000000Z\"\n"
+            + "program = \"probe\"\nhost = \"edge-01\"\nprocess = \"7\"\n"
+            + "location = \"xmip:///CT/node/one\"\nhidden = \"true\"\naction = \"start\"\n"
+            + "phase = \"begin\"\nseverity = \"information\"\n\n");
+        using StringWriter left = new();
+        using StringWriter included = new();
+
+        AuditCommand.Run(Audit(directory), new AuditQuery(), false, left, TextWriter.Null);
+        AuditCommand.Run(
+            Audit(directory), parsed.Audit, false, included, TextWriter.Null);
+
+        Assert.StartsWith("2 of 2 records", left.ToString(), StringComparison.Ordinal);
+        Assert.DoesNotContain("xmip:///CT", left.ToString(), StringComparison.Ordinal);
+        Assert.StartsWith("3 of 3 records", included.ToString(), StringComparison.Ordinal);
+        Assert.Contains("one · test", included.ToString(), StringComparison.Ordinal);
+        Directory.Delete(directory, recursive: true);
     }
 
     [Fact]
