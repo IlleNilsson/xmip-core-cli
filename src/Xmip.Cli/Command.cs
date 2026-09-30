@@ -44,5 +44,9 @@ public enum Command
 
     /// <summary>The Event subscriptions the nodes hold, and pause, resume or
     /// remove on one (ADR-0065, amendment 2026-09-29).</summary>
+    EventSubscriptions,
+
+    /// <summary>The Subscriptions the nodes route by, and pause or resume on
+    /// one (ADR-0013, amendment 2026-09-30).</summary>
     Subscriptions,
 }

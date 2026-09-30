@@ -25,6 +25,11 @@ xmip-cli pause <scope>    pause everything at and beneath a scope
 xmip-cli resume <scope>   resume everything at and beneath a scope
 xmip-cli validate <toml>  check a node configuration without starting it
 xmip-cli audit [pattern]  what the audit recorded, newest first
+xmip-cli subscriptions [pattern]
+                          the Subscriptions the nodes route by; pause or resume one
+xmip-cli event-subscriptions [pattern]
+                          the Event subscriptions the nodes hold; pause, resume or
+                          remove one
 xmip-cli help             this text
 
 --json                    one JSON document instead of text
@@ -32,7 +37,8 @@ xmip-cli help             this text
 --runtime <path>          the runtime library, instead of finding it
 --remote <url>            a web host to follow, instead of a runtime here
 --snapshot <path>         a published snapshot to read, instead of the document's
---who <name>              with pause: who is pausing, instead of the current user
+--who <name>              with pause, or the act of subscriptions or
+                          event-subscriptions: who acts, instead of the current user
 ```
 
 Which surface a command reads is stated in `xmip.cli.toml` beside the
@@ -116,34 +122,71 @@ table resolved from beside the executable; unset, the capability decides —
 `XMIP_AUDIT_DIRECTORY`, else the operating system's log, which also takes a
 record the directory cannot.
 
-## Event subscriptions
+## Subscriptions
 
-`xmip-cli subscriptions` lists the Event subscriptions the cluster's nodes
-hold (ADR-0065, amendment 2026-09-29): each one's number on its node, the
-subscriber (a Party), the cluster, the node, the action it subscribes to, its
-state, queued against capacity, delivered, missed and since. One command for
-the noun, and the act an option on it:
+`xmip-cli subscriptions` lists the Subscriptions the cluster's nodes route by
+(ADR-0013, amendment 2026-09-30; ADR-0052). A Subscription picks a published
+Message up and opens a Journey; it is drawn in an Xmip Application and bound
+in a node's TOML. Each one's name, the cluster, the node, its filter, where
+it leads, its state, what it picked up, what it holds and since. One command
+for the noun, and the act an option on it:
 
 ```text
-xmip-cli subscriptions [pattern] --location <scope> --id <n>
+xmip-cli subscriptions [pattern] --location <scope> --name <subscription>
   --sort <column> --order ascending|descending --json
-xmip-cli subscriptions --location <node scope> --id <n> --pause|--resume|--remove
+xmip-cli subscriptions --location <node scope> --name <subscription> --pause|--resume
   --who <name> --json
 ```
 
-The pattern is `*` and `?` over each subscription's node and the scope it
-reaches; `--location`, `--sort` and `--order` mean what they mean for `audit`,
-and the columns are subscriber, cluster, node, action, state, queued,
-delivered, missed and since. Which subscriptions a line selects and in what
-order is `SubscriptionQuery`'s in `Xmip.Surface`, the one the web's
-Subscriptions view and `Get-XmipSubscription` ask. An act names one
-subscription, by `--location` at its node and `--id`, or it is REFUSED before
-any node is asked (exit 2); paused, a subscription keeps queuing and hands
-nothing over, resumed it hands over what queued, removed it is gone. Over a
-live node the act is applied in its process and audited in the subscriber's
-audit; over a snapshot it is left where the publication says, for the node to
-take within a round. `OK.` and exit 0 when it was applied or left, `REFUSED:`
-and exit 1 when it was not.
+The pattern is `*` and `?` over each Subscription's node, or its node and
+name as `xmip:///<cluster>/node/<node>/subscription/<name>`; `--location`,
+`--sort` and `--order` mean what they mean for `audit`, and the columns are
+subscription, cluster, node, filter, destination, state, picked-up, held and
+since. Which Subscriptions a line selects and in what order is
+`SubscriptionQuery`'s in `Xmip.Surface`, the one the web's Subscriptions view
+and `Get-XmipSubscription` ask. An act names one Subscription, by
+`--location` at its node and `--name`, or it is REFUSED before any node is
+asked (exit 2). Paused, the Messages a Subscription matches are held — kept
+in the node's runtime store, counted, not picked up — and a pause survives a
+restart of the node; resumed, it picks up what it held, oldest first. There
+is no `--remove`: a Subscription is added and removed in the TOML
+configuration of the Xmip Application that draws it, and the line is REFUSED
+in those words (exit 2). Over a live node the act is applied in its process
+and audited there as `subscription.pause` or `subscription.resume`; over a
+snapshot it is left where the publication says, for the node to take within
+a round. `OK.` and exit 0 when it was applied or left, `REFUSED:` and exit 1
+when it was not.
+
+## Event subscriptions
+
+`xmip-cli event-subscriptions` lists the Event subscriptions the cluster's
+nodes hold (ADR-0065, amendment 2026-09-29): each one's number on its node,
+the subscriber (a Party), the cluster, the node, the action it subscribes to,
+its state, queued against capacity, delivered, missed and since. An Event
+subscription is not a Subscription: it hands Events to a Party, and picks no
+Message up. One command for the noun, and the act an option on it:
+
+```text
+xmip-cli event-subscriptions [pattern] --location <scope> --id <n>
+  --sort <column> --order ascending|descending --json
+xmip-cli event-subscriptions --location <node scope> --id <n>
+  --pause|--resume|--remove --who <name> --json
+```
+
+The pattern is `*` and `?` over each Event subscription's node and the scope
+it reaches; `--location`, `--sort` and `--order` mean what they mean for
+`audit`, and the columns are subscriber, cluster, node, action, state, queued,
+delivered, missed and since. Which Event subscriptions a line selects and in
+what order is `EventSubscriptionQuery`'s in `Xmip.Surface`, the one the web's
+Event subscriptions view and `Get-XmipEventSubscription` ask. An act names
+one Event subscription, by `--location` at its node and `--id`, or it is
+REFUSED before any node is asked (exit 2); paused, an Event subscription
+keeps queuing and hands nothing over, resumed it hands over what queued,
+removed it is gone. Over a live node the act is applied in its process and
+audited as `event.pause`, `event.resume` or `event.remove`; over a snapshot
+it is left where the publication says, for the node to take within a round.
+`OK.` and exit 0 when it was applied or left, `REFUSED:` and exit 1 when it
+was not.
 
 ## Reading the audit
 

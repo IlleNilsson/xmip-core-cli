@@ -155,17 +155,7 @@ public static class AuditCommand
         }
 
         output.WriteLine();
-        List<string[]> rows = [Headings, .. read.Records.Select(Row)];
-        int[] widths =
-            [.. Enumerable.Range(0, Headings.Length).Select(i => rows.Max(row => row[i].Length))];
-
-        foreach (string[] row in rows)
-        {
-            output.WriteLine(string.Join(
-                "  ",
-                row.Select((cell, i) => i == row.Length - 1 ? cell : cell.PadRight(widths[i])))
-                .TrimEnd());
-        }
+        TextTable.Write(output, string.Empty, [Headings, .. read.Records.Select(Row)]);
     }
 
     // One record, every field and every property, one to a line.

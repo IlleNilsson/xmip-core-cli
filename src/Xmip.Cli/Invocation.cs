@@ -29,11 +29,16 @@ namespace Xmip.Cli;
 /// user this process runs as (<see cref="ScopeOperation.Who"/>).</param>
 /// <param name="Audit">What <c>audit</c> asks of the audit, its argument the
 /// pattern (<see cref="AuditArguments"/>); null for every other command.</param>
+/// <param name="EventSubscriptions">What <c>event-subscriptions</c> asks,
+/// its argument the pattern (<see cref="EventSubscriptionArguments"/>); null
+/// for every other command.</param>
+/// <param name="EventAct">The act <c>event-subscriptions</c> takes on the one
+/// Event subscription it names; null to list.</param>
 /// <param name="Subscriptions">What <c>subscriptions</c> asks, its argument
 /// the pattern (<see cref="SubscriptionArguments"/>); null for every other
 /// command.</param>
 /// <param name="Act">The act <c>subscriptions</c> takes on the one
-/// subscription it names; null to list.</param>
+/// Subscription it names; null to list.</param>
 public sealed record Invocation(
     Command Command,
     string Argument,
@@ -44,6 +49,8 @@ public sealed record Invocation(
     string? Snapshot = null,
     string? Who = null,
     AuditQuery? Audit = null,
+    EventSubscriptionQuery? EventSubscriptions = null,
+    EventSubscriptionAct? EventAct = null,
     SubscriptionQuery? Subscriptions = null,
     SubscriptionAct? Act = null)
 {
@@ -67,6 +74,7 @@ public sealed record Invocation(
             ["resume"] = (Command.Resume, 1, 1),
             ["validate"] = (Command.Validate, 1, 1),
             ["audit"] = (Command.Audit, 0, 1),
+            ["event-subscriptions"] = (Command.EventSubscriptions, 0, 1),
             ["subscriptions"] = (Command.Subscriptions, 0, 1),
         };
 
@@ -88,8 +96,9 @@ public sealed record Invocation(
         AuditQuery? audit = null;
         List<string> auditOptions = [];
         ulong? id = null;
-        SubscriptionAct? act = null;
-        string? subscriptionOption = null;
+        string? name = null;
+        string? act = null;
+        List<string> nounOptions = [];
 
         for (int i = 0; i < args.Count; i++)
         {
@@ -107,7 +116,9 @@ public sealed record Invocation(
                 continue;
             }
 
-            if (SubscriptionArguments.Take(args, ref i, ref id, ref act, out unobeyed))
+            if (EventSubscriptionArguments.Take(args, ref i, ref id, out unobeyed)
+                || SubscriptionArguments.Take(args, ref i, ref name, out unobeyed)
+                || NounArguments.Take(args, i, ref act, out unobeyed))
             {
                 if (unobeyed is not null)
                 {
@@ -115,7 +126,7 @@ public sealed record Invocation(
                     return null;
                 }
 
-                subscriptionOption ??= arg;
+                nounOptions.Add(arg);
                 continue;
             }
 
@@ -214,23 +225,20 @@ public sealed record Invocation(
             return null;
         }
 
-        if (who is not null
-            && known.Command is not Command.Pause
-            && !(known.Command is Command.Subscriptions && act is not null))
+        bool noun = known.Command is Command.EventSubscriptions or Command.Subscriptions;
+
+        if (who is not null && known.Command is not Command.Pause && !(noun && act is not null))
         {
-            problem = "--who only applies to 'pause' and to an act of 'subscriptions'.";
+            problem = "--who only applies to 'pause' and to an act of 'event-subscriptions' "
+                + "or 'subscriptions'.";
             return null;
         }
 
-        // subscriptions shares where it stands and its order with audit; the
+        // Both nouns share where they stand and their order with audit; the
         // rest of audit's words are audit's.
-        string? foreign = known.Command switch
-        {
-            Command.Audit => null,
-            Command.Subscriptions => auditOptions.FirstOrDefault(
-                option => !SubscriptionArguments.Shared.Contains(option)),
-            _ => auditOptions.FirstOrDefault(),
-        };
+        string? foreign = noun
+            ? auditOptions.FirstOrDefault(option => !NounArguments.Shared.Contains(option))
+            : known.Command is Command.Audit ? null : auditOptions.FirstOrDefault();
 
         if (foreign is not null)
         {
@@ -238,13 +246,25 @@ public sealed record Invocation(
             return null;
         }
 
-        if (subscriptionOption is not null && known.Command is not Command.Subscriptions)
+        if (Stray(known.Command, nounOptions) is { } stray)
         {
-            problem = $"{subscriptionOption} only applies to 'subscriptions'.";
+            problem = stray;
+            return null;
+        }
+
+        string? refused = null;
+        SubscriptionAct? taken = known.Command is Command.Subscriptions
+            ? SubscriptionArguments.Act(act, out refused)
+            : null;
+
+        if (refused is not null)
+        {
+            problem = refused;
             return null;
         }
 
         string argument = arguments == 1 ? words[1] : string.Empty;
+        string? pattern = argument.Length > 0 ? argument : null;
 
         problem = string.Empty;
 
@@ -258,21 +278,54 @@ public sealed record Invocation(
             snapshot,
             who,
             known.Command is Command.Audit
-                ? (audit ?? new AuditQuery()) with
-                {
-                    Pattern = argument.Length > 0 ? argument : null,
-                }
+                ? (audit ?? new AuditQuery()) with { Pattern = pattern }
                 : null,
-            known.Command is Command.Subscriptions
-                ? new SubscriptionQuery
+            known.Command is Command.EventSubscriptions
+                ? new EventSubscriptionQuery
                 {
-                    Pattern = argument.Length > 0 ? argument : null,
+                    Pattern = pattern,
                     Location = audit?.Location,
                     Id = id,
                     Sort = audit?.Sort,
                     Order = audit?.Order,
                 }
                 : null,
-            act);
+            known.Command is Command.EventSubscriptions
+                ? EventSubscriptionArguments.Act(act)
+                : null,
+            known.Command is Command.Subscriptions
+                ? new SubscriptionQuery
+                {
+                    Pattern = pattern,
+                    Location = audit?.Location,
+                    Name = name,
+                    Sort = audit?.Sort,
+                    Order = audit?.Order,
+                }
+                : null,
+            taken);
+    }
+
+    // The first option of the two nouns' that the command named does not
+    // take, said as the line's problem; null when there is none.
+    private static string? Stray(Command command, List<string> nounOptions)
+    {
+        foreach (string option in nounOptions)
+        {
+            string? owner = EventSubscriptionArguments.Options.Contains(option)
+                ? command is Command.EventSubscriptions ? null : "'event-subscriptions'"
+                : SubscriptionArguments.Options.Contains(option)
+                    ? command is Command.Subscriptions ? null : "'subscriptions'"
+                    : command is Command.EventSubscriptions or Command.Subscriptions
+                        ? null
+                        : "'event-subscriptions' and 'subscriptions'";
+
+            if (owner is not null)
+            {
+                return $"{option} only applies to {owner}.";
+            }
+        }
+
+        return null;
     }
 }
