@@ -63,15 +63,15 @@ public sealed class HealthCommandTests
     {
         FakeSurface surface = Estate();
         surface.Started = new Xmip.Surface.RunHeader(
-            "Z6", ["RoundTrip"], ["alpha", "beta"], ["alpha=receive", "beta=process+send"],
+            "Z6", ["RoundTrip"], ["alpha", "beta"], ["alpha=receiving", "beta=processing+sending"],
             ["alpha"], "calm");
         StringWriter output = new();
 
         HealthCommand.Run(surface, "xmip:///", json: false, output, new StringWriter());
 
         Assert.Contains(
-            "               run RoundTrip · Z6 · nodes alpha=receive beta=process+send · "
-                + "online alpha · calm",
+            "               run RoundTrip · Z6 · nodes alpha=receiving "
+                + "beta=processing+sending · online alpha · calm",
             output.ToString(),
             StringComparison.Ordinal);
 
@@ -79,7 +79,8 @@ public sealed class HealthCommandTests
         HealthCommand.Run(surface, "xmip:///", json: true, asJson, new StringWriter());
         using JsonDocument document = JsonDocument.Parse(asJson.ToString());
         Assert.Equal(
-            "RoundTrip · Z6 · nodes alpha=receive beta=process+send · online alpha · calm",
+            "RoundTrip · Z6 · nodes alpha=receiving beta=processing+sending · "
+                + "online alpha · calm",
             document.RootElement.GetProperty("run").GetString());
 
         StringWriter silent = new();
