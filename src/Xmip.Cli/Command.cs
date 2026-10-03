@@ -49,4 +49,9 @@ public enum Command
     /// <summary>The Subscriptions the nodes route by, and pause or resume on
     /// one (ADR-0013, amendment 2026-09-30).</summary>
     Subscriptions,
+
+    /// <summary>The Messages no Subscription matched, kept in each node's
+    /// Dead Message Queue, and Replay on one (ADR-0052, amendment
+    /// 2026-10-01).</summary>
+    DeadMessages,
 }

@@ -9,6 +9,8 @@ namespace Xmip.Cli.Test;
 /// </summary>
 public sealed class InvocationTests
 {
+    private static readonly TestCluster Cluster = TestCluster.Read();
+
     [Fact]
     public void NoArgumentsIsHelp()
     {
@@ -90,10 +92,10 @@ public sealed class InvocationTests
     [Fact]
     public void MeasureAcceptsOneScope()
     {
-        Invocation? parsed = Invocation.Parse(["measure", "xmip:///edge-01"], out _);
+        Invocation? parsed = Invocation.Parse(["measure", Cluster.Scope], out _);
 
         Assert.NotNull(parsed);
-        Assert.Equal("xmip:///edge-01", parsed.Argument);
+        Assert.Equal(Cluster.Scope, parsed.Argument);
     }
 
     [Fact]
@@ -135,16 +137,16 @@ public sealed class InvocationTests
     public void WhoNamesThePauserAndOnlyForPause()
     {
         Invocation? parsed = Invocation.Parse(
-            ["pause", "xmip:///C1", "--who", "ilian"], out _);
+            ["pause", Cluster.Scope, "--who", "ilian"], out _);
 
         Assert.NotNull(parsed);
         Assert.Equal("ilian", parsed.Who);
         Assert.Equal("ilian", ScopeOperation.Who(parsed.Who));
         Assert.Equal(Environment.UserName, ScopeOperation.Who(null));
 
-        Assert.Null(Invocation.Parse(["resume", "xmip:///C1", "--who", "ilian"], out string not));
+        Assert.Null(Invocation.Parse(["resume", Cluster.Scope, "--who", "ilian"], out string not));
         Assert.Contains("--who", not, StringComparison.Ordinal);
-        Assert.Null(Invocation.Parse(["pause", "xmip:///C1", "--who"], out _));
+        Assert.Null(Invocation.Parse(["pause", Cluster.Scope, "--who"], out _));
     }
 
     [Fact]

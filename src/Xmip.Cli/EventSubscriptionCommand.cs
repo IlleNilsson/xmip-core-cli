@@ -42,10 +42,13 @@ public static class EventSubscriptionCommand
         ArgumentNullException.ThrowIfNull(error);
 
         IReadOnlyList<EventSubscriptionRecord> chosen;
+        IReadOnlyList<UnheardRecord> unheard;
 
         try
         {
-            chosen = query.Apply(surface.EventSubscriptions().EventSubscriptions);
+            EventSubscriptionList listed = surface.EventSubscriptions();
+            chosen = query.Apply(listed.EventSubscriptions);
+            unheard = query.Unheard(listed.Unheard);
         }
         catch (ArgumentException refused)
         {
@@ -58,13 +61,18 @@ public static class EventSubscriptionCommand
 
         return act is { } taken
             ? Act(surface, query, chosen, taken, who, json, output, error)
-            : List(surface, chosen, json, output);
+            : List(surface, chosen, unheard, json, output);
     }
 
-    /// <summary>The Event subscriptions as one document.</summary>
-    public static string Document(string source, IReadOnlyList<EventSubscriptionRecord> chosen)
+    /// <summary>The Event subscriptions, and the members their nodes do not
+    /// hear, as one document.</summary>
+    public static string Document(
+        string source,
+        IReadOnlyList<EventSubscriptionRecord> chosen,
+        IReadOnlyList<UnheardRecord> unheard)
     {
         ArgumentNullException.ThrowIfNull(chosen);
+        ArgumentNullException.ThrowIfNull(unheard);
 
         return JsonText.Document(writer =>
         {
@@ -93,6 +101,20 @@ public static class EventSubscriptionCommand
             }
 
             writer.WriteEndArray();
+            writer.WriteStartArray("unheard");
+
+            foreach (UnheardRecord gone in unheard)
+            {
+                writer.WriteStartObject();
+                writer.WriteString("by", gone.By);
+                writer.WriteString("node", gone.Node);
+                writer.WriteString("since", gone.Since);
+                writer.WriteString("why", gone.Why);
+                writer.WriteString("said", gone.Said);
+                writer.WriteEndObject();
+            }
+
+            writer.WriteEndArray();
         });
     }
 
@@ -114,12 +136,13 @@ public static class EventSubscriptionCommand
     private static int List(
         IOperatorSurface surface,
         IReadOnlyList<EventSubscriptionRecord> chosen,
+        IReadOnlyList<UnheardRecord> unheard,
         bool json,
         TextWriter output)
     {
         if (json)
         {
-            output.WriteLine(Document(surface.Source, chosen));
+            output.WriteLine(Document(surface.Source, chosen, unheard));
             return 0;
         }
 
@@ -130,6 +153,13 @@ public static class EventSubscriptionCommand
         if (chosen.Count > 0)
         {
             TextTable.Write(output, "  ", [Headings, .. chosen.Select(Row)]);
+        }
+
+        // Read-only: what the nodes here do not hear, so no Event is missing
+        // silently; the links between nodes are never listed or acted on.
+        foreach (UnheardRecord gone in unheard)
+        {
+            output.WriteLine($"  {EventSubscriptionQuery.Line(gone)}");
         }
 
         return 0;

@@ -4,7 +4,7 @@ namespace Xmip.Cli;
 /// Rows for a person, in columns: every cell but the last padded to the
 /// widest in its column, two spaces between. Written once for every command
 /// that lists — <c>audit</c>, <c>event-subscriptions</c>,
-/// <c>subscriptions</c>.
+/// <c>subscriptions</c>, <c>dead-messages</c>.
 /// </summary>
 public static class TextTable
 {

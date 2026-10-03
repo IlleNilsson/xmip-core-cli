@@ -24,6 +24,10 @@ public static class Usage
           xmip-cli event-subscriptions [pattern]
                                     the Event subscriptions the nodes hold; with an
                                     act, pause, resume or remove one
+          xmip-cli dead-messages [pattern]
+                                    the Messages no Subscription matched, in each
+                                    node's Dead Message Queue; open one, or
+                                    replay it
           xmip-cli help             this text
 
           --json                    one JSON document instead of text
@@ -31,9 +35,11 @@ public static class Usage
           --runtime <path>          the runtime library, instead of finding it
           --remote <url>            a web host to follow, instead of a runtime here
           --snapshot <path>         a published snapshot to read, instead of the document's
-          --who <name>              with pause, or the act of subscriptions or
-                                    event-subscriptions: who acts, instead of the
-                                    current user
+          --who <name>              with pause, or the act of subscriptions,
+                                    event-subscriptions or dead-messages: who
+                                    acts, instead of the
+                                    current user; over --remote the host takes
+                                    the act as your certificate's subject
 
         A <scope> is one scope, or a wildcard over the scopes that exist:
         * for any run of characters, ? for exactly one, everything else
@@ -126,7 +132,12 @@ public static class Usage
         event-subscriptions lists the Event subscriptions the cluster's nodes
         hold (ADR-0065): the subscriber, a Party; the cluster and the node
         whose hub holds it; the action it subscribes to; its state, and what
-        its queue queued, delivered and missed. [pattern] is * and ? over each
+        its queue queued, delivered and missed. The node is the one its
+        subscriber connected to, not the one it hears: it hears the matching
+        Events of every node of the cluster, and the links that carry them
+        between nodes are the cluster's, never listed here; a member a
+        node here does not hear is said under the table, one line each:
+        "R1: not hearing <node> since <time>: <why>". [pattern] is * and ? over each
         one's node and the scope it reaches. It shares --location, --sort
         (subscriber, cluster, node, action, state, queued, delivered, missed,
         since) and --order with audit, and adds:
@@ -139,10 +150,34 @@ public static class Usage
           xmip-cli event-subscriptions --location xmip:///C1/node/R1
           xmip-cli event-subscriptions --location xmip:///C1/node/R1 --id 2 --pause --who ilian
 
-        An act names one, by --location at its node and --name or --id; the
-        node applies it and audits it, or — read through a snapshot — takes it
-        within a round from where its publication says. An act not taken is
-        REFUSED in words and exits 1.
+        dead-messages lists what each node's Dead Message Queue keeps
+        (ADR-0052, amendment 2026-10-01): every accepted Message that no
+        Subscription matched, kept in the Ledger with its receive context. It
+        is not a dead letter queue: a failed Journey never goes there. A row
+        is when it was received, the Message's identifier, the cluster and the
+        node whose queue keeps it, the Receive Location it arrived at and how
+        many Subscriptions declined it; a node lists its oldest hundred.
+        [pattern] is * and ? over each one's node, or its node and Message as
+        xmip:///<cluster>/node/<node>/dead-message/<message>. It shares
+        --location, --sort (received, message, cluster, node,
+        receive-location, declines) and --order with audit, and adds:
+
+          --message <id>            one Message, by its identifier: opened, with
+                                    its gate verdicts, its promoted properties
+                                    and every Subscription's decline
+          --replay                  once a Subscription is added or fixed: route
+                                    it again, open a Journey for each match and
+                                    take it out of the queue; a Message that
+                                    still matches nothing stays
+
+          xmip-cli dead-messages --location xmip:///C1/node/R1
+          xmip-cli dead-messages --location xmip:///C1/node/R1 --message <id>
+          xmip-cli dead-messages --location xmip:///C1/node/R1 --message <id> --replay
+
+        An act names one, by --location at its node and --name, --id or
+        --message; the node applies it and audits it, or — read through a
+        snapshot — takes it within a round from where its publication says.
+        An act not taken is REFUSED in words and exits 1.
         """;
 
     /// <summary>Print the usage text.</summary>

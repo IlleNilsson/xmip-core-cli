@@ -5,23 +5,28 @@ namespace Xmip.Cli.Test;
 
 public sealed class ScopeCommandTests
 {
+    private static readonly TestCluster Cluster = TestCluster.Read();
+
     [Fact]
     public void ListShowsOneRowPerChildWithItsRolledMoodAndFigures()
     {
         FakeSurface surface = new(
         [
-            FakeSurface.Leaf("xmip:///edge-01/receive/orders", HealthState.Fine),
-            FakeSurface.Leaf("xmip:///edge-02/send/billing", HealthState.Working),
+            FakeSurface.Leaf($"{Cluster.NodeScope(0)}/receive/orders", HealthState.Fine),
+            FakeSurface.Leaf($"{Cluster.NodeScope(1)}/send/billing", HealthState.Working),
         ]);
         StringWriter output = new();
 
-        int exit = ScopeCommand.List(surface, "xmip:///", false, output, TextWriter.Null);
+        int exit = ScopeCommand.List(
+            surface, $"{Cluster.Scope}/node", false, output, TextWriter.Null);
 
         Assert.Equal(0, exit);
-        Assert.Contains("fine       xmip:///edge-01", output.ToString(), StringComparison.Ordinal);
+        Assert.Contains(
+            $"fine       {Cluster.NodeScope(0)}", output.ToString(), StringComparison.Ordinal);
         // A node is a container: a Working leaf beneath it rolls up as Holding
         // (ADR-0041), and the row says so.
-        Assert.Contains("holding    xmip:///edge-02", output.ToString(), StringComparison.Ordinal);
+        Assert.Contains(
+            $"holding    {Cluster.NodeScope(1)}", output.ToString(), StringComparison.Ordinal);
         Assert.Contains("Retrying –", output.ToString(), StringComparison.Ordinal);
     }
 
@@ -31,16 +36,16 @@ public sealed class ScopeCommandTests
         FakeSurface surface = new(
         [
             FakeSurface.Leaf(
-                "xmip:///edge-01/receive/orders", HealthState.Holding, 70, "disk full"),
+                $"{Cluster.NodeScope(0)}/receive/orders", HealthState.Holding, 70, "disk full"),
         ]);
         StringWriter output = new();
 
         int exit = ScopeCommand.Show(
-            surface, "xmip:///edge-01/receive/orders", false, output, TextWriter.Null);
+            surface, $"{Cluster.NodeScope(0)}/receive/orders", false, output, TextWriter.Null);
 
         Assert.Equal(0, exit);
         Assert.Contains(
-            "holding    xmip:///edge-01/receive/orders",
+            $"holding    {Cluster.NodeScope(0)}/receive/orders",
             output.ToString(),
             StringComparison.Ordinal);
         Assert.Contains("  disk full", output.ToString(), StringComparison.Ordinal);
@@ -56,22 +61,22 @@ public sealed class ScopeCommandTests
     {
         FakeSurface surface = new(
         [
-            FakeSurface.Leaf("xmip:///C1/node/alpha/receive/http/json", HealthState.Fine),
+            FakeSurface.Leaf($"{Cluster.NodeScope(0)}/receive/http/json", HealthState.Fine),
             FakeSurface.Leaf(
-                "xmip:///C1/node/alpha/receive/sftp/xml", HealthState.Done, 90, "refused: key"),
+                $"{Cluster.NodeScope(0)}/receive/sftp/xml", HealthState.Done, 90, "refused: key"),
         ]);
         StringWriter listed = new();
         StringWriter shown = new();
 
-        ScopeCommand.List(surface, "xmip:///C1/node", false, listed, TextWriter.Null);
-        ScopeCommand.Show(surface, "xmip:///C1", false, shown, TextWriter.Null);
+        ScopeCommand.List(surface, $"{Cluster.Scope}/node", false, listed, TextWriter.Null);
+        ScopeCommand.Show(surface, Cluster.Scope, false, shown, TextWriter.Null);
 
         Assert.Contains(
-            "  worst xmip:///C1/node/alpha/receive/sftp/xml: refused: key",
+            $"  worst {Cluster.NodeScope(0)}/receive/sftp/xml: refused: key",
             listed.ToString(),
             StringComparison.Ordinal);
         Assert.Contains(
-            "  worst xmip:///C1/node/alpha/receive/sftp/xml: refused: key",
+            $"  worst {Cluster.NodeScope(0)}/receive/sftp/xml: refused: key",
             shown.ToString(),
             StringComparison.Ordinal);
     }
@@ -83,7 +88,7 @@ public sealed class ScopeCommandTests
         StringWriter error = new();
 
         int exit = ScopeCommand.Apply(
-            surface, "xmip:///edge-01", ScopeAction.Pause, "test",
+            surface, Cluster.Scope, ScopeAction.Pause, "test",
             false, TextWriter.Null, error);
 
         Assert.Equal(1, exit);

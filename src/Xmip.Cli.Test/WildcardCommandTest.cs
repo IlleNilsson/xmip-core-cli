@@ -13,16 +13,24 @@ namespace Xmip.Cli.Test;
 /// </summary>
 public sealed class WildcardCommandTest
 {
+    private static readonly TestCluster Test = TestCluster.Read();
+
+    // The test cluster's first node, and one named as it is with a 2 after:
+    // the pattern First* selects the two of them and no other.
+    private static readonly string First = Test.NodeScope(0);
+    private static readonly string Second = $"{First}2";
+    private static readonly string Pattern = $"{First}*";
+
     private static FakeSurface Cluster()
     {
         return new FakeSurface(
         [
-            FakeSurface.Leaf("xmip:///C1/node/alpha/receive/tcp", HealthState.Fine),
+            FakeSurface.Leaf($"{First}/receive/tcp", HealthState.Fine),
+            FakeSurface.Leaf($"{First}/receive/file", HealthState.Stressed, 55, "slow"),
+            FakeSurface.Leaf($"{Second}/receive/tcp", HealthState.Fine),
             FakeSurface.Leaf(
-                "xmip:///C1/node/alpha/receive/file", HealthState.Stressed, 55, "slow"),
-            FakeSurface.Leaf("xmip:///C1/node/alpha2/receive/tcp", HealthState.Fine),
-            FakeSurface.Leaf("xmip:///C1/node/beta/process/json", HealthState.Done, 90, "refused"),
-            FakeSurface.Leaf("xmip:///C1/node/gamma/send/tcp", HealthState.Fine),
+                $"{Test.NodeScope(1)}/process/json", HealthState.Done, 90, "refused"),
+            FakeSurface.Leaf($"{Test.NodeScope(2)}/send/tcp", HealthState.Fine),
         ]);
     }
 
@@ -31,12 +39,14 @@ public sealed class WildcardCommandTest
     [Fact]
     public void TheRefusalIsADocumentWhenAProgramIsAsking()
     {
-        ScopeSelection.Of(Cluster(), "xmip:///C1/node/Q*", out string refusal);
+        // Two node names run together: no node is named so.
+        string none = $"{Test.Scope}/node/{Test.Nodes[0]}{Test.Nodes[1]}*";
+        ScopeSelection.Of(Cluster(), none, out string refusal);
 
         using JsonDocument document = JsonDocument.Parse(
-            ScopeCommand.Unmatched("xmip:///C1/node/Q*", refusal));
+            ScopeCommand.Unmatched(none, refusal));
 
-        Assert.Equal("xmip:///C1/node/Q*", document.RootElement.GetProperty("pattern").GetString());
+        Assert.Equal(none, document.RootElement.GetProperty("pattern").GetString());
         Assert.Equal(0, document.RootElement.GetProperty("matched").GetInt32());
         Assert.StartsWith(
             "REFUSED",
@@ -48,7 +58,7 @@ public sealed class WildcardCommandTest
     public void HealthOverAPatternSaysEachScopeInTurnAndRollsUpNoneOfThemTogether()
     {
         FakeSurface surface = Cluster();
-        ScopeSelection chosen = ScopeSelection.Of(surface, "xmip:///C1/node/alpha*", out _)!;
+        ScopeSelection chosen = ScopeSelection.Of(surface, Pattern, out _)!;
         StringWriter output = new();
 
         int exit = HealthCommand.Over(surface, chosen, json: false, output, new StringWriter());
@@ -56,15 +66,15 @@ public sealed class WildcardCommandTest
             Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
 
         Assert.Equal(0, exit);
-        Assert.Equal("holding        xmip:///C1/node/alpha", lines[0]);
-        Assert.Contains(lines, line => line == "fine           xmip:///C1/node/alpha2");
+        Assert.Equal($"holding        {First}", lines[0]);
+        Assert.Contains(lines, line => line == $"fine           {Second}");
     }
 
     [Fact]
     public void HealthOverAPatternInJsonIsOneDocumentWithOneObjectPerScope()
     {
         FakeSurface surface = Cluster();
-        ScopeSelection chosen = ScopeSelection.Of(surface, "xmip:///C1/node/alpha*", out _)!;
+        ScopeSelection chosen = ScopeSelection.Of(surface, Pattern, out _)!;
         StringWriter output = new();
 
         HealthCommand.Over(surface, chosen, json: true, output, new StringWriter());
@@ -74,11 +84,11 @@ public sealed class WildcardCommandTest
 
         using JsonDocument document = JsonDocument.Parse(text);
         JsonElement root = document.RootElement;
-        Assert.Equal("xmip:///C1/node/alpha*", root.GetProperty("pattern").GetString());
+        Assert.Equal(Pattern, root.GetProperty("pattern").GetString());
         Assert.Equal(2, root.GetProperty("matched").GetInt32());
 
         JsonElement scopes = root.GetProperty("scopes");
-        Assert.Equal("xmip:///C1/node/alpha", scopes[0].GetProperty("scope").GetString());
+        Assert.Equal(First, scopes[0].GetProperty("scope").GetString());
         Assert.Equal("holding", scopes[0].GetProperty("state").GetString());
         Assert.Equal("fine", scopes[1].GetProperty("state").GetString());
     }
@@ -88,7 +98,7 @@ public sealed class WildcardCommandTest
     {
         FakeSurface surface = Cluster();
         surface.Measurements[Counted.Streams] = 7;
-        ScopeSelection chosen = ScopeSelection.Of(surface, "xmip:///C1/node/alpha*", out _)!;
+        ScopeSelection chosen = ScopeSelection.Of(surface, Pattern, out _)!;
         StringWriter output = new();
 
         int exit = MeasureCommand.Over(surface, chosen, json: false, output, new StringWriter());
@@ -97,8 +107,8 @@ public sealed class WildcardCommandTest
 
         Assert.Equal(0, exit);
         Assert.Equal(2, lines.Length);
-        Assert.StartsWith("xmip:///C1/node/alpha  Streams 7", lines[0], StringComparison.Ordinal);
-        Assert.StartsWith("xmip:///C1/node/alpha2  Streams 7", lines[1], StringComparison.Ordinal);
+        Assert.StartsWith($"{First}  Streams 7", lines[0], StringComparison.Ordinal);
+        Assert.StartsWith($"{Second}  Streams 7", lines[1], StringComparison.Ordinal);
     }
 
     [Fact]
@@ -106,7 +116,7 @@ public sealed class WildcardCommandTest
     {
         FakeSurface surface = Cluster();
         surface.Measurements[Counted.Streams] = 7;
-        ScopeSelection chosen = ScopeSelection.Of(surface, "xmip:///C1/node/alpha*", out _)!;
+        ScopeSelection chosen = ScopeSelection.Of(surface, Pattern, out _)!;
         StringWriter output = new();
 
         MeasureCommand.Over(surface, chosen, json: true, output, new StringWriter());
@@ -115,7 +125,7 @@ public sealed class WildcardCommandTest
         JsonElement root = document.RootElement;
         Assert.Equal(2, root.GetProperty("matched").GetInt32());
         Assert.Equal(
-            "xmip:///C1/node/alpha2",
+            Second,
             root.GetProperty("scopes")[1].GetProperty("scope").GetString());
         Assert.Equal(7UL, root.GetProperty("scopes")[0].GetProperty("streams").GetUInt64());
     }
@@ -124,26 +134,26 @@ public sealed class WildcardCommandTest
     public void ListOverAPatternIsOneListOfRowsThatNameTheirOwnScopes()
     {
         FakeSurface surface = Cluster();
-        ScopeSelection chosen = ScopeSelection.Of(surface, "xmip:///C1/node/alpha*", out _)!;
+        ScopeSelection chosen = ScopeSelection.Of(surface, Pattern, out _)!;
         StringWriter output = new();
 
         int exit = ScopeCommand.ListOver(surface, chosen, json: false, output, new StringWriter());
         string text = output.ToString();
 
         Assert.Equal(0, exit);
-        Assert.Contains("xmip:///C1/node/alpha/receive", text, StringComparison.Ordinal);
-        Assert.Contains("xmip:///C1/node/alpha2/receive", text, StringComparison.Ordinal);
+        Assert.Contains($"{First}/receive", text, StringComparison.Ordinal);
+        Assert.Contains($"{Second}/receive", text, StringComparison.Ordinal);
     }
 
     [Fact]
     public void ShowOverAPatternIsOneRowPerScopeAndInJsonOneEntryEach()
     {
         FakeSurface surface = Cluster();
-        ScopeSelection chosen = ScopeSelection.Of(surface, "xmip:///C1/node/alpha*", out _)!;
+        ScopeSelection chosen = ScopeSelection.Of(surface, Pattern, out _)!;
         StringWriter output = new();
 
         ScopeCommand.ShowOver(surface, chosen, json: false, output, new StringWriter());
-        Assert.Contains("xmip:///C1/node/alpha", output.ToString(), StringComparison.Ordinal);
+        Assert.Contains(First, output.ToString(), StringComparison.Ordinal);
 
         StringWriter asJson = new();
         ScopeCommand.ShowOver(surface, chosen, json: true, asJson, new StringWriter());
@@ -151,7 +161,7 @@ public sealed class WildcardCommandTest
         using JsonDocument document = JsonDocument.Parse(asJson.ToString());
         Assert.Equal(2, document.RootElement.GetProperty("scopes").GetArrayLength());
         Assert.Equal(
-            "xmip:///C1/node/alpha2",
+            Second,
             document.RootElement.GetProperty("scopes")[1].GetProperty("scope").GetString());
     }
 
@@ -164,7 +174,7 @@ public sealed class WildcardCommandTest
     public void PauseOverAPatternActsOnEachAndSaysSoWhenOneWasNotApplied()
     {
         FakeSurface surface = Cluster();
-        ScopeSelection chosen = ScopeSelection.Of(surface, "xmip:///C1/node/alpha*", out _)!;
+        ScopeSelection chosen = ScopeSelection.Of(surface, Pattern, out _)!;
         StringWriter error = new();
 
         int exit = ScopeCommand.ApplyOver(
@@ -181,7 +191,7 @@ public sealed class WildcardCommandTest
     public void PauseOverAPatternInJsonIsOneDocumentAndNotOneLinePerScope()
     {
         FakeSurface surface = Cluster();
-        ScopeSelection chosen = ScopeSelection.Of(surface, "xmip:///C1/node/alpha*", out _)!;
+        ScopeSelection chosen = ScopeSelection.Of(surface, Pattern, out _)!;
         StringWriter output = new();
 
         ScopeCommand.ApplyOver(
@@ -204,7 +214,6 @@ public sealed class WildcardCommandTest
     {
         Assert.Contains("wildcard", Usage.Text, StringComparison.Ordinal);
         Assert.Contains("REFUSED", Usage.Text, StringComparison.Ordinal);
-        Assert.Contains("xmip-cli health \"xmip:///C1/node/R*\"", Usage.Text,
-            StringComparison.Ordinal);
+        Assert.Matches("xmip-cli health \"xmip:///[^\"]*\\*\"", Usage.Text);
     }
 }

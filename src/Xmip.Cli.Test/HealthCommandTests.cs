@@ -11,14 +11,20 @@ namespace Xmip.Cli.Test;
 /// </summary>
 public sealed class HealthCommandTests
 {
+    private static readonly TestCluster Cluster = TestCluster.Read();
+
+    // Two of the test cluster's nodes, by place.
+    private static readonly string Here = Cluster.NodeScope(0);
+    private static readonly string There = Cluster.NodeScope(1);
+
     private static FakeSurface Estate()
     {
         return new FakeSurface(
         [
-            FakeSurface.Leaf("xmip:///edge-01/receive/orders", HealthState.Fine),
+            FakeSurface.Leaf($"{Here}/receive/orders", HealthState.Fine),
             FakeSurface.Leaf(
-                "xmip:///edge-01/send/invoices", HealthState.Done, 90, "certificate expired"),
-            FakeSurface.Leaf("xmip:///edge-02/receive/orders", HealthState.Working, 30),
+                $"{Here}/send/invoices", HealthState.Done, 90, "certificate expired"),
+            FakeSurface.Leaf($"{There}/receive/orders", HealthState.Working, 30),
         ]);
     }
 
@@ -32,7 +38,7 @@ public sealed class HealthCommandTests
         Assert.Equal(0, exit);
         string[] lines = output.ToString().Split(Environment.NewLine);
         Assert.Equal("holding        xmip:///", lines[0]);
-        Assert.Equal("               done at xmip:///edge-01/send/invoices", lines[1]);
+        Assert.Equal($"               done at {Here}/send/invoices", lines[1]);
         Assert.Equal("               certificate expired", lines[2]);
     }
 
@@ -45,11 +51,11 @@ public sealed class HealthCommandTests
 
         string[] lines = output.ToString().Split(Environment.NewLine);
         int first = Array.IndexOf(lines, string.Empty) + 1;
-        Assert.Equal("done       90  xmip:///edge-01/send/invoices", lines[first]);
+        Assert.Equal($"done       90  {Here}/send/invoices", lines[first]);
         Assert.Equal("               certificate expired", lines[first + 1]);
         Assert.Equal(
             $"               observed {FakeSurface.Seen:O}", lines[first + 2]);
-        Assert.Equal("working    30  xmip:///edge-02/receive/orders", lines[first + 3]);
+        Assert.Equal($"working    30  {There}/receive/orders", lines[first + 3]);
     }
 
     /// <summary>
@@ -62,16 +68,18 @@ public sealed class HealthCommandTests
     public void HealthSaysWhatTheRunWasStartedWithWhereASurfaceSaysOne()
     {
         FakeSurface surface = Estate();
+        string receiver = Cluster.WithRole("receiving");
+        string processor = Cluster.WithRole("processing");
         surface.Started = new Xmip.Surface.RunHeader(
-            "Z6", ["RoundTrip"], ["alpha", "beta"], ["alpha=receiving", "beta=processing+sending"],
-            ["alpha"], "calm");
+            Cluster.Name, ["RoundTrip"], [receiver, processor],
+            [$"{receiver}=receiving", $"{processor}=processing+sending"], [receiver], "calm");
         StringWriter output = new();
 
         HealthCommand.Run(surface, "xmip:///", json: false, output, new StringWriter());
 
         Assert.Contains(
-            "               run RoundTrip · Z6 · nodes alpha=receiving "
-                + "beta=processing+sending · online alpha · calm",
+            $"               run RoundTrip · {Cluster.Name} · nodes {receiver}=receiving "
+                + $"{processor}=processing+sending · online {receiver} · calm",
             output.ToString(),
             StringComparison.Ordinal);
 
@@ -79,8 +87,8 @@ public sealed class HealthCommandTests
         HealthCommand.Run(surface, "xmip:///", json: true, asJson, new StringWriter());
         using JsonDocument document = JsonDocument.Parse(asJson.ToString());
         Assert.Equal(
-            "RoundTrip · Z6 · nodes alpha=receiving beta=processing+sending · "
-                + "online alpha · calm",
+            $"RoundTrip · {Cluster.Name} · nodes {receiver}=receiving "
+                + $"{processor}=processing+sending · online {receiver} · calm",
             document.RootElement.GetProperty("run").GetString());
 
         StringWriter silent = new();
@@ -95,10 +103,10 @@ public sealed class HealthCommandTests
         StringWriter output = new();
 
         HealthCommand.Run(
-            Estate(), "xmip:///edge-01/receive", json: false, output, new StringWriter());
+            Estate(), $"{Here}/receive", json: false, output, new StringWriter());
 
         string[] lines = output.ToString().Split(Environment.NewLine);
-        Assert.Equal("fine           xmip:///edge-01/receive", lines[0]);
+        Assert.Equal($"fine           {Here}/receive", lines[0]);
         Assert.StartsWith("               source ", lines[1], StringComparison.Ordinal);
     }
 
@@ -128,10 +136,10 @@ public sealed class HealthCommandTests
         StringWriter error = new();
 
         int exit = HealthCommand.Run(
-            Estate(), "xmip:///edge-09", json: false, new StringWriter(), error);
+            Estate(), Cluster.NodeScope(2), json: false, new StringWriter(), error);
 
         Assert.Equal(1, exit);
-        Assert.Contains("xmip:///edge-09", error.ToString(), StringComparison.Ordinal);
+        Assert.Contains(Cluster.NodeScope(2), error.ToString(), StringComparison.Ordinal);
     }
 
     [Fact]
@@ -151,7 +159,7 @@ public sealed class HealthCommandTests
                 {
                     surface!.Records =
                     [
-                        FakeSurface.Leaf("xmip:///edge-01/receive/orders", HealthState.Fine),
+                        FakeSurface.Leaf($"{Here}/receive/orders", HealthState.Fine),
                     ];
                 }
 

@@ -39,6 +39,11 @@ namespace Xmip.Cli;
 /// command.</param>
 /// <param name="Act">The act <c>subscriptions</c> takes on the one
 /// Subscription it names; null to list.</param>
+/// <param name="DeadMessages">What <c>dead-messages</c> asks, its argument
+/// the pattern (<see cref="DeadMessageArguments"/>); null for every other
+/// command.</param>
+/// <param name="Replay">The act <c>dead-messages</c> takes on the one Message
+/// it names; null to list or open.</param>
 public sealed record Invocation(
     Command Command,
     string Argument,
@@ -52,7 +57,9 @@ public sealed record Invocation(
     EventSubscriptionQuery? EventSubscriptions = null,
     EventSubscriptionAct? EventAct = null,
     SubscriptionQuery? Subscriptions = null,
-    SubscriptionAct? Act = null)
+    SubscriptionAct? Act = null,
+    DeadMessageQuery? DeadMessages = null,
+    DeadMessageAct? Replay = null)
 {
     /// <summary>What this line states about the surface to read, for the one
     /// precedence every surface shares (<see cref="SurfaceChoice.Stated"/>).</summary>
@@ -76,6 +83,7 @@ public sealed record Invocation(
             ["audit"] = (Command.Audit, 0, 1),
             ["event-subscriptions"] = (Command.EventSubscriptions, 0, 1),
             ["subscriptions"] = (Command.Subscriptions, 0, 1),
+            ["dead-messages"] = (Command.DeadMessages, 0, 1),
         };
 
     /// <summary>
@@ -97,6 +105,7 @@ public sealed record Invocation(
         List<string> auditOptions = [];
         ulong? id = null;
         string? name = null;
+        string? message = null;
         string? act = null;
         List<string> nounOptions = [];
 
@@ -118,6 +127,7 @@ public sealed record Invocation(
 
             if (EventSubscriptionArguments.Take(args, ref i, ref id, out unobeyed)
                 || SubscriptionArguments.Take(args, ref i, ref name, out unobeyed)
+                || DeadMessageArguments.Take(args, ref i, ref message, out unobeyed)
                 || NounArguments.Take(args, i, ref act, out unobeyed))
             {
                 if (unobeyed is not null)
@@ -225,16 +235,24 @@ public sealed record Invocation(
             return null;
         }
 
-        bool noun = known.Command is Command.EventSubscriptions or Command.Subscriptions;
+        bool noun = known.Command
+            is Command.EventSubscriptions or Command.Subscriptions or Command.DeadMessages;
 
         if (who is not null && known.Command is not Command.Pause && !(noun && act is not null))
         {
-            problem = "--who only applies to 'pause' and to an act of 'event-subscriptions' "
-                + "or 'subscriptions'.";
+            problem = "--who only applies to 'pause' and to an act of 'event-subscriptions', "
+                + "'subscriptions' or 'dead-messages'.";
             return null;
         }
 
-        // Both nouns share where they stand and their order with audit; the
+        // Replay is a Message's act alone; the other nouns never see the word.
+        if (act == "replay" && known.Command is not Command.DeadMessages)
+        {
+            problem = "--replay only applies to 'dead-messages'.";
+            return null;
+        }
+
+        // Every noun shares where it stands and its order with audit; the
         // rest of audit's words are audit's.
         string? foreign = noun
             ? auditOptions.FirstOrDefault(option => !NounArguments.Shared.Contains(option))
@@ -255,6 +273,9 @@ public sealed record Invocation(
         string? refused = null;
         SubscriptionAct? taken = known.Command is Command.Subscriptions
             ? SubscriptionArguments.Act(act, out refused)
+            : null;
+        DeadMessageAct? replay = known.Command is Command.DeadMessages
+            ? DeadMessageArguments.Act(act, out refused)
             : null;
 
         if (refused is not null)
@@ -303,11 +324,22 @@ public sealed record Invocation(
                     Order = audit?.Order,
                 }
                 : null,
-            taken);
+            taken,
+            known.Command is Command.DeadMessages
+                ? new DeadMessageQuery
+                {
+                    Pattern = pattern,
+                    Location = audit?.Location,
+                    Message = message,
+                    Sort = audit?.Sort,
+                    Order = audit?.Order,
+                }
+                : null,
+            replay);
     }
 
-    // The first option of the two nouns' that the command named does not
-    // take, said as the line's problem; null when there is none.
+    // The first option of the nouns' that the command named does not take,
+    // said as the line's problem; null when there is none.
     private static string? Stray(Command command, List<string> nounOptions)
     {
         foreach (string option in nounOptions)
@@ -316,9 +348,12 @@ public sealed record Invocation(
                 ? command is Command.EventSubscriptions ? null : "'event-subscriptions'"
                 : SubscriptionArguments.Options.Contains(option)
                     ? command is Command.Subscriptions ? null : "'subscriptions'"
-                    : command is Command.EventSubscriptions or Command.Subscriptions
-                        ? null
-                        : "'event-subscriptions' and 'subscriptions'";
+                    : DeadMessageArguments.Options.Contains(option)
+                        ? command is Command.DeadMessages ? null : "'dead-messages'"
+                        : command is Command.EventSubscriptions or Command.Subscriptions
+                            or Command.DeadMessages
+                            ? null
+                            : "'event-subscriptions', 'subscriptions' and 'dead-messages'";
 
             if (owner is not null)
             {
