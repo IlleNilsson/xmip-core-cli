@@ -12,12 +12,14 @@ namespace Xmip.Cli.Test;
 /// </summary>
 public sealed class AuditCommandTests
 {
+    private static readonly TestCluster Cluster = TestCluster.Read();
+
     [Fact]
     public void EveryOptionIsTheQuerysWordAndTheArgumentItsPattern()
     {
         Invocation? parsed = Invocation.Parse(
             [
-                "audit", "xmip:///C1/*", "--location", "xmip:///C1", "--host", "H1",
+                "audit", $"{Cluster.Scope}/*", "--location", Cluster.Scope, "--host", "H1",
                 "--program", "xmip-cli", "--record", "r1", "--severity", "error",
                 "--action", "pause", "--from", "2026-09-29", "--to", "2026-09-30T12:00",
                 "--sort", "node", "--order", "ascending", "--offset", "5", "--limit", "7",
@@ -31,8 +33,8 @@ public sealed class AuditCommandTests
         Assert.Equal(
             new AuditQuery
             {
-                Pattern = "xmip:///C1/*",
-                Location = "xmip:///C1",
+                Pattern = $"{Cluster.Scope}/*",
+                Location = Cluster.Scope,
                 Host = "H1",
                 Program = "xmip-cli",
                 Record = "r1",
@@ -84,8 +86,8 @@ public sealed class AuditCommandTests
         File.AppendAllText(
             Path.Combine(directory, "audit.toml"),
             "[[record]]\naudit_id = \"h1\"\nat = \"2026-09-30T10:00:00.000000000Z\"\n"
-            + "program = \"probe\"\nhost = \"edge-01\"\nprocess = \"7\"\n"
-            + "location = \"xmip:///CT/node/one\"\nhidden = \"true\"\naction = \"start\"\n"
+            + "program = \"probe\"\nhost = \"H1\"\nprocess = \"7\"\n"
+            + $"location = \"{Cluster.NodeScope(0)}\"\nhidden = \"true\"\naction = \"start\"\n"
             + "phase = \"begin\"\nseverity = \"information\"\n\n");
         using StringWriter left = new();
         using StringWriter included = new();
@@ -95,9 +97,10 @@ public sealed class AuditCommandTests
             Audit(directory), parsed.Audit, false, included, TextWriter.Null);
 
         Assert.StartsWith("2 of 2 records", left.ToString(), StringComparison.Ordinal);
-        Assert.DoesNotContain("xmip:///CT", left.ToString(), StringComparison.Ordinal);
+        Assert.DoesNotContain(Cluster.Scope, left.ToString(), StringComparison.Ordinal);
         Assert.StartsWith("3 of 3 records", included.ToString(), StringComparison.Ordinal);
-        Assert.Contains("one · test", included.ToString(), StringComparison.Ordinal);
+        Assert.Contains(
+            $"{Cluster.Nodes[0]} · test", included.ToString(), StringComparison.Ordinal);
         Directory.Delete(directory, recursive: true);
     }
 
@@ -105,11 +108,11 @@ public sealed class AuditCommandTests
     public void WhatTheOperatorAskedIsRecordedInTheQuerysWords()
     {
         Invocation? parsed = Invocation.Parse(
-            ["audit", "xmip:///C1/*", "--severity", "error", "--limit", "5"], out _);
+            ["audit", $"{Cluster.Scope}/*", "--severity", "error", "--limit", "5"], out _);
 
         IReadOnlyDictionary<string, string> said = CommandAudit.Properties(parsed!);
 
-        Assert.Equal("xmip:///C1/*", said["argument"]);
+        Assert.Equal($"{Cluster.Scope}/*", said["argument"]);
         Assert.Equal("error", said["severity"]);
         Assert.Equal("5", said["limit"]);
         Assert.False(said.ContainsKey("pattern"));

@@ -6,13 +6,20 @@ namespace Xmip.Cli.Test;
 /// <summary>
 /// <c>xmip-cli subscriptions</c> (ADR-0013, amendment 2026-09-30): one
 /// command for the noun, the act an option on it. The line becomes the one
-/// query every surface asks; what a snapshot of cluster CT lists is
+/// query every surface asks; what a snapshot of the test cluster lists is
 /// rendered, drilled and sorted; an act names one Subscription or is refused
 /// before any node is asked; one taken is left where the publication says;
 /// and remove is refused in words, because a Subscription is configuration.
 /// </summary>
 public sealed class SubscriptionCommandTests : IDisposable
 {
+    private static readonly TestCluster Cluster = TestCluster.Read();
+
+    // The test cluster's first two nodes, by place: the first routes by two
+    // Subscriptions, the second by one.
+    private static readonly string First = Cluster.Nodes[0];
+    private static readonly string Second = Cluster.Nodes[1];
+
     private readonly string _place = Path.Combine(
         Path.GetTempPath(), $"xmip-cli-subscriptions-{Guid.NewGuid():N}");
 
@@ -21,14 +28,14 @@ public sealed class SubscriptionCommandTests : IDisposable
         Directory.CreateDirectory(_place);
         File.WriteAllText(
             Snapshot,
-            "node = \"xmip:///CT\"\n"
+            $"node = \"{Cluster.Scope}\"\n"
             + $"orders = '{Orders}'\n"
-            + Entry("alpha", "structured", "active", 12, 0)
-            + Entry("alpha", "edi", "paused", 3, 9)
-            + Entry("beta", "flat", "active", 40, 0));
+            + Entry(First, "structured", "active", 12, 0)
+            + Entry(First, "edi", "paused", 3, 9)
+            + Entry(Second, "flat", "active", 40, 0));
     }
 
-    private string Snapshot => Path.Combine(_place, "CT-snapshot.toml");
+    private string Snapshot => Path.Combine(_place, $"{Cluster.Name}-snapshot.toml");
 
     private string Orders => Path.Combine(_place, "orders");
 
@@ -39,7 +46,7 @@ public sealed class SubscriptionCommandTests : IDisposable
 
     private static string Entry(string node, string name, string state, int picked, int held)
     {
-        return $"[[subscriptions]]\nnode = \"xmip:///CT/node/{node}\"\nname = \"{name}\"\n"
+        return $"[[subscriptions]]\nnode = \"{Cluster.Scope}/node/{node}\"\nname = \"{name}\"\n"
             + "application = \"RoundTrip\"\n"
             + $"filter = \"MessageType = '{name}'\"\n"
             + "destination = \"the Send Port 'RoundTripOut'\"\n"
@@ -69,15 +76,15 @@ public sealed class SubscriptionCommandTests : IDisposable
     public void TheLineIsTheQueryAndTheActAnOption()
     {
         Invocation parsed = Line(
-            "subscriptions", "*/alpha", "--location", "xmip:///CT/node/alpha", "--name", "edi",
+            "subscriptions", $"*/{First}", "--location", Cluster.NodeScope(0), "--name", "edi",
             "--sort", "held", "--order", "descending", "--resume", "--who", "ilian");
 
         Assert.Equal(Command.Subscriptions, parsed.Command);
         Assert.Equal(
             new SubscriptionQuery
             {
-                Pattern = "*/alpha",
-                Location = "xmip:///CT/node/alpha",
+                Pattern = $"*/{First}",
+                Location = Cluster.NodeScope(0),
                 Name = "edi",
                 Sort = "held",
                 Order = "descending",
@@ -93,7 +100,7 @@ public sealed class SubscriptionCommandTests : IDisposable
     [InlineData("subscriptions --name", "--name needs")]
     [InlineData("subscriptions --id 3", "--id only applies to 'event-subscriptions'")]
     [InlineData("event-subscriptions --name edi", "--name only applies to 'subscriptions'")]
-    [InlineData("list --pause", "--pause only applies to 'event-subscriptions' and")]
+    [InlineData("list --pause", "--pause only applies to 'event-subscriptions',")]
     [InlineData("subscriptions --program xmip-cli", "--program only applies to 'audit'")]
     [InlineData("subscriptions --who ilian", "--who only applies")]
     public void ALineThatCannotBeObeyedIsSaidSo(string line, string said)
@@ -106,7 +113,7 @@ public sealed class SubscriptionCommandTests : IDisposable
     public void RemoveIsRefusedInWordsBecauseTheConfigurationAddsAndRemovesIt()
     {
         Assert.Null(Invocation.Parse(
-            ["subscriptions", "--location", "xmip:///CT/node/alpha", "--name", "edi", "--remove"],
+            ["subscriptions", "--location", Cluster.NodeScope(0), "--name", "edi", "--remove"],
             out string problem));
 
         Assert.StartsWith("REFUSED", problem, StringComparison.Ordinal);
@@ -122,10 +129,11 @@ public sealed class SubscriptionCommandTests : IDisposable
         (int exit, string text, _) = Run(surface, Line("subscriptions"));
         Assert.Equal(0, exit);
         Assert.Contains("3 Subscription(s), 1 paused, 9 held", text, StringComparison.Ordinal);
-        Assert.Matches(@"edi\s+CT\s+alpha\s+MessageType = 'edi'\s+the Send Port", text);
+        Assert.Matches(
+            $@"edi\s+{Cluster.Name}\s+{First}\s+MessageType = 'edi'\s+the Send Port", text);
 
         (_, string json, _) = Run(
-            surface, Line("subscriptions", "--location", "xmip:///CT/node/alpha", "--json"));
+            surface, Line("subscriptions", "--location", Cluster.NodeScope(0), "--json"));
         using JsonDocument document = JsonDocument.Parse(json);
         JsonElement[] listed =
             [.. document.RootElement.GetProperty("subscriptions").EnumerateArray()];
@@ -175,7 +183,7 @@ public sealed class SubscriptionCommandTests : IDisposable
         (exit, _, error) = Run(
             surface,
             Line(
-                "subscriptions", "--location", "xmip:///CT/node/beta", "--name", "edi",
+                "subscriptions", "--location", Cluster.NodeScope(1), "--name", "edi",
                 "--pause"));
         Assert.Equal(1, exit);
         Assert.Contains("no Subscription 'edi'", error, StringComparison.Ordinal);
@@ -184,11 +192,12 @@ public sealed class SubscriptionCommandTests : IDisposable
         (exit, string said, _) = Run(
             surface,
             Line(
-                "subscriptions", "--location", "xmip:///CT/node/alpha", "--name", "edi",
+                "subscriptions", "--location", Cluster.NodeScope(0), "--name", "edi",
                 "--resume", "--who", "ilian"));
         Assert.Equal(0, exit);
         Assert.StartsWith(
-            "OK. resume of Subscription 'edi' left for alpha", said, StringComparison.Ordinal);
-        Assert.Single(Directory.GetFiles(Path.Combine(Orders, "alpha"), "*-resume.toml"));
+            $"OK. resume of Subscription 'edi' left for {First}", said,
+            StringComparison.Ordinal);
+        Assert.Single(Directory.GetFiles(Path.Combine(Orders, First), "*-resume.toml"));
     }
 }

@@ -30,6 +30,9 @@ xmip-cli subscriptions [pattern]
 xmip-cli event-subscriptions [pattern]
                           the Event subscriptions the nodes hold; pause, resume or
                           remove one
+xmip-cli dead-messages [pattern]
+                          the Messages no Subscription matched, in each node's Dead
+                          Message Queue; open one, or replay it
 xmip-cli help             this text
 
 --json                    one JSON document instead of text
@@ -37,8 +40,9 @@ xmip-cli help             this text
 --runtime <path>          the runtime library, instead of finding it
 --remote <url>            a web host to follow, instead of a runtime here
 --snapshot <path>         a published snapshot to read, instead of the document's
---who <name>              with pause, or the act of subscriptions or
-                          event-subscriptions: who acts, instead of the current user
+--who <name>              with pause, or the act of subscriptions, event-subscriptions
+                          or dead-messages: who acts, instead of the current user;
+                          over --remote the host takes the act as your certificate's subject
 ```
 
 Which surface a command reads is stated in `xmip.cli.toml` beside the
@@ -93,7 +97,9 @@ the two acts the operator boundary carries (ADR-0027 clause 5); there is no
 start, stop or restart, because the thing that watches must not be able to
 stop the thing it watches. Who paused is `--who`, else the user the command
 runs as — `ScopeOperation.Who`, the rule `Suspend-XmipScope -Who` and the GUI
-follow.
+follow. Over `--remote` no name crosses the wire: the web host takes an act as
+the subject of the client certificate this side presented, only where its role
+may act, and refuses it in words otherwise (ADR-0009, amendment 2026-10-03).
 
 **The drill.** `list` with no scope lists what is beneath the cluster the
 surface publishes at (`IOperatorSurface.Root`), never the one row of the
@@ -162,8 +168,16 @@ when it was not.
 `xmip-cli event-subscriptions` lists the Event subscriptions the cluster's
 nodes hold (ADR-0065, amendment 2026-09-29): each one's number on its node,
 the subscriber (a Party), the cluster, the node, the action it subscribes to,
-its state, queued against capacity, delivered, missed and since. An Event
-subscription is not a Subscription: it hands Events to a Party, and picks no
+its state, queued against capacity, delivered, missed and since. The node is
+the one its subscriber connected to, not the one it hears: an Event
+subscription on any node hears the matching Events of every node of the
+cluster (ADR-0065, amendment 2026-10-02), and the links that carry them
+between nodes are the cluster's, not Event subscriptions, and never listed.
+A member a node there does not hear is said read-only under the table, one
+line each — `R1: not hearing xmip:///C1/node/S1 since
+2026-10-02T12:00:00Z: connection refused` — and as `unheard` in `--json`,
+so no Event is missing silently.
+An Event subscription is not a Subscription: it hands Events to a Party, and picks no
 Message up. One command for the noun, and the act an option on it:
 
 ```text
@@ -187,6 +201,46 @@ audited as `event.pause`, `event.resume` or `event.remove`; over a snapshot
 it is left where the publication says, for the node to take within a round.
 `OK.` and exit 0 when it was applied or left, `REFUSED:` and exit 1 when it
 was not.
+
+## Dead Message Queue
+
+`xmip-cli dead-messages` lists what each node's Dead Message Queue keeps
+(ADR-0052, amendment 2026-10-01): every accepted Message that no
+Subscription matched, kept in the Ledger with its receive context, what its
+gates concluded, its promoted properties and every Subscription's reason for
+declining. It is not a dead letter queue: a failed Journey never goes there.
+A row is when it was received, the Message's identifier, the cluster, the
+node whose queue keeps it, the Receive Location it arrived at and how many
+Subscriptions declined it; a node publishes its oldest hundred. One command
+for the noun, and the act an option on it:
+
+```text
+xmip-cli dead-messages [pattern] --location <scope> --message <id>
+  --sort <column> --order ascending|descending --json
+xmip-cli dead-messages --location <node scope> --message <id> --replay
+  --who <name> --json
+```
+
+The pattern is `*` and `?` over each entry's node, or its node and Message as
+`xmip:///<cluster>/node/<node>/dead-message/<message>`; `--location`,
+`--sort` and `--order` mean what they mean for `audit`, and the columns are
+received (the default, oldest first), message, cluster, node,
+receive-location and declines. Which entries a line selects and in what
+order is `DeadMessageQuery`'s in `Xmip.Surface`, the one the web's Dead
+Message Queue view and `Get-XmipDeadMessage` ask. `--message` alone opens
+the one Message: its gate verdicts, its promoted properties and every
+Subscription's decline, in the order written; `--json` carries them as
+`validation`, `promoted` and `declines`, each a list of `name` and `value`.
+`--replay`, once a Subscription is added or fixed, routes the Message again
+against the node's Subscriptions of now, opens a Journey for each match and
+takes it out of the queue, once; a Message that still matches nothing stays
+and the Replay is REFUSED in words. A Replay names one Message, by
+`--location` at its node and `--message`, or it is REFUSED before any node is
+asked (exit 2); `--pause`, `--resume` and `--remove` are no act on it (exit
+2). Over a live node the Replay is applied in its process and audited there
+as `dead-message.replay`; over a snapshot it is left where the publication
+says, for the node to take within a round. `OK.` and exit 0 when it was
+applied or left, `REFUSED:` and exit 1 when it was not.
 
 ## Reading the audit
 
