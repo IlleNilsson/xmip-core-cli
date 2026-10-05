@@ -54,4 +54,8 @@ public enum Command
     /// Dead Message Queue, and Replay on one (ADR-0052, amendment
     /// 2026-10-01).</summary>
     DeadMessages,
+
+    /// <summary>Retry or Dismiss one Journey that failed, sent by a node's
+    /// Send Port (runtime-model.md section 13; ADR-0013).</summary>
+    Journey,
 }
