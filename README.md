@@ -33,6 +33,7 @@ xmip-cli event-subscriptions [pattern]
 xmip-cli dead-messages [pattern]
                           the Messages no Subscription matched, in each node's Dead
                           Message Queue; open one, or replay it
+xmip-cli journey <id>     retry or dismiss a Journey that failed
 xmip-cli help             this text
 
 --json                    one JSON document instead of text
@@ -40,8 +41,8 @@ xmip-cli help             this text
 --runtime <path>          the runtime library, instead of finding it
 --remote <url>            a web host to follow, instead of a runtime here
 --snapshot <path>         a published snapshot to read, instead of the document's
---who <name>              with pause, or the act of subscriptions, event-subscriptions
-                          or dead-messages: who acts, instead of the current user;
+--who <name>              with pause, or the act of subscriptions, event-subscriptions,
+                          dead-messages or journey: who acts, instead of the current user;
                           over --remote the host takes the act as your certificate's subject
 ```
 
@@ -241,6 +242,38 @@ asked (exit 2); `--pause`, `--resume` and `--remove` are no act on it (exit
 as `dead-message.replay`; over a snapshot it is left where the publication
 says, for the node to take within a round. `OK.` and exit 0 when it was
 applied or left, `REFUSED:` and exit 1 when it was not.
+
+## A Journey that failed
+
+`xmip-cli journey` retries or dismisses one Journey that failed
+(runtime-model.md section 13; ADR-0013). A Journey leads to one Send Port;
+when every Send Location of its Port failed its tries it is written Failed,
+with why, and waits in its Port's queue. The node publishes, at the Port's
+scope `xmip:///<cluster>/node/<node>/send/<Port>`, what the Port sent, what
+failed and the last Journey that failed there and why — the identifier
+named here; `xmip-cli show` on that scope says it. There is no list. The
+Journey is the argument, `--location` names the node that sends the Port or
+the Port's scope beneath it, and one act is required:
+
+```text
+xmip-cli journey <id> --location <node or Send Port scope> --retry|--dismiss
+  --who <name> --json
+```
+
+`--retry` writes it Active, its tries begun anew, and sends it again from
+the end of its Port's queue — or from its place, where it blocks a
+Sequential Send Port; `--dismiss` writes it Dismissed, its history, Message
+and Stream kept, and takes it out of the queue. A line with no act, or with
+`--pause`, `--resume`, `--remove` or `--replay`, cannot be obeyed (exit 2),
+and `--retry` and `--dismiss` apply to no other command; one with no
+`--location` on a node is REFUSED before any node is asked (exit 2). Over a
+live node the act is applied in its process and audited there as
+`journey.retry` or `journey.dismiss`; over a snapshot it is left where the
+publication says, for the node to take within a round. A Journey that is no
+longer Failed, or a node that does not send its Port, is REFUSED in the
+node's words. `OK.` and exit 0 when it was applied or left, `REFUSED:` and
+exit 1 when it was not; `--json` carries `node`, `journey`, `act`, `applied`
+and `result`.
 
 ## Reading the audit
 

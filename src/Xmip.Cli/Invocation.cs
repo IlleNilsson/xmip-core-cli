@@ -44,6 +44,11 @@ namespace Xmip.Cli;
 /// command.</param>
 /// <param name="Replay">The act <c>dead-messages</c> takes on the one Message
 /// it names; null to list or open.</param>
+/// <param name="JourneyAct">The act <c>journey</c> takes on the Journey its
+/// argument names (<see cref="JourneyArguments"/>); null for every other
+/// command.</param>
+/// <param name="Location">Where <c>journey</c>'s Journey is sent: its node, or
+/// the Send Port's scope beneath it; null for every other command.</param>
 public sealed record Invocation(
     Command Command,
     string Argument,
@@ -59,7 +64,9 @@ public sealed record Invocation(
     SubscriptionQuery? Subscriptions = null,
     SubscriptionAct? Act = null,
     DeadMessageQuery? DeadMessages = null,
-    DeadMessageAct? Replay = null)
+    DeadMessageAct? Replay = null,
+    JourneyAct? JourneyAct = null,
+    string? Location = null)
 {
     /// <summary>What this line states about the surface to read, for the one
     /// precedence every surface shares (<see cref="SurfaceChoice.Stated"/>).</summary>
@@ -84,6 +91,7 @@ public sealed record Invocation(
             ["event-subscriptions"] = (Command.EventSubscriptions, 0, 1),
             ["subscriptions"] = (Command.Subscriptions, 0, 1),
             ["dead-messages"] = (Command.DeadMessages, 0, 1),
+            ["journey"] = (Command.Journey, 1, 1),
         };
 
     /// <summary>
@@ -236,12 +244,13 @@ public sealed record Invocation(
         }
 
         bool noun = known.Command
-            is Command.EventSubscriptions or Command.Subscriptions or Command.DeadMessages;
+            is Command.EventSubscriptions or Command.Subscriptions or Command.DeadMessages
+            or Command.Journey;
 
         if (who is not null && known.Command is not Command.Pause && !(noun && act is not null))
         {
             problem = "--who only applies to 'pause' and to an act of 'event-subscriptions', "
-                + "'subscriptions' or 'dead-messages'.";
+                + "'subscriptions', 'dead-messages' or 'journey'.";
             return null;
         }
 
@@ -252,11 +261,20 @@ public sealed record Invocation(
             return null;
         }
 
-        // Every noun shares where it stands and its order with audit; the
-        // rest of audit's words are audit's.
-        string? foreign = noun
-            ? auditOptions.FirstOrDefault(option => !NounArguments.Shared.Contains(option))
-            : known.Command is Command.Audit ? null : auditOptions.FirstOrDefault();
+        // Retry and Dismiss are a Journey's acts alone.
+        if (act is "retry" or "dismiss" && known.Command is not Command.Journey)
+        {
+            problem = $"--{act} only applies to 'journey'.";
+            return null;
+        }
+
+        // Every noun shares where it stands and its order with audit, a
+        // Journey only where it stands; the rest of audit's words are audit's.
+        string? foreign = known.Command is Command.Journey
+            ? auditOptions.FirstOrDefault(option => option != "--location")
+            : noun
+                ? auditOptions.FirstOrDefault(option => !NounArguments.Shared.Contains(option))
+                : known.Command is Command.Audit ? null : auditOptions.FirstOrDefault();
 
         if (foreign is not null)
         {
@@ -276,6 +294,9 @@ public sealed record Invocation(
             : null;
         DeadMessageAct? replay = known.Command is Command.DeadMessages
             ? DeadMessageArguments.Act(act, out refused)
+            : null;
+        JourneyAct? journeyAct = known.Command is Command.Journey
+            ? JourneyArguments.Act(act, out refused)
             : null;
 
         if (refused is not null)
@@ -335,7 +356,9 @@ public sealed record Invocation(
                     Order = audit?.Order,
                 }
                 : null,
-            replay);
+            replay,
+            journeyAct,
+            known.Command is Command.Journey ? audit?.Location : null);
     }
 
     // The first option of the nouns' that the command named does not take,
@@ -351,9 +374,10 @@ public sealed record Invocation(
                     : DeadMessageArguments.Options.Contains(option)
                         ? command is Command.DeadMessages ? null : "'dead-messages'"
                         : command is Command.EventSubscriptions or Command.Subscriptions
-                            or Command.DeadMessages
+                            or Command.DeadMessages or Command.Journey
                             ? null
-                            : "'event-subscriptions', 'subscriptions' and 'dead-messages'";
+                            : "'event-subscriptions', 'subscriptions', 'dead-messages' "
+                                + "and 'journey'";
 
             if (owner is not null)
             {

@@ -86,9 +86,9 @@ static async Task<int> RunAsync(Invocation invocation, ProgramAudit audit)
         Command.Audit => AuditCommand.Run(
             audit, invocation.Audit ?? new AuditQuery(), json, output, error),
 
-        // The Event subscriptions, the Subscriptions and the Dead Message
-        // Queues, over the surface the line and the document choose; the
-        // pattern is each query's, not a scope.
+        // The Event subscriptions, the Subscriptions, the Dead Message
+        // Queues and a Journey that failed, over the surface the line and the
+        // document choose; the pattern is each query's, not a scope.
         Command.EventSubscriptions => OnSurface(invocation, error, surface =>
             EventSubscriptionCommand.Over(
                 surface,
@@ -112,6 +112,16 @@ static async Task<int> RunAsync(Invocation invocation, ProgramAudit audit)
                 surface,
                 invocation.DeadMessages ?? new DeadMessageQuery(),
                 invocation.Replay,
+                ScopeOperation.Who(invocation.Who),
+                json,
+                output,
+                error)),
+        Command.Journey when invocation.JourneyAct is { } act => OnSurface(
+            invocation, error, surface => JourneyCommand.Over(
+                surface,
+                invocation.Location,
+                invocation.Argument,
+                act,
                 ScopeOperation.Who(invocation.Who),
                 json,
                 output,

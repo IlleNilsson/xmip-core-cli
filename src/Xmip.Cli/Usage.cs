@@ -28,6 +28,7 @@ public static class Usage
                                     the Messages no Subscription matched, in each
                                     node's Dead Message Queue; open one, or
                                     replay it
+          xmip-cli journey <id>     retry or dismiss a Journey that failed
           xmip-cli help             this text
 
           --json                    one JSON document instead of text
@@ -36,8 +37,8 @@ public static class Usage
           --remote <url>            a web host to follow, instead of a runtime here
           --snapshot <path>         a published snapshot to read, instead of the document's
           --who <name>              with pause, or the act of subscriptions,
-                                    event-subscriptions or dead-messages: who
-                                    acts, instead of the
+                                    event-subscriptions, dead-messages or
+                                    journey: who acts, instead of the
                                     current user; over --remote the host takes
                                     the act as your certificate's subject
 
@@ -174,9 +175,30 @@ public static class Usage
           xmip-cli dead-messages --location xmip:///C1/node/R1 --message <id>
           xmip-cli dead-messages --location xmip:///C1/node/R1 --message <id> --replay
 
-        An act names one, by --location at its node and --name, --id or
-        --message; the node applies it and audits it, or — read through a
-        snapshot — takes it within a round from where its publication says.
+        journey acts on one Journey that failed (runtime-model.md section
+        13): a Journey leads to one Send Port, and when every Send Location
+        of its Port failed its tries it is written Failed, with why, and
+        waits in its Port's queue. The node publishes, at its Send Port's
+        scope xmip:///<cluster>/node/<node>/send/<Port>, what the Port sent,
+        what failed, and the last Journey that failed there and why: the
+        <id> named here. There is no list. --location names the node that
+        sends the Port, or the Port's scope beneath it, and one act is
+        required:
+
+          --retry                   send it again, its tries begun anew; where
+                                    it blocks a Sequential Send Port it keeps
+                                    its place
+          --dismiss                 give it up: written Dismissed, its history,
+                                    Message and Stream kept, and taken out of
+                                    the Port's queue
+
+          xmip-cli journey <id> --location xmip:///C1/node/S1/send/invoices --retry
+          xmip-cli journey <id> --location xmip:///C1/node/S1 --dismiss --who ilian
+
+        An act names one, by --location at its node and --name, --id,
+        --message or journey's <id>; the node applies it and audits it, or
+        — read through a snapshot — takes it within a round from where its
+        publication says.
         An act not taken is REFUSED in words and exits 1.
         """;
 
