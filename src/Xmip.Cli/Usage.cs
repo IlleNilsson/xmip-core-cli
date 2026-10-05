@@ -28,7 +28,8 @@ public static class Usage
                                     the Messages no Subscription matched, in each
                                     node's Dead Message Queue; open one, or
                                     replay it
-          xmip-cli journey <id>     retry or dismiss a Journey that failed
+          xmip-cli journey [id]     list the Journeys that failed, or retry or
+                                    dismiss one
           xmip-cli help             this text
 
           --json                    one JSON document instead of text
@@ -175,15 +176,23 @@ public static class Usage
           xmip-cli dead-messages --location xmip:///C1/node/R1 --message <id>
           xmip-cli dead-messages --location xmip:///C1/node/R1 --message <id> --replay
 
-        journey acts on one Journey that failed (runtime-model.md section
-        13): a Journey leads to one Send Port, and when every Send Location
-        of its Port failed its tries it is written Failed, with why, and
-        waits in its Port's queue. The node publishes, at its Send Port's
-        scope xmip:///<cluster>/node/<node>/send/<Port>, what the Port sent,
-        what failed, and the last Journey that failed there and why: the
-        <id> named here. There is no list. --location names the node that
-        sends the Port, or the Port's scope beneath it, and one act is
-        required:
+        journey lists the Journeys that failed and acts on one
+        (runtime-model.md section 13): a Journey leads to one Send Port, and
+        when every Send Location of its Port failed its tries it is written
+        Failed, with why, and waits in its Port's queue. With no <id>, every
+        one at or beneath --location is listed, Port by Port: how many wait,
+        and a page of them with why — read from Xmip Storage where the node
+        runs in this process, or the oldest hundred its publication carries.
+
+          --offset <place>          the place in each Port's queue to read
+                                    from, as the last page's 'more' said
+          --limit <count>           the most of each Port; a hundred if unsaid
+
+          xmip-cli journey --location xmip:///C1/node/S1
+          xmip-cli journey --location xmip:///C1/node/S1/send/invoices --offset 40
+
+        With an <id>, --location names the node that sends its Port, or the
+        Port's scope beneath it, and one act is required:
 
           --retry                   send it again, its tries begun anew; where
                                     it blocks a Sequential Send Port it keeps

@@ -4,11 +4,11 @@ using Xmip.Surface;
 namespace Xmip.Cli.Test;
 
 /// <summary>
-/// <c>xmip-cli journey</c> (runtime-model.md section 13; ADR-0013): Retry or
-/// Dismiss on one Journey that failed, the act an option and required, the
-/// Journey the argument and its node <c>--location</c> — the node, or the
-/// Send Port's scope where the node publishes the last Journey that failed.
-/// A line without a node is refused before any node is asked; an act taken
+/// <c>xmip-cli journey</c> (runtime-model.md section 13; ADR-0013): the
+/// Journeys that failed listed where no Journey is named, and Retry or
+/// Dismiss on one, the act an option and required, the Journey the argument
+/// and its node <c>--location</c> — the node, or the Send Port's scope. A
+/// line without a node is refused before any node is asked; an act taken
 /// through a snapshot is left where its publication says; and no other noun
 /// takes a Journey's act, nor a Journey another noun's.
 /// </summary>
@@ -27,7 +27,14 @@ public sealed class JourneyCommandTests : IDisposable
     public JourneyCommandTests()
     {
         Directory.CreateDirectory(_place);
-        File.WriteAllText(Snapshot, $"node = \"{Cluster.Scope}\"\norders = '{Orders}'\n");
+        File.WriteAllText(
+            Snapshot,
+            $"node = \"{Cluster.Scope}\"\norders = '{Orders}'\n\n"
+                + $"[[failed_journeys]]\nnode = \"{Sending}\"\nsend_port = \"invoices\"\n"
+                + "count = 2\n\n[[failed_journeys.journeys]]\njourney = \"j-1\"\n"
+                + "sequence = 3\nreason = \"invoices: the far end refused it\"\n\n"
+                + "[[failed_journeys.journeys]]\njourney = \"j-2\"\nsequence = 7\n"
+                + "reason = \"invoices: the far end refused it again\"\n");
     }
 
     private string Snapshot => Path.Combine(_place, $"{Cluster.Name}-snapshot.toml");
@@ -76,7 +83,8 @@ public sealed class JourneyCommandTests : IDisposable
 
     [Theory]
     [InlineData("journey j-1", "needs an act: --retry or --dismiss")]
-    [InlineData("journey --retry", "takes exactly one argument")]
+    [InlineData("journey --retry", "to retry a Journey, name it")]
+    [InlineData("journey j-1 j-2 --retry", "takes at most one argument")]
     [InlineData("journey j-1 --replay", "--replay only applies to 'dead-messages'")]
     [InlineData("journey j-1 --pause", "--retry and --dismiss are its acts")]
     [InlineData("journey j-1 --retry --dismiss", "one act")]
@@ -90,6 +98,37 @@ public sealed class JourneyCommandTests : IDisposable
     {
         Assert.Null(Invocation.Parse(line.Split(' '), out string problem));
         Assert.Contains(said, problem, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void NoJourneyAndNoActListsTheJourneysThatFailedPagedByOffsetAndLimit()
+    {
+        Invocation parsed = Line(
+            "journey", "--location", Port, "--offset", "4", "--limit", "1");
+
+        Assert.Equal(Command.Journey, parsed.Command);
+        Assert.Null(parsed.JourneyAct);
+        Assert.Equal((4UL, 1U), (parsed.From, parsed.Most));
+
+        SnapshotOperator surface = new(Snapshot);
+        using StringWriter output = new();
+        int exit = JourneyCommand.List(surface, Port, (0, 0), json: false, output);
+        string said = output.ToString();
+
+        Assert.Equal(0, exit);
+        Assert.Contains("Send Port invoices: 2 failed in its queue", said, StringComparison.Ordinal);
+        Assert.Contains("j-1  place 3  invoices: the far end refused it", said, StringComparison.Ordinal);
+        Assert.Contains("j-2", said, StringComparison.Ordinal);
+
+        using StringWriter paged = new();
+        JourneyCommand.List(surface, Sending, (parsed.From, parsed.Most), json: true, paged);
+        using JsonDocument document = JsonDocument.Parse(paged.ToString());
+        JsonElement port = document.RootElement.GetProperty("failed_journeys")[0];
+        Assert.Equal("invoices", port.GetProperty("send_port").GetString());
+        Assert.Equal(2UL, port.GetProperty("count").GetUInt64());
+        JsonElement journeys = port.GetProperty("journeys");
+        Assert.Equal(1, journeys.GetArrayLength());
+        Assert.Equal("j-2", journeys[0].GetProperty("journey").GetString());
     }
 
     [Fact]
