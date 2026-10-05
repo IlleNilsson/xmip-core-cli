@@ -48,7 +48,12 @@ namespace Xmip.Cli;
 /// argument names (<see cref="JourneyArguments"/>); null for every other
 /// command.</param>
 /// <param name="Location">Where <c>journey</c>'s Journey is sent: its node, or
-/// the Send Port's scope beneath it; null for every other command.</param>
+/// the Send Port's scope beneath it — or, listing, where the Journeys that
+/// failed are listed at or beneath; null for every other command.</param>
+/// <param name="From">The place in each Send Port's queue <c>journey</c>'s
+/// list reads from: <c>--offset</c>, as the last page's next said.</param>
+/// <param name="Most">The most Journeys of each Send Port <c>journey</c>'s
+/// list holds: <c>--limit</c>; 0 for a hundred.</param>
 public sealed record Invocation(
     Command Command,
     string Argument,
@@ -66,7 +71,9 @@ public sealed record Invocation(
     DeadMessageQuery? DeadMessages = null,
     DeadMessageAct? Replay = null,
     JourneyAct? JourneyAct = null,
-    string? Location = null)
+    string? Location = null,
+    ulong From = 0,
+    uint Most = 0)
 {
     /// <summary>What this line states about the surface to read, for the one
     /// precedence every surface shares (<see cref="SurfaceChoice.Stated"/>).</summary>
@@ -91,7 +98,7 @@ public sealed record Invocation(
             ["event-subscriptions"] = (Command.EventSubscriptions, 0, 1),
             ["subscriptions"] = (Command.Subscriptions, 0, 1),
             ["dead-messages"] = (Command.DeadMessages, 0, 1),
-            ["journey"] = (Command.Journey, 1, 1),
+            ["journey"] = (Command.Journey, 0, 1),
         };
 
     /// <summary>
@@ -269,9 +276,10 @@ public sealed record Invocation(
         }
 
         // Every noun shares where it stands and its order with audit, a
-        // Journey only where it stands; the rest of audit's words are audit's.
+        // Journey where it stands and the page of its list; the rest of
+        // audit's words are audit's.
         string? foreign = known.Command is Command.Journey
-            ? auditOptions.FirstOrDefault(option => option != "--location")
+            ? auditOptions.FirstOrDefault(option => !JourneyArguments.Shared.Contains(option))
             : noun
                 ? auditOptions.FirstOrDefault(option => !NounArguments.Shared.Contains(option))
                 : known.Command is Command.Audit ? null : auditOptions.FirstOrDefault();
@@ -296,7 +304,7 @@ public sealed record Invocation(
             ? DeadMessageArguments.Act(act, out refused)
             : null;
         JourneyAct? journeyAct = known.Command is Command.Journey
-            ? JourneyArguments.Act(act, out refused)
+            ? JourneyArguments.Act(act, arguments == 1, out refused)
             : null;
 
         if (refused is not null)
@@ -358,7 +366,9 @@ public sealed record Invocation(
                 : null,
             replay,
             journeyAct,
-            known.Command is Command.Journey ? audit?.Location : null);
+            known.Command is Command.Journey ? audit?.Location : null,
+            known.Command is Command.Journey ? (ulong)Math.Max(audit?.Offset ?? 0, 0) : 0,
+            known.Command is Command.Journey ? (uint)Math.Max(audit?.Limit ?? 0, 0) : 0);
     }
 
     // The first option of the nouns' that the command named does not take,

@@ -1,17 +1,21 @@
+using Xmip.Abi.Operate;
 using Xmip.Surface;
 
 namespace Xmip.Cli;
 
 /// <summary>
-/// <c>xmip-cli journey</c>: Retry or Dismiss on one Journey that failed
-/// (runtime-model.md section 13; ADR-0013). A Journey leads to one Send Port;
-/// when every Send Location of its Port failed its tries it is written Failed
-/// and waits in its Port's queue, and the node publishes at the Port's scope
-/// the last Journey that failed there and why — the identifier an operator
-/// names here. There is no list: the act is the command, as the PowerShell
-/// module takes it as a parameter. How the act reaches the node is the
-/// surface's; only the rendering is here. Exit 0 when it was applied or left
-/// for the node, 1 when it was not, 2 for a line that names no node.
+/// <c>xmip-cli journey</c>: the Journeys that failed, listed, and Retry or
+/// Dismiss on one (runtime-model.md section 13; ADR-0013). A Journey leads to
+/// one Send Port; when every Send Location of its Port failed its tries it is
+/// written Failed and waits in its Port's queue. With no Journey named, every
+/// one that failed at or beneath <c>--location</c> is listed, Port by Port —
+/// how many wait, and a page of them with why, read from Xmip Storage in the
+/// process that runs the node or as its publication carries them; with one
+/// named, the act is the command, as the PowerShell module takes it as a
+/// parameter. How the list is read and the act reaches the node is the
+/// surface's; only the rendering is here. An act exits 0 when it was applied
+/// or left for the node, 1 when it was not, 2 for a line that names no
+/// node.
 /// </summary>
 public static class JourneyCommand
 {
@@ -54,6 +58,102 @@ public static class JourneyCommand
         }
 
         return done.Applied ? 0 : 1;
+    }
+
+    /// <summary>
+    /// List the Journeys that failed at the Send Ports at or beneath
+    /// <paramref name="location"/> — the surface's root where none is named —
+    /// a page of each Port's from <c>page.From</c>, at most <c>page.Most</c>
+    /// (0: a hundred). Exit 0.
+    /// </summary>
+    public static int List(
+        IOperatorSurface surface,
+        string? location,
+        (ulong From, uint Most) page,
+        bool json,
+        TextWriter output)
+    {
+        ArgumentNullException.ThrowIfNull(surface);
+        ArgumentNullException.ThrowIfNull(output);
+
+        string scope = location is { Length: > 0 } ? location : surface.Root();
+        FailedJourneyList failed = surface.FailedJourneys(scope, page.From, page.Most);
+
+        if (json)
+        {
+            output.WriteLine(Document(failed));
+            return 0;
+        }
+
+        if (failed.Ports.Count == 0)
+        {
+            output.WriteLine($"No Journey that failed waits at or beneath {scope}.");
+            return 0;
+        }
+
+        foreach (FailedJourneyPort port in failed.Ports)
+        {
+            output.WriteLine(
+                $"{port.Node} Send Port {port.SendPort}: {port.Count} failed in its queue");
+
+            foreach (FailedJourneyRecord journey in port.Journeys)
+            {
+                output.WriteLine($"  {journey.Journey}  place {journey.Sequence}  {journey.Reason}");
+            }
+
+            if (port.Next is { } next)
+            {
+                output.WriteLine($"  more: --offset {next}");
+            }
+        }
+
+        return 0;
+    }
+
+    /// <summary>The Journeys that failed, as one document: each Port's,
+    /// with its count, the place its next page reads from and its
+    /// Journeys.</summary>
+    public static string Document(FailedJourneyList failed)
+    {
+        ArgumentNullException.ThrowIfNull(failed);
+
+        return JsonText.Document(writer =>
+        {
+            writer.WriteStartArray("failed_journeys");
+
+            foreach (FailedJourneyPort port in failed.Ports)
+            {
+                writer.WriteStartObject();
+                writer.WriteString("node", port.Node);
+                writer.WriteString("send_port", port.SendPort);
+                writer.WriteNumber("count", port.Count);
+
+                if (port.Next is { } next)
+                {
+                    writer.WriteNumber("next", next);
+                }
+                else
+                {
+                    writer.WriteNull("next");
+                }
+
+                writer.WriteStartArray("journeys");
+
+                foreach (FailedJourneyRecord journey in port.Journeys)
+                {
+                    writer.WriteStartObject();
+                    writer.WriteString("journey", journey.Journey);
+                    writer.WriteNumber("sequence", journey.Sequence);
+                    writer.WriteString("reason", journey.Reason);
+                    writer.WriteEndObject();
+                }
+
+                writer.WriteEndArray();
+                writer.WriteEndObject();
+            }
+
+            writer.WriteEndArray();
+        });
     }
 
     /// <summary>What came of the act, as one document.</summary>

@@ -245,15 +245,26 @@ applied or left, `REFUSED:` and exit 1 when it was not.
 
 ## A Journey that failed
 
-`xmip-cli journey` retries or dismisses one Journey that failed
-(runtime-model.md section 13; ADR-0013). A Journey leads to one Send Port;
-when every Send Location of its Port failed its tries it is written Failed,
-with why, and waits in its Port's queue. The node publishes, at the Port's
-scope `xmip:///<cluster>/node/<node>/send/<Port>`, what the Port sent, what
-failed and the last Journey that failed there and why — the identifier
-named here; `xmip-cli show` on that scope says it. There is no list. The
-Journey is the argument, `--location` names the node that sends the Port or
-the Port's scope beneath it, and one act is required:
+`xmip-cli journey` lists the Journeys that failed and retries or dismisses
+one (runtime-model.md section 13; ADR-0013). A Journey leads to one Send
+Port; when every Send Location of its Port failed its tries it is written
+Failed, with why, and waits in its Port's queue. The node publishes, at the
+Port's scope `xmip:///<cluster>/node/<node>/send/<Port>`, what the Port
+sent, what failed, how many failed wait in its queue and the last that
+failed and why. With no Journey named, every one that failed at or beneath
+`--location` — a cluster, a node or one Send Port's scope — is listed Port by
+Port: how many wait, and a page of them, each its identifier, its place in
+the queue and why — read from Xmip Storage where the node runs in the
+process, or the oldest hundred its publication carries. `--offset` is the
+place to read from, as the last page's `more:` said, and `--limit` the most
+of each Port:
+
+```text
+xmip-cli journey --location <scope> --offset <place> --limit <count> --json
+```
+
+With a Journey named, it is the argument, `--location` names the node that
+sends the Port or the Port's scope beneath it, and one act is required:
 
 ```text
 xmip-cli journey <id> --location <node or Send Port scope> --retry|--dismiss
@@ -263,8 +274,9 @@ xmip-cli journey <id> --location <node or Send Port scope> --retry|--dismiss
 `--retry` writes it Active, its tries begun anew, and sends it again from
 the end of its Port's queue — or from its place, where it blocks a
 Sequential Send Port; `--dismiss` writes it Dismissed, its history, Message
-and Stream kept, and takes it out of the queue. A line with no act, or with
-`--pause`, `--resume`, `--remove` or `--replay`, cannot be obeyed (exit 2),
+and Stream kept, and takes it out of the queue. A Journey named with no
+act, an act with no Journey, or `--pause`, `--resume`, `--remove` or
+`--replay` cannot be obeyed (exit 2),
 and `--retry` and `--dismiss` apply to no other command; one with no
 `--location` on a node is REFUSED before any node is asked (exit 2). Over a
 live node the act is applied in its process and audited there as

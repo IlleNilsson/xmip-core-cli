@@ -126,6 +126,13 @@ static async Task<int> RunAsync(Invocation invocation, ProgramAudit audit)
                 json,
                 output,
                 error)),
+        Command.Journey => OnSurface(
+            invocation, error, surface => JourneyCommand.List(
+                surface,
+                invocation.Location,
+                (invocation.From, invocation.Most),
+                json,
+                output)),
         _ => Usage.Print(output),
     };
 }
