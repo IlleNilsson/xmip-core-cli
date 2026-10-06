@@ -33,7 +33,7 @@ xmip-cli event-subscriptions [pattern]
 xmip-cli dead-messages [pattern]
                           the Messages no Subscription matched, in each node's Dead
                           Message Queue; open one, or replay it
-xmip-cli journey <id>     retry or dismiss a Journey that failed
+xmip-cli journey [id]     list the Journeys that failed, or retry or dismiss one
 xmip-cli help             this text
 
 --json                    one JSON document instead of text
@@ -61,8 +61,10 @@ environment variable, else the library beside the executable. The line wins
 over the document, in one order — `--remote`, then `--snapshot`, then
 `--runtime` — which is `SurfaceChoice.Stated` in `Xmip.Surface`, the same
 precedence `Get-XmipHealth -Remote -Snapshot -Library` follows in PowerShell.
-`--snapshot` reads one cluster's publication, `--runtime` loads that library,
-and `--remote
+`--snapshot` reads one cluster's publication, `--runtime` loads that library —
+what each of the three answers, and whether an act applies at once or is
+submitted as an order, is the table *What each source answers* in
+`module/foundation/abi/README.md` — and `--remote
 https://host:5443` reads no library at all: it follows that web host's surface
 hub over SignalR and is told when the host's surface changes, so `--follow` on
 another machine never polls (ADR-0052, amendment 2026-09-15). It is TLS,
