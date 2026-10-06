@@ -263,6 +263,15 @@ of each Port:
 xmip-cli journey --location <scope> --offset <place> --limit <count> --json
 ```
 
+A list says plainly which of three it is. An answer exits 0, and where none
+fails it says *No Journey that failed waits at or beneath* and the scope. A surface
+that cannot list failed Journeys — no node reached, no runtime loaded, no
+publication read yet — says `NOT LISTED:` on stderr, that whether any wait is
+not known and not that none do, and exits 1. A surface that asked and was
+not answered, Xmip Storage not answering the node, says `FAILED:` with the
+runtime's words and exits 1. `--json` carries the same as `listed` and
+`failure` beside `failed_journeys`, with the same exit.
+
 With a Journey named, it is the argument, `--location` names the node that
 sends the Port or the Port's scope beneath it, and one act is required:
 

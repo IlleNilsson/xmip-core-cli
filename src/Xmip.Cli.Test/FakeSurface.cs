@@ -32,8 +32,18 @@ public sealed class FakeSurface(IReadOnlyList<HealthRecord> records) : IOperator
     /// unless a test says one, as a surface with no run says nothing.</summary>
     public RunHeader Started { get; set; } = RunHeader.None;
 
+    /// <summary>What <see cref="FailedJourneys"/> answers: no answer unless a
+    /// test says one, as a surface that cannot list them says.</summary>
+    public FailedJourneyList Failed { get; set; } = FailedJourneyList.Unlisted;
+
     /// <inheritdoc />
     public string Source => "FAKE — a test wrote these";
+
+    /// <inheritdoc />
+    public FailedJourneyList FailedJourneys(string scope, ulong from = 0, uint most = 0)
+    {
+        return Failed;
+    }
 
     /// <inheritdoc />
     public IReadOnlyList<HealthRecord> Health(string scope)

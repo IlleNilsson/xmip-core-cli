@@ -132,7 +132,8 @@ static async Task<int> RunAsync(Invocation invocation, ProgramAudit audit)
                 invocation.Location,
                 (invocation.From, invocation.Most),
                 json,
-                output)),
+                output,
+                error)),
         _ => Usage.Print(output),
     };
 }
