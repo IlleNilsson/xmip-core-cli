@@ -389,7 +389,7 @@ compiles without a single Xmip source file is the test.
 ## Not this repository's
 
 - Not a runtime. It drives a runtime, and holds no execution state.
-- Not a place for domain logic. A rule that belongs in an Xmip Process does
+- Not a place for domain logic. A rule that belongs in a Work Process does
   not belong in a subcommand.
 - Not the PowerShell surface. `xmip-core-powershell` reads the same
   `Xmip.Surface` directly; it does not shell out to this.
