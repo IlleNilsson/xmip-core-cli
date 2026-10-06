@@ -13,9 +13,11 @@ namespace Xmip.Cli;
 /// process that runs the node or as its publication carries them; with one
 /// named, the act is the command, as the PowerShell module takes it as a
 /// parameter. How the list is read and the act reaches the node is the
-/// surface's; only the rendering is here. An act exits 0 when it was applied
-/// or left for the node, 1 when it was not, 2 for a line that names no
-/// node.
+/// surface's; only the rendering is here. A list exits 0 when it is an
+/// answer, none failing among them, and 1 when it is not: the surface
+/// cannot list failed Journeys, or asked and Xmip Storage did not answer.
+/// An act exits 0 when it was applied or left for the node, 1 when it was
+/// not, 2 for a line that names no node.
 /// </summary>
 public static class JourneyCommand
 {
@@ -64,17 +66,22 @@ public static class JourneyCommand
     /// List the Journeys that failed at the Send Ports at or beneath
     /// <paramref name="location"/> — the surface's root where none is named —
     /// a page of each Port's from <c>page.From</c>, at most <c>page.Most</c>
-    /// (0: a hundred). Exit 0.
+    /// (0: a hundred). Exit 0 for an answer, none failing among them; 1, said
+    /// on <paramref name="error"/>, where there is none — the surface cannot
+    /// list them, or asked and was not answered — for nothing is then known of
+    /// the queue.
     /// </summary>
     public static int List(
         IOperatorSurface surface,
         string? location,
         (ulong From, uint Most) page,
         bool json,
-        TextWriter output)
+        TextWriter output,
+        TextWriter error)
     {
         ArgumentNullException.ThrowIfNull(surface);
         ArgumentNullException.ThrowIfNull(output);
+        ArgumentNullException.ThrowIfNull(error);
 
         string scope = location is { Length: > 0 } ? location : surface.Root();
         FailedJourneyList failed = surface.FailedJourneys(scope, page.From, page.Most);
@@ -82,7 +89,13 @@ public static class JourneyCommand
         if (json)
         {
             output.WriteLine(Document(failed));
-            return 0;
+            return failed.Listed ? 0 : 1;
+        }
+
+        if (!failed.Listed)
+        {
+            error.WriteLine(JourneyOperation.Unlisted(failed, scope, surface.Source));
+            return 1;
         }
 
         if (failed.Ports.Count == 0)
@@ -110,7 +123,8 @@ public static class JourneyCommand
         return 0;
     }
 
-    /// <summary>The Journeys that failed, as one document: each Port's,
+    /// <summary>The Journeys that failed, as one document: whether it is an
+    /// answer and, where it was asked and not answered, why; each Port's,
     /// with its count, the place its next page reads from and its
     /// Journeys.</summary>
     public static string Document(FailedJourneyList failed)
@@ -119,6 +133,8 @@ public static class JourneyCommand
 
         return JsonText.Document(writer =>
         {
+            writer.WriteBoolean("listed", failed.Listed);
+            writer.WriteString("failure", failed.Failure);
             writer.WriteStartArray("failed_journeys");
 
             foreach (FailedJourneyPort port in failed.Ports)

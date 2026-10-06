@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Xmip.Abi.Operate;
 using Xmip.Surface;
 
 namespace Xmip.Cli.Test;
@@ -112,7 +113,8 @@ public sealed class JourneyCommandTests : IDisposable
 
         SnapshotOperator surface = new(Snapshot);
         using StringWriter output = new();
-        int exit = JourneyCommand.List(surface, Port, (0, 0), json: false, output);
+        int exit = JourneyCommand.List(
+            surface, Port, (0, 0), json: false, output, TextWriter.Null);
         string said = output.ToString();
 
         Assert.Equal(0, exit);
@@ -121,7 +123,8 @@ public sealed class JourneyCommandTests : IDisposable
         Assert.Contains("j-2", said, StringComparison.Ordinal);
 
         using StringWriter paged = new();
-        JourneyCommand.List(surface, Sending, (parsed.From, parsed.Most), json: true, paged);
+        JourneyCommand.List(
+            surface, Sending, (parsed.From, parsed.Most), json: true, paged, TextWriter.Null);
         using JsonDocument document = JsonDocument.Parse(paged.ToString());
         JsonElement port = document.RootElement.GetProperty("failed_journeys")[0];
         Assert.Equal("invoices", port.GetProperty("send_port").GetString());
@@ -129,6 +132,50 @@ public sealed class JourneyCommandTests : IDisposable
         JsonElement journeys = port.GetProperty("journeys");
         Assert.Equal(1, journeys.GetArrayLength());
         Assert.Equal("j-2", journeys[0].GetProperty("journey").GetString());
+    }
+
+    [Fact]
+    public void AListSaysPlainlyWhetherNoneFailedOrNothingIsKnown()
+    {
+        static (int Exit, string Out, string Error) List(IOperatorSurface surface, bool json)
+        {
+            using StringWriter output = new();
+            using StringWriter error = new();
+            int exit = JourneyCommand.List(surface, Port, (0, 0), json, output, error);
+            return (exit, output.ToString(), error.ToString());
+        }
+
+        // Answered, and none failing.
+        string quiet = Path.Combine(_place, "quiet-snapshot.toml");
+        File.WriteAllText(quiet, $"node = \"{Cluster.Scope}\"\n");
+        (int exit, string said, string error) = List(new SnapshotOperator(quiet), json: false);
+        Assert.Equal((0, string.Empty), (exit, error));
+        Assert.Equal($"No Journey that failed waits at or beneath {Port}.", said.Trim());
+
+        // A surface that cannot list them: not known, and not "none".
+        FakeSurface unlisted = new([]);
+        (exit, said, error) = List(unlisted, json: false);
+        Assert.Equal((1, string.Empty), (exit, said));
+        Assert.Equal(
+            $"NOT LISTED: {unlisted.Source} cannot list the Journeys that failed, so whether "
+                + $"any wait at or beneath {Port} is not known — not that none do.",
+            error.Trim());
+
+        // Asked, and Xmip Storage did not answer: what it was told.
+        FakeSurface unanswered = new([])
+        {
+            Failed = FailedJourneyList.Unanswered("Xmip Storage is not open"),
+        };
+        (exit, _, error) = List(unanswered, json: false);
+        Assert.Equal((1, "FAILED: Xmip Storage is not open"), (exit, error.Trim()));
+
+        (exit, said, _) = List(unanswered, json: true);
+        using JsonDocument document = JsonDocument.Parse(said);
+        Assert.Equal(1, exit);
+        Assert.False(document.RootElement.GetProperty("listed").GetBoolean());
+        Assert.Equal(
+            "FAILED: Xmip Storage is not open",
+            document.RootElement.GetProperty("failure").GetString());
     }
 
     [Fact]
