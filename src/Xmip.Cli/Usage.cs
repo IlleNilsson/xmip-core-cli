@@ -85,7 +85,7 @@ public static class Usage
           --host <name>             programs that declared no location, on that machine
           --program <name>          one program, exactly
           --record <id>             one record, every field and property
-          --severity <word>         information, warning or error
+          --severity <word>         Information, Warning or Error
           --action <word>           one action, exactly
           --from <time>             at or after; RFC 3339, or a date and time read as UTC
           --to <time>               at or before, the same
@@ -97,7 +97,7 @@ public static class Usage
           --include-hidden          the records of a run started hidden too, marked
                                     test; left out unless given
 
-          xmip-cli audit "xmip:///C1/*" --severity error
+          xmip-cli audit "xmip:///C1/*" --severity Error
           xmip-cli audit --location xmip:///C1 --from 2026-09-29
 
         [pattern] is * and ? over the location each record's process declared;

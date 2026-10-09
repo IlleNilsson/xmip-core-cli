@@ -95,7 +95,7 @@ public sealed class EventSubscriptionCommandTests : IDisposable
     [Theory]
     [InlineData("event-subscriptions --pause --remove", "one act")]
     [InlineData("event-subscriptions --id x", "--id needs")]
-    [InlineData("event-subscriptions --severity error", "--severity only applies to 'audit'")]
+    [InlineData("event-subscriptions --severity Error", "--severity only applies to 'audit'")]
     [InlineData("list --id 3", "--id only applies to 'event-subscriptions'")]
     [InlineData("event-subscriptions --who ilian", "--who only applies")]
     public void ALineThatCannotBeObeyedIsSaidSo(string line, string said)

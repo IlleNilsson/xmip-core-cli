@@ -20,7 +20,7 @@ public sealed class AuditCommandTests
         Invocation? parsed = Invocation.Parse(
             [
                 "audit", $"{Cluster.Scope}/*", "--location", Cluster.Scope, "--host", "H1",
-                "--program", "xmip-cli", "--record", "r1", "--severity", "error",
+                "--program", "xmip-cli", "--record", "r1", "--severity", "Error",
                 "--action", "pause", "--from", "2026-09-29", "--to", "2026-09-30T12:00",
                 "--sort", "node", "--order", "ascending", "--offset", "5", "--limit", "7",
                 "--json",
@@ -38,7 +38,7 @@ public sealed class AuditCommandTests
                 Host = "H1",
                 Program = "xmip-cli",
                 Record = "r1",
-                Severity = "error",
+                Severity = "Error",
                 Action = "pause",
                 From = "2026-09-29",
                 To = "2026-09-30T12:00",
@@ -61,7 +61,7 @@ public sealed class AuditCommandTests
     }
 
     [Theory]
-    [InlineData(new[] { "health", "xmip:///", "--severity", "error" },
+    [InlineData(new[] { "health", "xmip:///", "--severity", "Error" },
         "--severity only applies to 'audit'.")]
     [InlineData(new[] { "audit", "--limit", "many" }, "--limit needs a whole number, not 'many'.")]
     [InlineData(new[] { "audit", "--location" }, "--location needs a value.")]
@@ -88,7 +88,7 @@ public sealed class AuditCommandTests
             "[[record]]\naudit_id = \"h1\"\nat = \"2026-09-30T10:00:00.000000000Z\"\n"
             + "program = \"probe\"\nhost = \"H1\"\nprocess = \"7\"\n"
             + $"location = \"{Cluster.NodeScope(0)}\"\nhidden = \"true\"\naction = \"start\"\n"
-            + "phase = \"begin\"\nseverity = \"information\"\n\n");
+            + "phase = \"Begin\"\nseverity = \"Information\"\n\n");
         using StringWriter left = new();
         using StringWriter included = new();
 
@@ -108,12 +108,12 @@ public sealed class AuditCommandTests
     public void WhatTheOperatorAskedIsRecordedInTheQuerysWords()
     {
         Invocation? parsed = Invocation.Parse(
-            ["audit", $"{Cluster.Scope}/*", "--severity", "error", "--limit", "5"], out _);
+            ["audit", $"{Cluster.Scope}/*", "--severity", "Error", "--limit", "5"], out _);
 
         IReadOnlyDictionary<string, string> said = CommandAudit.Properties(parsed!);
 
         Assert.Equal($"{Cluster.Scope}/*", said["argument"]);
-        Assert.Equal("error", said["severity"]);
+        Assert.Equal("Error", said["severity"]);
         Assert.Equal("5", said["limit"]);
         Assert.False(said.ContainsKey("pattern"));
     }
@@ -167,7 +167,7 @@ public sealed class AuditCommandTests
         using StringWriter json = new();
 
         Assert.Equal(0, AuditCommand.Run(
-            Audit(directory), new AuditQuery { Severity = "warning" }, true, json,
+            Audit(directory), new AuditQuery { Severity = "Warning" }, true, json,
             TextWriter.Null));
 
         using JsonDocument document = JsonDocument.Parse(json.ToString());
@@ -177,7 +177,7 @@ public sealed class AuditCommandTests
         JsonElement record = root.GetProperty("records")[0];
         Assert.Equal("stop", record.GetProperty("action").GetString());
         Assert.Equal("yes", record.GetProperty("properties").GetProperty("tested").GetString());
-        Assert.Contains("information", root.GetProperty("severities").EnumerateArray()
+        Assert.Contains("Information", root.GetProperty("severities").EnumerateArray()
             .Select(word => word.GetString()));
 
         using StringWriter one = new();
