@@ -27,8 +27,8 @@ public sealed class CommandAuditTests
         Assert.Contains("[[record]]", text, StringComparison.Ordinal);
         Assert.Contains("program = \"xmip-cli\"", text, StringComparison.Ordinal);
         Assert.Contains("action = \"validate\"", text, StringComparison.Ordinal);
-        Assert.Contains("phase = \"begin\"", text, StringComparison.Ordinal);
-        Assert.Contains("phase = \"failure\"", text, StringComparison.Ordinal);
+        Assert.Contains("phase = \"Begin\"", text, StringComparison.Ordinal);
+        Assert.Contains("phase = \"Failure\"", text, StringComparison.Ordinal);
         Assert.Contains("message = \"No file at missing.toml.\"", text, StringComparison.Ordinal);
         Assert.Contains("\"exit\" = \"2\"", text, StringComparison.Ordinal);
         Directory.Delete(directory, recursive: true);
@@ -42,7 +42,7 @@ public sealed class CommandAuditTests
 
         CommandAudit.Ended(audit, Line("abi"), 0, string.Empty);
 
-        Assert.Contains("phase = \"finished\"", Records(directory), StringComparison.Ordinal);
+        Assert.Contains("phase = \"Finished\"", Records(directory), StringComparison.Ordinal);
         Directory.Delete(directory, recursive: true);
     }
 
@@ -55,7 +55,7 @@ public sealed class CommandAuditTests
 
         string text = Records(directory);
         Assert.Contains("action = \"refused\"", text, StringComparison.Ordinal);
-        Assert.Contains("phase = \"failure\"", text, StringComparison.Ordinal);
+        Assert.Contains("phase = \"Failure\"", text, StringComparison.Ordinal);
         Directory.Delete(directory, recursive: true);
     }
 
@@ -110,7 +110,7 @@ public sealed class CommandAuditTests
         string text = Records(directory);
         Assert.Contains("program = \"xmip-cli\"", text, StringComparison.Ordinal);
         Assert.Contains("action = \"refused\"", text, StringComparison.Ordinal);
-        Assert.Contains("phase = \"failure\"", text, StringComparison.Ordinal);
+        Assert.Contains("phase = \"Failure\"", text, StringComparison.Ordinal);
         Directory.Delete(directory, recursive: true);
     }
 

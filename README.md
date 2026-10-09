@@ -118,10 +118,10 @@ owner, 2026-09-26: *drill-down does not work*). JSON carries it as `worst`.
 Every invocation is audited as program `xmip-cli` through the audit
 capability, reached through the runtime's library (ADR-0062; `CommandAudit`
 over `ProgramAudit` in `Xmip.Surface`): the command as it begins (action the
-command's word, phase `begin`, the arguments and options as properties — a
+command's word, phase `Begin`, the arguments and options as properties — a
 web host's user and password are left out by the capability, as they are
-from every program's record), its end (`finished`, with `exit`), a
-non-zero exit as a `failure` with its exit code and what it said on stderr, a
+from every program's record), its end (`Finished`, with `exit`), a
+non-zero exit as a `Failure` with its exit code and what it said on stderr, a
 line that could not be obeyed as `refused`, and anything unhandled as
 `unhandled` before the process ends as it would have. The records go through
 the runtime library the line states — `--runtime` reaches the audit as it
