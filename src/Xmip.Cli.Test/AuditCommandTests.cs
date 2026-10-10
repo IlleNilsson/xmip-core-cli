@@ -232,6 +232,41 @@ public sealed class AuditCommandTests
 
     // Two records, written as any program writes them: a start, and a stop
     // that warns.
+    [Fact]
+    public void VerifyWalksEachWritersChainAndSaysItInWordsAfterTheRecords()
+    {
+        // ADR-0070 clause 5: every record carries the digest of the one
+        // before it in its writer's chain, and a verification says where it
+        // breaks, or that it is whole.
+        Invocation? parsed = Invocation.Parse(["audit", "--verify"], out string problem);
+        Assert.True(parsed is not null, problem);
+        Assert.True(parsed.Audit!.Verify);
+
+        string directory = Written();
+        using StringWriter text = new();
+        using StringWriter json = new();
+
+        Assert.Equal(
+            0, AuditCommand.Run(Audit(directory), parsed.Audit, false, text, TextWriter.Null));
+        AuditCommand.Run(Audit(directory), parsed.Audit, true, json, TextWriter.Null);
+
+        Assert.Contains(
+            $"OK: the audit chain of {CommandAudit.Program} is whole: 2 records",
+            text.ToString(), StringComparison.Ordinal);
+        Assert.Contains("\"whole\":true", json.ToString(), StringComparison.Ordinal);
+
+        string file = Path.Combine(directory, "audit.toml");
+        File.WriteAllText(file, File.ReadAllText(file).Replace(
+            "\"stopped\"", "\"started\"", StringComparison.Ordinal));
+        using StringWriter changed = new();
+
+        Assert.Equal(
+            1, AuditCommand.Run(Audit(directory), parsed.Audit, false, changed, TextWriter.Null));
+        Assert.Contains("FAILED: ", changed.ToString(), StringComparison.Ordinal);
+        Assert.Contains("number 2: it was changed", changed.ToString(), StringComparison.Ordinal);
+        Directory.Delete(directory, recursive: true);
+    }
+
     private static string Written()
     {
         string directory =

@@ -311,7 +311,7 @@ the capability's:
 xmip-cli audit [pattern] --location <scope> --host <name> --program <name>
   --record <id> --severity <word> --action <word> --from <time> --to <time>
   --sort <column> --order ascending|descending --offset <n> --limit <n>
-  --include-hidden --json
+  --include-hidden --verify --json
 ```
 
 The pattern is `*` and `?` over the location each record's process declared
@@ -332,7 +332,15 @@ programs, a node's programs), then a table: time, node, program, action,
 phase, severity, summary. `--record <id>` prints that record's every field,
 its scope and its properties. `--json` is the read whole: `file`, `read`,
 `matched`, `offset`, `limit`, `groups`, `records`, and the `actions`,
-`columns` and `severities` there are to choose from. A query the capability
+`columns` and `severities` there are to choose from.
+
+`--verify` walks the audit chain of each writer of the records matched —
+a node's location, or a program's name — whole, and prints one sentence for
+each after the records: OK and how many records, or FAILED and the first
+place it breaks, a record deleted, changed or out of order (ADR-0070 clause
+5); `chains` in JSON, each with `writer`, `records`, `whole` and `said`. A
+chain that breaks exits 1. It reads no payload, so an Observer may run it
+(ADR-0009, amendment 2026-09-06). A query the capability
 does not take is its REFUSED sentence on stderr, exit 2; with no audit
 directory stated the records went to the operating system's log, which is
 said, exit 1.

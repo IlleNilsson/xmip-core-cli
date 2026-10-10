@@ -96,6 +96,8 @@ public static class Usage
           --limit <n>               how long a page: 100 by default, 1000 at most
           --include-hidden          the records of a run started hidden too, marked
                                     test; left out unless given
+          --verify                  walk the audit chain of each writer of the records
+                                    matched and say where it breaks, or OK
 
           xmip-cli audit "xmip:///C1/*" --severity Error
           xmip-cli audit --location xmip:///C1 --from 2026-09-29

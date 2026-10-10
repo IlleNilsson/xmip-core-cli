@@ -10,7 +10,10 @@ namespace Xmip.Cli;
 /// read here; whether a severity, a time or a column is one the capability
 /// takes is the capability's to say. <c>--include-hidden</c> takes no value:
 /// it reads the records of a run that declared itself hidden too (ADR-0028,
-/// amendment 2026-09-30), <c>hidden=include</c> in the query's words.
+/// amendment 2026-09-30), <c>hidden=include</c> in the query's words; nor
+/// does <c>--verify</c>: it walks the audit chain of each writer of the
+/// records matched and says where it breaks (ADR-0070 clause 5),
+/// <c>verify=yes</c>.
 /// </summary>
 public static class AuditArguments
 {
@@ -23,6 +26,9 @@ public static class AuditArguments
 
     /// <summary>The flag that reads what a hidden run recorded too.</summary>
     public const string IncludeHidden = "--include-hidden";
+
+    /// <summary>The flag that walks each writer's audit chain.</summary>
+    public const string Verify = "--verify";
 
     /// <summary>
     /// Take the option at <paramref name="index"/> into
@@ -42,6 +48,12 @@ public static class AuditArguments
         if (string.Equals(option, IncludeHidden, StringComparison.Ordinal))
         {
             query = (query ?? new AuditQuery()) with { IncludeHidden = true };
+            return true;
+        }
+
+        if (string.Equals(option, Verify, StringComparison.Ordinal))
+        {
+            query = (query ?? new AuditQuery()) with { Verify = true };
             return true;
         }
 
