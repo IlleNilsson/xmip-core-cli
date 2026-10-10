@@ -76,7 +76,19 @@ public static class AuditCommand
             WriteText(output, read);
         }
 
-        return one && read.Records.Count == 0 ? 1 : 0;
+        if (!json && read.Chains.Count > 0)
+        {
+            // Each writer's chain, in words: OK or FAILED, and where.
+            output.WriteLine();
+            foreach (AuditChain chain in read.Chains)
+            {
+                output.WriteLine(chain.Said);
+            }
+        }
+
+        // A chain that breaks is a failure, as a record not found is.
+        bool broken = read.Chains.Any(chain => !chain.Whole);
+        return (one && read.Records.Count == 0) || broken ? 1 : 0;
     }
 
     /// <summary>The read as one document: the file, the counts, the page,
@@ -117,6 +129,19 @@ public static class AuditCommand
 
             writer.WriteEndArray();
             Words(writer, "actions", read.Actions);
+            writer.WriteStartArray("chains");
+
+            foreach (AuditChain chain in read.Chains)
+            {
+                writer.WriteStartObject();
+                writer.WriteString("writer", chain.Writer);
+                writer.WriteNumber("records", chain.Records);
+                writer.WriteBoolean("whole", chain.Whole);
+                writer.WriteString("said", chain.Said);
+                writer.WriteEndObject();
+            }
+
+            writer.WriteEndArray();
             Words(writer, "columns", read.Columns);
             Words(writer, "severities", read.Severities);
         });
