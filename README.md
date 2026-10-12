@@ -338,8 +338,13 @@ its scope and its properties. `--json` is the read whole: `file`, `read`,
 a node's location, or a program's name — whole, and prints one sentence for
 each after the records: OK and how many records, or FAILED and the first
 place it breaks, a record deleted, changed or out of order (ADR-0070 clause
-5); `chains` in JSON, each with `writer`, `records`, `whole` and `said`. A
-chain that breaks exits 1. It reads no payload, so an Observer may run it
+5); `chains` in JSON, each with `writer`, `records`, `whole` and `said`.
+After them comes one sentence for each part of the file that is not a whole
+record: FAILED for a record whose write was interrupted, which the next
+append kept as written and sealed, in no chain; UNFINISHED for the file's
+end, a write still going on or not yet sealed; `fragments` in JSON, each
+with `offset`, `length`, `sealed` and `said`. A chain that breaks exits 1,
+and so does a sealed fragment; an unfinished end does not. It reads no payload, so an Observer may run it
 (ADR-0009, amendment 2026-09-06). A query the capability
 does not take is its REFUSED sentence on stderr, exit 2; with no audit
 directory stated the records went to the operating system's log, which is
