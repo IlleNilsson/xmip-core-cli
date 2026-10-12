@@ -18,11 +18,19 @@ public static class JsonText
     /// clause 10).</summary>
     public static string Document(Action<Utf8JsonWriter> body)
     {
+        return Document(body, default);
+    }
+
+    /// <summary>A document written with <paramref name="options"/>: an MCP
+    /// message (ADR-0071) escapes only what JSON requires, since the command's
+    /// document it carries is itself a string inside it.</summary>
+    public static string Document(Action<Utf8JsonWriter> body, JsonWriterOptions options)
+    {
         ArgumentNullException.ThrowIfNull(body);
 
         using MemoryStream buffer = new();
 
-        using (Utf8JsonWriter writer = new(buffer))
+        using (Utf8JsonWriter writer = new(buffer, options))
         {
             writer.WriteStartObject();
             body(writer);

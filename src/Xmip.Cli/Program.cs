@@ -1,3 +1,4 @@
+using System.Text;
 using Xmip.Cli;
 using Xmip.Surface;
 
@@ -9,8 +10,8 @@ using Xmip.Surface;
 // Text for a person on stdout; --json one document, --follow JSON Lines
 // (ADR-0014 clause 10). Every complaint goes to stderr with a non-zero exit:
 // 2 when the line could not be obeyed, 1 when the thing asked about is wrong.
-// The console, the runtime, Ctrl+C and the audit are wired here and nowhere
-// else.
+// The console and the audit are wired here and nowhere else; what each
+// command answers is CommandRun's, the one mcp's tools answer by too.
 //
 // Every invocation is audited through the capability (ADR-0062): the command
 // as it begins, its end, a non-zero exit as a failure with what it said on
@@ -50,192 +51,24 @@ static async Task<int> RunAsync(Invocation invocation, ProgramAudit audit)
             Path.Combine(AppContext.BaseDirectory, SurfaceOpen.ConfigurationFile))),
         SurfaceOpen.Runtime(invocation));
 
-    bool json = invocation.Json;
-    TextWriter output = Console.Out;
-    TextWriter error = Console.Error;
-
-    return invocation.Command switch
+    // An MCP server over standard input and output (ADR-0071): stdout carries
+    // the protocol and nothing else, so it is opened raw, without the
+    // console's encoding preamble, each message ending in one line feed;
+    // everything else said goes to stderr.
+    if (invocation.Command == Command.Mcp)
     {
-        Command.Help => Usage.Print(output),
-        Command.Abi => AbiCommand.Run(json, output),
-        Command.Status => StatusCommand.Run(invocation.Argument, json, output, error),
-        Command.Probe => ProbeCommand.Run(invocation.Argument, json, output, error),
-        Command.Health => await OverAsync(invocation, (surface, chosen) => invocation.Follow
-            ? FollowAsync(surface, chosen, HealthCommand.Answer)
-            : Task.FromResult(HealthCommand.Over(surface, chosen, json, output, error)))
-            .ConfigureAwait(false),
-        Command.Measure => await OverAsync(invocation, (surface, chosen) => invocation.Follow
-            ? FollowAsync(surface, chosen, MeasureCommand.Answer)
-            : Task.FromResult(MeasureCommand.Over(surface, chosen, json, output, error)))
-            .ConfigureAwait(false),
-        Command.List => await OverAsync(invocation, (surface, chosen) => Task.FromResult(
-            ScopeCommand.ListOver(surface, chosen, json, output, error))).ConfigureAwait(false),
-        Command.Show => await OverAsync(invocation, (surface, chosen) => Task.FromResult(
-            ScopeCommand.ShowOver(surface, chosen, json, output, error))).ConfigureAwait(false),
-        Command.Pause => await OverAsync(invocation, (surface, chosen) => Task.FromResult(
-            ScopeCommand.ApplyOver(
-                surface, chosen, ScopeAction.Pause, ScopeOperation.Who(invocation.Who),
-                json, output, error))).ConfigureAwait(false),
-        Command.Resume => await OverAsync(invocation, (surface, chosen) => Task.FromResult(
-            ScopeCommand.ApplyOver(
-                surface, chosen, ScopeAction.Resume, ScopeOperation.Who(null),
-                json, output, error))).ConfigureAwait(false),
-        Command.Validate => Validate(invocation),
+        using StreamReader input = new(Console.OpenStandardInput(), new UTF8Encoding(false));
+        using StreamWriter protocol = new(Console.OpenStandardOutput(), new UTF8Encoding(false))
+        {
+            AutoFlush = true,
+            NewLine = "\n",
+        };
 
-        // The audit read back from where this executable's own records go.
-        Command.Audit => AuditCommand.Run(
-            audit, invocation.Audit ?? new AuditQuery(), json, output, error),
-
-        // The Event subscriptions, the Subscriptions, the Dead Message
-        // Queues and a Journey that failed, over the surface the line and the
-        // document choose; the pattern is each query's, not a scope.
-        Command.EventSubscriptions => OnSurface(invocation, error, surface =>
-            EventSubscriptionCommand.Over(
-                surface,
-                invocation.EventSubscriptions ?? new EventSubscriptionQuery(),
-                invocation.EventAct,
-                ScopeOperation.Who(invocation.Who),
-                json,
-                output,
-                error)),
-        Command.Subscriptions => OnSurface(invocation, error, surface =>
-            SubscriptionCommand.Over(
-                surface,
-                invocation.Subscriptions ?? new SubscriptionQuery(),
-                invocation.Act,
-                ScopeOperation.Who(invocation.Who),
-                json,
-                output,
-                error)),
-        Command.DeadMessages => OnSurface(invocation, error, surface =>
-            DeadMessageCommand.Over(
-                surface,
-                invocation.DeadMessages ?? new DeadMessageQuery(),
-                invocation.Replay,
-                ScopeOperation.Who(invocation.Who),
-                json,
-                output,
-                error)),
-        Command.Journey when invocation.JourneyAct is { } act => OnSurface(
-            invocation, error, surface => JourneyCommand.Over(
-                surface,
-                invocation.Location,
-                invocation.Argument,
-                act,
-                ScopeOperation.Who(invocation.Who),
-                json,
-                output,
-                error)),
-        Command.Journey => OnSurface(
-            invocation, error, surface => JourneyCommand.List(
-                surface,
-                invocation.Location,
-                (invocation.From, invocation.Most),
-                json,
-                output,
-                error)),
-        _ => Usage.Print(output),
-    };
-}
-
-// Every command that answers over scopes, once: open the surface the line and
-// the document choose, select what the argument names — a wildcard among the
-// scopes that exist (ADR-0059 clause 7, read for every surface) — and refuse a
-// pattern that names nothing here and nowhere else: the words for a person,
-// the same refusal as a document for --json, on stderr and never exit 0.
-static async Task<int> OverAsync(
-    Invocation invocation, Func<IOperatorSurface, ScopeSelection, Task<int>> answer)
-{
-    IOperatorSurface? surface = SurfaceOpen.Open(invocation, out string reason);
-    using IDisposable? release = surface as IDisposable;
-
-    if (surface is null)
-    {
-        Console.Error.WriteLine(reason);
-        return 1;
-    }
-
-    ScopeSelection? chosen = ScopeSelection.Of(surface, invocation.Argument, out string unmatched);
-
-    if (chosen is null)
-    {
-        Console.Error.WriteLine(invocation.Json
-            ? ScopeCommand.Unmatched(invocation.Argument, unmatched)
-            : unmatched);
-
-        return 1;
-    }
-
-    return await answer(surface, chosen).ConfigureAwait(false);
-}
-
-// A command that answers over the surface itself, not over scopes: open the
-// surface the line and the document choose, answer, release it.
-static int OnSurface(
-    Invocation invocation, TextWriter error, Func<IOperatorSurface, int> answer)
-{
-    IOperatorSurface? surface = SurfaceOpen.Open(invocation, out string reason);
-    using IDisposable? release = surface as IDisposable;
-
-    if (surface is null)
-    {
-        error.WriteLine(reason);
-        return 1;
-    }
-
-    return answer(surface);
-}
-
-// --follow (Follow) until Ctrl+C, which is ours to end: the loop stops, the
-// runtime is released, the exit is clean. Without this the process dies
-// mid-line.
-static async Task<int> FollowAsync(
-    IOperatorSurface surface,
-    ScopeSelection chosen,
-    Func<IOperatorSurface, ScopeSelection, string> document)
-{
-    using CancellationTokenSource stop = new();
-
-    void Interrupted(object? sender, ConsoleCancelEventArgs interrupt)
-    {
-        interrupt.Cancel = true;
-        stop.Cancel();
-    }
-
-    Console.CancelKeyPress += Interrupted;
-
-    try
-    {
-        return await Follow.RunAsync(surface, chosen, document, Console.Out, stop.Token)
+        return await new McpServer(invocation, audit, SurfaceOpen.Open, Console.Error)
+            .RunAsync(input, protocol, CancellationToken.None)
             .ConfigureAwait(false);
     }
-    finally
-    {
-        Console.CancelKeyPress -= Interrupted;
-    }
-}
 
-static int Validate(Invocation invocation)
-{
-    string configurationPath = invocation.Argument;
-
-    if (!File.Exists(configurationPath))
-    {
-        Console.Error.WriteLine($"No file at {configurationPath}.");
-        return 2;
-    }
-
-    // The shared surface answers with the record and the sentence together
-    // (ADR-0052 clause 4), so the command renders the same verdict the
-    // desktop's Configure page decides from.
-    using NativeOperator surface = new(SurfaceOpen.Runtime(invocation));
-
-    if (!surface.IsLoaded)
-    {
-        Console.Error.WriteLine(surface.Reason);
-        return 1;
-    }
-
-    return ValidateCommand.Run(
-        surface.Validate(configurationPath), invocation.Json, Console.Out, Console.Error);
+    return await CommandRun.AnswerAsync(
+        invocation, audit, SurfaceOpen.Open, Console.Out, Console.Error).ConfigureAwait(false);
 }

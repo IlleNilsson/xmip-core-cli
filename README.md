@@ -34,6 +34,7 @@ xmip-cli dead-messages [pattern]
                           the Messages no Subscription matched, in each node's Dead
                           Message Queue; open one, or replay it
 xmip-cli journey [id]     list the Journeys that failed, or retry or dismiss one
+xmip-cli mcp              a Model Context Protocol server on stdin and stdout
 xmip-cli help             this text
 
 --json                    one JSON document instead of text
@@ -130,6 +131,47 @@ reaches `validate` (`ProgramAudit.Library`). Records go to
 table resolved from beside the executable; unset, the capability decides —
 `XMIP_AUDIT_DIRECTORY`, else the operating system's log, which also takes a
 record the directory cannot.
+
+## MCP
+
+`xmip-cli mcp` is a Model Context Protocol server (ADR-0071): an MCP client
+starts it and speaks JSON-RPC 2.0 on its standard input and output, one
+message a line, protocol revision `2025-11-25` (and `2025-06-18` and
+`2025-03-26` when a client asks for one of them). Stdout carries protocol
+messages and nothing else; what the server says of itself goes to stderr. It
+answers `initialize`, `ping`, `tools/list`, `tools/call`, `resources/list`,
+`resources/templates/list` and `resources/read`, takes
+`notifications/initialized` and every other notification unanswered, and
+answers any other method with JSON-RPC's *method not found*.
+
+**Its tools are the read commands**, named by their word on the line —
+`abi`, `status`, `health`, `measure`, `list`, `show`, `validate`, `audit`,
+`subscriptions`, `event-subscriptions`, `dead-messages` and `journey` — each
+taking its options without the dashes as arguments (`McpTools`: `scope` or
+`pattern`, `location`, `severity`, `verify` and the rest). A call is the line
+an operator would type, `--json` added, parsed by `Invocation` and answered
+by `CommandRun`, the dispatch the executable runs; its text is the command's
+JSON document, `isError` where the command exits non-zero, with what it said
+on stderr beneath. No act is a tool: `pause`, `resume`, the nouns' acts and
+`--who` are not arguments, a line that would act is REFUSED, and `probe` is
+left out because loading a library runs its code. Read only is the
+Observer's reach (ADR-0009, amendment 2026-09-06).
+
+**Its resources are the scopes.** Every scope is an Xmip URI (ADR-0027
+clause 3): `resources/list` gives every scope the surface publishes, the
+templates are the tree — `xmip:///{cluster}`, `xmip:///{cluster}/node/{node}`
+and the path beneath a node — and `resources/read` drills as an operator
+does: the scope's row as `show` gives it, then the rows beneath it as `list`
+does, two JSON documents under the URI. A URI with a wildcard is not a
+resource; the tools take wildcards. A scope with nothing at it is MCP's
+*resource not found*, in `show`'s words.
+
+`--runtime`, `--remote` and `--snapshot` on the `mcp` line choose the
+surface every answer reads, as they do for any command. Every answer is
+audited as its command (`CommandAudit`), the session as `mcp`. On another
+machine it is the same line over SSH, as every command is (ADR-0014 clause
+6): a client configured to start `ssh <host> xmip-cli mcp` reaches that
+machine's Xmip with SSH's authentication, and Xmip adds no listener.
 
 ## Subscriptions
 
@@ -363,8 +405,10 @@ implemented anything.
 
 `src/Xmip.Cli` is the executable. `Invocation` parses the line into a command,
 its one argument and the three options; one class per command renders over a
-`TextWriter`, so every rendering is tested without a console. `Program.cs`
-wires the console, the runtime and Ctrl+C, and nothing else.
+`TextWriter`, so every rendering is tested without a console. `CommandRun`
+answers a parsed line over the writers it is handed — the executable's
+console, or an MCP call's own (`McpServer`, `McpTools`, `McpResources`).
+`Program.cs` wires the console and the audit, and nothing else.
 
 `src/Xmip.Cli.Test` is xunit, over a fake `IOperatorSurface`: argument
 parsing, what the line states about the surface, and the text and JSON
@@ -375,7 +419,9 @@ what crosses the C ABI is the binding's to verify. The one exception is the
 audit: `CommandAuditTests` records through the runtime's library, which
 `Xmip.Abi` copies beside the tests, and runs the executable once to prove a
 refused line lands as a record; `AuditCommandTests` reads back, through the
-same library, records it wrote to a directory of its own.
+same library, records it wrote to a directory of its own. `McpServerTest`
+scripts one MCP session over in-memory streams against the test cluster's
+names.
 
 ## Public contracts and compatibility
 

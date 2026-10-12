@@ -58,4 +58,9 @@ public enum Command
     /// <summary>Retry or Dismiss one Journey that failed, sent by a node's
     /// Send Port (runtime-model.md section 13; ADR-0013).</summary>
     Journey,
+
+    /// <summary>A Model Context Protocol server over standard input and
+    /// output: the read commands as its tools, the scope tree as its
+    /// resources (ADR-0071).</summary>
+    Mcp,
 }
