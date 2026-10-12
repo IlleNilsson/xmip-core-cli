@@ -76,23 +76,29 @@ public static class AuditCommand
             WriteText(output, read);
         }
 
-        if (!json && read.Chains.Count > 0)
+        if (!json && read.Chains.Count + read.Fragments.Count > 0)
         {
-            // Each writer's chain, in words: OK or FAILED, and where.
+            // Each writer's chain, in words: OK or FAILED, and where; then
+            // each fragment no write finished, FAILED or UNFINISHED.
             output.WriteLine();
-            foreach (AuditChain chain in read.Chains)
+            foreach (string said in read.Chains.Select(chain => chain.Said)
+                .Concat(read.Fragments.Select(fragment => fragment.Said)))
             {
-                output.WriteLine(chain.Said);
+                output.WriteLine(said);
             }
         }
 
-        // A chain that breaks is a failure, as a record not found is.
-        bool broken = read.Chains.Any(chain => !chain.Whole);
+        // A chain that breaks is a failure, as a record not found is, and so
+        // is a sealed fragment, a write that was interrupted; the file's
+        // unfinished end is not, as a write may still be going on.
+        bool broken = read.Chains.Any(chain => !chain.Whole)
+            || read.Fragments.Any(fragment => fragment.Sealed);
         return (one && read.Records.Count == 0) || broken ? 1 : 0;
     }
 
     /// <summary>The read as one document: the file, the counts, the page,
-    /// the groups, the records whole, and the words to choose from.</summary>
+    /// the groups, the records whole, the chains and fragments a
+    /// verification said, and the words to choose from.</summary>
     public static string Document(AuditRead read)
     {
         ArgumentNullException.ThrowIfNull(read);
@@ -138,6 +144,19 @@ public static class AuditCommand
                 writer.WriteNumber("records", chain.Records);
                 writer.WriteBoolean("whole", chain.Whole);
                 writer.WriteString("said", chain.Said);
+                writer.WriteEndObject();
+            }
+
+            writer.WriteEndArray();
+            writer.WriteStartArray("fragments");
+
+            foreach (AuditFragment fragment in read.Fragments)
+            {
+                writer.WriteStartObject();
+                writer.WriteNumber("offset", fragment.Offset);
+                writer.WriteNumber("length", fragment.Length);
+                writer.WriteBoolean("sealed", fragment.Sealed);
+                writer.WriteString("said", fragment.Said);
                 writer.WriteEndObject();
             }
 

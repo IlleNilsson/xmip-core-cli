@@ -267,6 +267,38 @@ public sealed class AuditCommandTests
         Directory.Delete(directory, recursive: true);
     }
 
+    [Fact]
+    public void VerifySaysAnInterruptedWriteAndFailsOnlyOnceItIsSealed()
+    {
+        // ADR-0070 clause 5, built 2026-10-12: the next append seals an
+        // interrupted record; it is in no chain and said apart from them.
+        Invocation? parsed = Invocation.Parse(["audit", "--verify"], out string problem);
+        Assert.True(parsed is not null, problem);
+
+        string directory = Written();
+        File.AppendAllText(Path.Combine(directory, "audit.toml"), "[[record]]\naudit_id = \"0");
+        using StringWriter open = new();
+        using StringWriter openJson = new();
+
+        Assert.Equal(
+            0, AuditCommand.Run(Audit(directory), parsed!.Audit!, false, open, TextWriter.Null));
+        AuditCommand.Run(Audit(directory), parsed.Audit!, true, openJson, TextWriter.Null);
+        Assert.Contains("UNFINISHED: ", open.ToString(), StringComparison.Ordinal);
+        Assert.Contains("\"sealed\":false", openJson.ToString(), StringComparison.Ordinal);
+
+        Audit(directory).Record("stop", AuditPhase.Finished, AuditSeverity.Warning, "again");
+        using StringWriter sealedText = new();
+
+        Assert.Equal(
+            1, AuditCommand.Run(Audit(directory), parsed.Audit!, false, sealedText,
+                TextWriter.Null));
+        Assert.Contains(
+            $"OK: the audit chain of {CommandAudit.Program} is whole: 3 records",
+            sealedText.ToString(), StringComparison.Ordinal);
+        Assert.Contains("FAILED: ", sealedText.ToString(), StringComparison.Ordinal);
+        Directory.Delete(directory, recursive: true);
+    }
+
     private static string Written()
     {
         string directory =

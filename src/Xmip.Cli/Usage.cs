@@ -97,7 +97,8 @@ public static class Usage
           --include-hidden          the records of a run started hidden too, marked
                                     test; left out unless given
           --verify                  walk the audit chain of each writer of the records
-                                    matched and say where it breaks, or OK
+                                    matched and say where it breaks, or OK, and
+                                    say each record whose write was interrupted
 
           xmip-cli audit "xmip:///C1/*" --severity Error
           xmip-cli audit --location xmip:///C1 --from 2026-09-29
