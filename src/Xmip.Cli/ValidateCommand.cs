@@ -13,6 +13,36 @@ namespace Xmip.Cli;
 /// </summary>
 public static class ValidateCommand
 {
+    /// <summary>Validate the file at <paramref name="configurationPath"/>
+    /// with the runtime at <paramref name="runtime"/> and render the verdict.
+    /// Exit 2 when there is no file, 1 when the runtime cannot be loaded or
+    /// the document is not valid.</summary>
+    public static int Over(
+        string runtime, string configurationPath, bool json, TextWriter output,
+        TextWriter error)
+    {
+        ArgumentNullException.ThrowIfNull(error);
+
+        if (!File.Exists(configurationPath))
+        {
+            error.WriteLine($"No file at {configurationPath}.");
+            return 2;
+        }
+
+        // The shared surface answers with the record and the sentence together
+        // (ADR-0052 clause 4), so the command renders the same verdict the
+        // desktop's Configure page decides from.
+        using NativeOperator surface = new(runtime);
+
+        if (!surface.IsLoaded)
+        {
+            error.WriteLine(surface.Reason);
+            return 1;
+        }
+
+        return Run(surface.Validate(configurationPath), json, output, error);
+    }
+
     /// <summary>Render one verdict: text for a person, or the record as a
     /// document. Exit 0 when the document is valid, 1 when it is not.</summary>
     public static int Run(

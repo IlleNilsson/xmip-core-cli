@@ -30,6 +30,9 @@ public static class Usage
                                     replay it
           xmip-cli journey [id]     list the Journeys that failed, or retry or
                                     dismiss one
+          xmip-cli mcp              a Model Context Protocol server on stdin and
+                                    stdout: the read commands as its tools, the
+                                    scopes as its resources
           xmip-cli help             this text
 
           --json                    one JSON document instead of text
@@ -70,6 +73,17 @@ public static class Usage
         Xmip:RuntimeLibrary in the configuration, else XMIP_RUNTIME_LIBRARY,
         else the library beside this executable. Every command answers over
         the C ABI in xmip-core-abi; nothing here links Xmip's Rust.
+
+        mcp is for an MCP client that starts it (ADR-0071): JSON-RPC 2.0 on
+        stdin and stdout, one message a line, and nothing else on stdout. Its
+        tools are the read commands — abi, status, health, measure, list,
+        show, validate, audit, subscriptions, event-subscriptions,
+        dead-messages and journey, each with its options as arguments — and
+        never an act. Its resources are the scopes, each an Xmip URI, read as
+        an operator drills: the scope's row, then the rows beneath it.
+        --runtime, --remote and --snapshot on its line choose the surface
+        every answer reads, and each answer is audited as its command. On
+        another machine it is the same line over SSH.
 
         Every invocation is audited as program xmip-cli (ADR-0062): the
         command as it begins and ends, a non-zero exit as a failure with what
