@@ -4,17 +4,18 @@
 # xmip.powershell.toml, read by the same reader (ADR-0052).
 #
 # Paths are relative to this file's directory. The line wins over this
-# document: --remote <host:port> follows a node and --runtime <path> loads a
-# library, whatever is written here.
+# document: --remote <host:port> and --local <endpoint> follow a node and
+# --runtime <path> loads a library, whatever is written here.
 
 [Xmip]
-# Which surface a command reads (ADR-0052 clause 3): "native", the runtime's
-# library loaded into this process, "snapshot", a file a node or the
-# Playground publishes, or "remote", a node followed over gRPC at its operate
-# Address. Stated here and never guessed. With no surface named, a command
-# loads whatever library the one discovery rule finds — RuntimeLibrary below,
-# else XMIP_RUNTIME_LIBRARY, else the library beside the executable — and
-# validate always does, since it asks a runtime.
+# Which surface a command reads (ADR-0052 clause 3): "local", a node on this
+# machine followed over gRPC at the local endpoint Local names (ADR-0014,
+# amendment 2026-10-13), "snapshot", a file a node or the Playground
+# publishes, or "remote", a node on another machine followed over gRPC at its
+# operate Address. Stated here and never guessed. With no surface named, a
+# command names no node and says so; validate asks the library the one
+# discovery rule finds — RuntimeLibrary below, else XMIP_RUNTIME_LIBRARY, else
+# the library beside the executable — since it has no node behind it.
 #
 # As shipped, in a developer's clone: the Playground roll the estate's own
 # walkthrough starts, which names its cluster C1 only because a roll must be
@@ -27,7 +28,8 @@ Surface = "snapshot"
 # deployment leaves it out or says runtime.
 Purpose = "test"
 
-# The runtime's native library, exporting xmip_operate_v1.
+# The runtime's native library, exporting xmip_operate_v1: what a command
+# calls the runtime through, the gRPC client among it.
 # RuntimeLibrary = "../../../../../platform/runtime/target/debug/xmip_core_runtime.dll"
 
 # The file to read when Surface = "snapshot". A path with no file behind it
@@ -37,6 +39,11 @@ Purpose = "test"
 # publishes under .local-work/playground. The file is named for the cluster
 # the roll was started as, so this line follows one roll and no other.
 Snapshot = "../../../../../../../../../.local-work/playground/C1-snapshot.toml"
+
+# The node on this machine to follow when Surface = "local": its local
+# endpoint, as its [operate] local names it. The node takes every act as the
+# user this executable runs as.
+# Local = "xmip-node1"
 
 # The node to follow when Surface = "remote", and on --remote too: its
 # operate address, host:port (ADR-0067). gRPC inside Xmip's mutual TLS,

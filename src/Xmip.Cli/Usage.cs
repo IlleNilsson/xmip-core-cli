@@ -38,13 +38,15 @@ public static class Usage
           --json                    one JSON document instead of text
           --follow                  with health or measure: JSON Lines as they change
           --runtime <path>          the runtime library, instead of finding it
-          --remote <host:port>      a node's operate address, instead of a runtime here
+          --remote <host:port>      a node on another machine, at its operate address
+          --local <endpoint>        a node on this machine, at its local endpoint
           --snapshot <path>         a published snapshot to read, instead of the document's
           --who <name>              with pause, or the act of subscriptions,
                                     event-subscriptions, dead-messages or
                                     journey: who acts, instead of the
                                     current user; over --remote the node takes
-                                    the act as your certificate's subject
+                                    the act as your certificate's subject, over
+                                    --local as the user you run as
 
         A <scope> is one scope, or a wildcard over the scopes that exist:
         * for any run of characters, ? for exactly one, everything else
@@ -71,8 +73,11 @@ public static class Usage
 
         The runtime is found by one rule, the same for every surface:
         Xmip:RuntimeLibrary in the configuration, else XMIP_RUNTIME_LIBRARY,
-        else the library beside this executable. Every command answers over
-        the C ABI in xmip-core-abi; nothing here links Xmip's Rust.
+        else the library beside this executable. A node is operated over gRPC
+        to its operate listener, on this machine at its local endpoint and on
+        another at its operate address, through the runtime's client in that
+        library; validate and abi ask the library itself, with no node behind
+        them. Nothing here links Xmip's Rust.
 
         mcp is for an MCP client that starts it (ADR-0071): JSON-RPC 2.0 on
         stdin and stdout, one message a line, and nothing else on stdout. Its
@@ -81,7 +86,7 @@ public static class Usage
         dead-messages and journey, each with its options as arguments — and
         never an act. Its resources are the scopes, each an Xmip URI, read as
         an operator drills: the scope's row, then the rows beneath it.
-        --runtime, --remote and --snapshot on its line choose the surface
+        --runtime, --remote, --local and --snapshot on its line choose the surface
         every answer reads, and each answer is audited as its command. On
         another machine it is the same line over SSH.
 

@@ -111,7 +111,8 @@ public static class JourneyCommand
 
             foreach (FailedJourneyRecord journey in port.Journeys)
             {
-                output.WriteLine($"  {journey.Journey}  place {journey.Sequence}  {journey.Reason}");
+                output.WriteLine(
+                    $"  {journey.Journey}  place {journey.Sequence}  {journey.Reason}");
             }
 
             if (port.Next is { } next)

@@ -131,6 +131,23 @@ public sealed class InvocationTests
     }
 
     [Fact]
+    public void LocalNamesANodesLocalEndpointAndNeedsOne()
+    {
+        // ADR-0014, amendment 2026-10-13: a node on this machine is followed
+        // over gRPC at its local endpoint, and the line states it like a remote.
+        Invocation? parsed = Invocation.Parse(
+            ["health", "xmip:///", "--local", "xmip-node1"], out _);
+
+        Assert.NotNull(parsed);
+        Assert.Equal("xmip-node1", parsed.Local);
+        Assert.Equal("xmip-node1", parsed.Line.Local);
+        Assert.Null(parsed.Remote);
+
+        Assert.Null(Invocation.Parse(["health", "xmip:///", "--local"], out string bare));
+        Assert.Equal(LocalOperator.Refusal(null), bare);
+    }
+
+    [Fact]
     public void WhoNamesThePauserAndOnlyForPause()
     {
         Invocation? parsed = Invocation.Parse(
