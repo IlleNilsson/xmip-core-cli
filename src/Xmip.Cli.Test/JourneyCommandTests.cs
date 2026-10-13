@@ -118,8 +118,10 @@ public sealed class JourneyCommandTests : IDisposable
         string said = output.ToString();
 
         Assert.Equal(0, exit);
-        Assert.Contains("Send Port invoices: 2 failed in its queue", said, StringComparison.Ordinal);
-        Assert.Contains("j-1  place 3  invoices: the far end refused it", said, StringComparison.Ordinal);
+        Assert.Contains(
+            "Send Port invoices: 2 failed in its queue", said, StringComparison.Ordinal);
+        Assert.Contains(
+            "j-1  place 3  invoices: the far end refused it", said, StringComparison.Ordinal);
         Assert.Contains("j-2", said, StringComparison.Ordinal);
 
         using StringWriter paged = new();

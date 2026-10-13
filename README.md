@@ -40,32 +40,41 @@ xmip-cli help             this text
 --json                    one JSON document instead of text
 --follow                  with health or measure: JSON Lines as they change
 --runtime <path>          the runtime library, instead of finding it
---remote <host:port>      a node's operate address, instead of a runtime here
+--remote <host:port>      a node on another machine, at its operate address
+--local <endpoint>        a node on this machine, at its local endpoint
 --snapshot <path>         a published snapshot to read, instead of the document's
 --who <name>              with pause, or the act of subscriptions, event-subscriptions,
                           dead-messages or journey: who acts, instead of the current user;
-                          over --remote the node takes the act as your certificate's subject
+                          over --remote the node takes the act as your certificate's
+                          subject, over --local as the user you run as
 ```
 
 Which surface a command reads is stated in `xmip.cli.toml` beside the
 executable, with the same `[Xmip]` keys as the GUI hosts and the PowerShell
-module — `Surface = "native" | "snapshot" | "remote"`, `RuntimeLibrary`,
-`Snapshot`, `Url` — and never guessed (ADR-0052 clause 3). As shipped, in a
+module — `Surface = "local" | "snapshot" | "remote"`, `Local`, `Address`,
+`RuntimeLibrary`, `Snapshot` — and never guessed (ADR-0052 clause 3). As shipped, in a
 developer's clone, it follows the Playground roll started as cluster C1 — a
 name the walkthrough picked, and nothing Xmip knows — the same file the
 PowerShell prompt follows, so `xmip-cli show xmip:///C1` answers while a roll
 runs and says `SNAPSHOT — no file at ...` before one has. Roll under another
-name and `Snapshot` names that file instead. With
-no surface named, the runtime library is found by the one rule every surface
-uses: `Xmip:RuntimeLibrary` in the document, else the `XMIP_RUNTIME_LIBRARY`
-environment variable, else the library beside the executable. The line wins
-over the document, in one order — `--remote`, then `--snapshot`, then
-`--runtime` — which is `SurfaceChoice.Stated` in `Xmip.Surface`, the same
-precedence `Get-XmipHealth -Remote -Snapshot -Library` follows in PowerShell.
-`--snapshot` reads one cluster's publication, `--runtime` loads that library —
-what each of the three answers, and whether an act applies at once or is
-submitted as an order, is the table *What each source answers* in
-`module/foundation/abi/README.md` — and `--remote node1:7401` reads the
+name and `Snapshot` names that file instead. With no surface named, no node
+is named, and a command says so. The runtime library — what every command
+calls the runtime through, its gRPC client among it — is found by the one
+rule every surface uses: `Xmip:RuntimeLibrary` in the document, else the
+`XMIP_RUNTIME_LIBRARY` environment variable, else the library beside the
+executable; `--runtime` names another and chooses no surface. The line wins
+over the document, in one order — `--remote`, then `--local`, then
+`--snapshot` — which is `SurfaceChoice.Stated` in `Xmip.Surface`, the same
+precedence `Get-XmipHealth -Remote -Local -Snapshot` follows in PowerShell.
+`--snapshot` reads one cluster's publication — what each source answers, and
+whether an act applies at once or is submitted as an order, is the table
+*What each source answers* in `module/foundation/abi/README.md` — and
+`--local xmip-node1` follows the node on this machine whose `[operate]
+local` names that endpoint, over gRPC on a named pipe on Windows and a Unix
+domain socket elsewhere (ADR-0014, amendment 2026-10-13): no certificate,
+the operating system proving to the node which user you run as, and the
+node taking every act as that user where the role its `[operate]` grants
+may act. `--remote node1:7401` reads the
 node at that operate address over gRPC (ADR-0014, amendment 2026-10-12): the
 runtime's remote surface reads its publication and is told when it
 advances, so `--follow` on another machine never polls, and an act is taken
@@ -73,8 +82,8 @@ by the node as your certificate's subject where the role its `[operate]`
 grants may act. It is Xmip's mutual TLS always, presenting the certificate
 the document's `Certificate` and `PrivateKey` name and taking the node only
 where its certificate reaches `TrustAnchor` (else `XMIP_CERTIFICATE`,
-`XMIP_PRIVATE_KEY`, `XMIP_TRUST_ANCHOR`; ADR-0063). `validate`
-stays local, since it asks a runtime. Text
+`XMIP_PRIVATE_KEY`, `XMIP_TRUST_ANCHOR`; ADR-0063). `validate` asks the
+runtime library itself, since no node stands behind it. Text
 goes to stdout for a person, column-aligned;
 `--json` emits one document; `--follow` subscribes to the shared operator
 change stream and emits one JSON Lines record each time the snapshot it reads

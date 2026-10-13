@@ -55,4 +55,57 @@ public static class NounArguments
         act = named;
         return true;
     }
+
+    /// <summary>
+    /// The first of audit's options <paramref name="command"/> does not take,
+    /// said as the line's problem; null when there is none. Every noun shares
+    /// where it stands and its order with audit, a Journey where it stands and
+    /// the page of its list; the rest of audit's words are audit's.
+    /// </summary>
+    public static string? Foreign(Command command, IEnumerable<string> auditOptions)
+    {
+        ArgumentNullException.ThrowIfNull(auditOptions);
+
+        bool noun = command
+            is Command.EventSubscriptions or Command.Subscriptions or Command.DeadMessages;
+
+        string? foreign = command is Command.Journey
+            ? auditOptions.FirstOrDefault(option => !JourneyArguments.Shared.Contains(option))
+            : noun
+                ? auditOptions.FirstOrDefault(option => !Shared.Contains(option))
+                : command is Command.Audit ? null : auditOptions.FirstOrDefault();
+
+        return foreign is null ? null : $"{foreign} only applies to 'audit'.";
+    }
+
+    /// <summary>
+    /// The first of the nouns' options <paramref name="command"/> does not
+    /// take, said as the line's problem; null when there is none.
+    /// </summary>
+    public static string? Stray(Command command, IEnumerable<string> nounOptions)
+    {
+        ArgumentNullException.ThrowIfNull(nounOptions);
+
+        foreach (string option in nounOptions)
+        {
+            string? owner = EventSubscriptionArguments.Options.Contains(option)
+                ? command is Command.EventSubscriptions ? null : "'event-subscriptions'"
+                : SubscriptionArguments.Options.Contains(option)
+                    ? command is Command.Subscriptions ? null : "'subscriptions'"
+                    : DeadMessageArguments.Options.Contains(option)
+                        ? command is Command.DeadMessages ? null : "'dead-messages'"
+                        : command is Command.EventSubscriptions or Command.Subscriptions
+                            or Command.DeadMessages or Command.Journey
+                            ? null
+                            : "'event-subscriptions', 'subscriptions', 'dead-messages' "
+                                + "and 'journey'";
+
+            if (owner is not null)
+            {
+                return $"{option} only applies to {owner}.";
+            }
+        }
+
+        return null;
+    }
 }

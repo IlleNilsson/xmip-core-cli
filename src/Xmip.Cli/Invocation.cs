@@ -15,11 +15,12 @@ namespace Xmip.Cli;
 /// ADR-0014 clause 10.</param>
 /// <param name="Follow">Emit JSON Lines of health or figures as they change,
 /// until interrupted. Implies <see cref="Json"/>.</param>
-/// <param name="Runtime">An explicit runtime library, overriding discovery.
-/// Null when the discovery rule decides.</param>
-/// <param name="Remote">A node on another machine to follow instead of a
-/// runtime here, at its operate address (ADR-0014, amendment 2026-10-12).
-/// Null when the surface is local.</param>
+/// <param name="Runtime">An explicit runtime library, overriding discovery:
+/// what the command calls the runtime through. It chooses no surface. Null
+/// when the discovery rule decides.</param>
+/// <param name="Remote">A node on another machine to follow, at its operate
+/// address (ADR-0014, amendment 2026-10-12). Null when the line names
+/// none.</param>
 /// <param name="Snapshot">One published snapshot to read, overriding the
 /// document. One and never several: a command answers at one scope, and a
 /// rollup or a sum over two clusters would be a figure at a scope that is in
@@ -75,9 +76,14 @@ public sealed record Invocation(
     ulong From = 0,
     uint Most = 0)
 {
+    /// <summary>A node on this machine to follow, at its local endpoint
+    /// (<c>--local</c>; ADR-0014, amendment 2026-10-13). Null when the line
+    /// names none.</summary>
+    public string? Local { get; init; }
+
     /// <summary>What this line states about the surface to read, for the one
     /// precedence every surface shares (<see cref="SurfaceChoice.Stated"/>).</summary>
-    public SurfaceLine Line => new(Remote, Snapshot, Runtime);
+    public SurfaceLine Line => new(Remote, Snapshot, Runtime, Local);
 
     // Each command, and how many arguments it takes: none, one, or one at most.
     private static readonly Dictionary<string, (Command Command, int Minimum, int Maximum)>
@@ -115,6 +121,7 @@ public sealed record Invocation(
         bool follow = false;
         string? runtime = null;
         string? remote = null;
+        string? local = null;
         string? snapshot = null;
         string? who = null;
         AuditQuery? audit = null;
@@ -183,6 +190,16 @@ public sealed record Invocation(
 
                     remote = args[++i];
                     break;
+                case "--local":
+                    if (LocalOperator.Refusal(i + 1 < args.Count ? args[i + 1] : null)
+                        is { } noEndpoint)
+                    {
+                        problem = noEndpoint;
+                        return null;
+                    }
+
+                    local = args[++i];
+                    break;
                 case "--who":
                     if (i + 1 >= args.Count || string.IsNullOrWhiteSpace(args[i + 1]))
                     {
@@ -224,7 +241,10 @@ public sealed record Invocation(
             problem = string.Empty;
 
             return new Invocation(
-                Command.Help, string.Empty, json, follow, runtime, remote, snapshot, who);
+                Command.Help, string.Empty, json, follow, runtime, remote, snapshot, who)
+            {
+                Local = local,
+            };
         }
 
         if (!Known.TryGetValue(words[0], out (Command Command, int Minimum, int Maximum) known))
@@ -276,22 +296,13 @@ public sealed record Invocation(
             return null;
         }
 
-        // Every noun shares where it stands and its order with audit, a
-        // Journey where it stands and the page of its list; the rest of
-        // audit's words are audit's.
-        string? foreign = known.Command is Command.Journey
-            ? auditOptions.FirstOrDefault(option => !JourneyArguments.Shared.Contains(option))
-            : noun
-                ? auditOptions.FirstOrDefault(option => !NounArguments.Shared.Contains(option))
-                : known.Command is Command.Audit ? null : auditOptions.FirstOrDefault();
-
-        if (foreign is not null)
+        if (NounArguments.Foreign(known.Command, auditOptions) is { } foreign)
         {
-            problem = $"{foreign} only applies to 'audit'.";
+            problem = foreign;
             return null;
         }
 
-        if (Stray(known.Command, nounOptions) is { } stray)
+        if (NounArguments.Stray(known.Command, nounOptions) is { } stray)
         {
             problem = stray;
             return null;
@@ -369,33 +380,9 @@ public sealed record Invocation(
             journeyAct,
             known.Command is Command.Journey ? audit?.Location : null,
             known.Command is Command.Journey ? (ulong)Math.Max(audit?.Offset ?? 0, 0) : 0,
-            known.Command is Command.Journey ? (uint)Math.Max(audit?.Limit ?? 0, 0) : 0);
-    }
-
-    // The first option of the nouns' that the command named does not take,
-    // said as the line's problem; null when there is none.
-    private static string? Stray(Command command, List<string> nounOptions)
-    {
-        foreach (string option in nounOptions)
+            known.Command is Command.Journey ? (uint)Math.Max(audit?.Limit ?? 0, 0) : 0)
         {
-            string? owner = EventSubscriptionArguments.Options.Contains(option)
-                ? command is Command.EventSubscriptions ? null : "'event-subscriptions'"
-                : SubscriptionArguments.Options.Contains(option)
-                    ? command is Command.Subscriptions ? null : "'subscriptions'"
-                    : DeadMessageArguments.Options.Contains(option)
-                        ? command is Command.DeadMessages ? null : "'dead-messages'"
-                        : command is Command.EventSubscriptions or Command.Subscriptions
-                            or Command.DeadMessages or Command.Journey
-                            ? null
-                            : "'event-subscriptions', 'subscriptions', 'dead-messages' "
-                                + "and 'journey'";
-
-            if (owner is not null)
-            {
-                return $"{option} only applies to {owner}.";
-            }
-        }
-
-        return null;
+            Local = local,
+        };
     }
 }

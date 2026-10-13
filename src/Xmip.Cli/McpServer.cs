@@ -178,12 +178,14 @@ public sealed class McpServer(
     /// <summary>
     /// What follows every line a tool or a resource answers by: the surface
     /// the <c>mcp</c> line stated — <c>--runtime</c>, <c>--remote</c>,
-    /// <c>--snapshot</c> — and <c>--json</c>, since a client reads documents.
+    /// <c>--local</c>, <c>--snapshot</c> — and <c>--json</c>, since a client
+    /// reads documents.
     /// </summary>
     public IReadOnlyList<string> SessionLine { get; } =
     [
         .. Stated("--runtime", session.Runtime),
         .. Stated("--remote", session.Remote),
+        .. Stated("--local", session.Local),
         .. Stated("--snapshot", session.Snapshot),
         "--json",
     ];
