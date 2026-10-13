@@ -51,9 +51,8 @@ public static class CommandAudit
 
     /// <summary>
     /// What the operator typed, as properties. No option of the line is a
-    /// secret; a web host's address may carry a user and password, and the
-    /// audit capability leaves those out of every record, so it is handed
-    /// over as typed.
+    /// secret, and every value is handed over as typed; the audit capability
+    /// leaves out any user and password an address carries, in every record.
     /// </summary>
     public static IReadOnlyDictionary<string, string> Properties(Invocation invocation)
     {

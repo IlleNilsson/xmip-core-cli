@@ -109,28 +109,25 @@ public sealed class InvocationTests
     }
 
     [Fact]
-    public void RemoteNamesAWebHost()
+    public void RemoteNamesANodesOperateAddress()
     {
         Invocation? parsed = Invocation.Parse(
-            ["health", "xmip:///", "--remote", "http://host:5087", "--follow"], out _);
+            ["health", "xmip:///", "--remote", "node1:7401", "--follow"], out _);
 
         Assert.NotNull(parsed);
-        Assert.Equal("http://host:5087", parsed.Remote);
+        Assert.Equal("node1:7401", parsed.Remote);
         Assert.Null(parsed.Runtime);
         Assert.True(parsed.Follow);
     }
 
     [Fact]
-    public void RemoteNeedsAnAbsoluteUrl()
+    public void RemoteNeedsAnAddress()
     {
-        // The sentence is the one every surface says (RemoteOperator.Refusal).
+        // The sentence is the one every surface says (RemoteOperator.Refusal);
+        // what an address is, the runtime judges as it opens it.
         Assert.Null(Invocation.Parse(["health", "xmip:///", "--remote"], out string bare));
         Assert.Equal(RemoteOperator.Refusal(null), bare);
-
-        Assert.Null(Invocation.Parse(
-            ["health", "xmip:///", "--remote", "host:5087"], out string relative));
-        Assert.Equal(RemoteOperator.Refusal("host:5087"), relative);
-        Assert.Contains("https://host:5443", relative, StringComparison.Ordinal);
+        Assert.Contains("node1:7401", bare, StringComparison.Ordinal);
     }
 
     [Fact]

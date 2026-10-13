@@ -72,23 +72,6 @@ public sealed class CommandAuditTests
     }
 
     [Fact]
-    public void AWebHostsUserAndPasswordAreNeverRecorded()
-    {
-        // Handed over as typed; the audit capability leaves the secret out of
-        // every record, for every program, once.
-        string directory = Scratch();
-        ProgramAudit audit = new(CommandAudit.Program, directory);
-
-        CommandAudit.Begun(
-            audit, Line("measure", "--remote", "http://operator:secret@elsewhere:5087"));
-
-        string text = Records(directory);
-        Assert.Contains("\"remote\" = \"http://elsewhere:5087\"", text, StringComparison.Ordinal);
-        Assert.DoesNotContain("secret", text, StringComparison.Ordinal);
-        Directory.Delete(directory, recursive: true);
-    }
-
-    [Fact]
     public void TheExecutableRecordsALineItRefuses()
     {
         string directory = Scratch();

@@ -17,9 +17,9 @@ namespace Xmip.Cli;
 /// until interrupted. Implies <see cref="Json"/>.</param>
 /// <param name="Runtime">An explicit runtime library, overriding discovery.
 /// Null when the discovery rule decides.</param>
-/// <param name="Remote">A web host on another machine to follow instead of a
-/// runtime here (ADR-0052, amendment 2026-09-15). Null when the surface is
-/// local.</param>
+/// <param name="Remote">A node on another machine to follow instead of a
+/// runtime here, at its operate address (ADR-0014, amendment 2026-10-12).
+/// Null when the surface is local.</param>
 /// <param name="Snapshot">One published snapshot to read, overriding the
 /// document. One and never several: a command answers at one scope, and a
 /// rollup or a sum over two clusters would be a figure at a scope that is in
@@ -175,9 +175,9 @@ public sealed record Invocation(
                     break;
                 case "--remote":
                     if (RemoteOperator.Refusal(i + 1 < args.Count ? args[i + 1] : null)
-                        is { } notAWebHost)
+                        is { } noAddress)
                     {
-                        problem = notAWebHost;
+                        problem = noAddress;
                         return null;
                     }
 

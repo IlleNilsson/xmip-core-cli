@@ -40,11 +40,11 @@ xmip-cli help             this text
 --json                    one JSON document instead of text
 --follow                  with health or measure: JSON Lines as they change
 --runtime <path>          the runtime library, instead of finding it
---remote <url>            a web host to follow, instead of a runtime here
+--remote <host:port>      a node's operate address, instead of a runtime here
 --snapshot <path>         a published snapshot to read, instead of the document's
 --who <name>              with pause, or the act of subscriptions, event-subscriptions,
                           dead-messages or journey: who acts, instead of the current user;
-                          over --remote the host takes the act as your certificate's subject
+                          over --remote the node takes the act as your certificate's subject
 ```
 
 Which surface a command reads is stated in `xmip.cli.toml` beside the
@@ -65,14 +65,15 @@ precedence `Get-XmipHealth -Remote -Snapshot -Library` follows in PowerShell.
 `--snapshot` reads one cluster's publication, `--runtime` loads that library —
 what each of the three answers, and whether an act applies at once or is
 submitted as an order, is the table *What each source answers* in
-`module/foundation/abi/README.md` — and `--remote
-https://host:5443` reads no library at all: it follows that web host's surface
-hub over SignalR and is told when the host's surface changes, so `--follow` on
-another machine never polls (ADR-0052, amendment 2026-09-15). It is TLS,
-presenting the certificate the document's `Certificate` and `PrivateKey` name
-and checking the host's against `TrustAnchor` (else `XMIP_CERTIFICATE`,
-`XMIP_PRIVATE_KEY`, `XMIP_TRUST_ANCHOR`); plain http is refused to anything
-but this machine (ADR-0063 clause 1). `validate`
+`module/foundation/abi/README.md` — and `--remote node1:7401` reads the
+node at that operate address over gRPC (ADR-0014, amendment 2026-10-12): the
+runtime's remote surface reads its publication and is told when it
+advances, so `--follow` on another machine never polls, and an act is taken
+by the node as your certificate's subject where the role its `[operate]`
+grants may act. It is Xmip's mutual TLS always, presenting the certificate
+the document's `Certificate` and `PrivateKey` name and taking the node only
+where its certificate reaches `TrustAnchor` (else `XMIP_CERTIFICATE`,
+`XMIP_PRIVATE_KEY`, `XMIP_TRUST_ANCHOR`; ADR-0063). `validate`
 stays local, since it asks a runtime. Text
 goes to stdout for a person, column-aligned;
 `--json` emits one document; `--follow` subscribes to the shared operator
