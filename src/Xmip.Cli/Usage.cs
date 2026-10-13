@@ -38,12 +38,12 @@ public static class Usage
           --json                    one JSON document instead of text
           --follow                  with health or measure: JSON Lines as they change
           --runtime <path>          the runtime library, instead of finding it
-          --remote <url>            a web host to follow, instead of a runtime here
+          --remote <host:port>      a node's operate address, instead of a runtime here
           --snapshot <path>         a published snapshot to read, instead of the document's
           --who <name>              with pause, or the act of subscriptions,
                                     event-subscriptions, dead-messages or
                                     journey: who acts, instead of the
-                                    current user; over --remote the host takes
+                                    current user; over --remote the node takes
                                     the act as your certificate's subject
 
         A <scope> is one scope, or a wildcard over the scopes that exist:
