@@ -24,6 +24,10 @@ xmip-cli show <scope>     one scope: its mood, its worst leaf and why, its figur
 xmip-cli pause <scope>    pause everything at and beneath a scope
 xmip-cli resume <scope>   resume everything at and beneath a scope
 xmip-cli validate <toml>  check a node configuration without starting it
+xmip-cli certificate [request]
+                          with --operator, make a person's key and certificate
+                          request; with --sign, sign one by the authority a
+                          node configuration names
 xmip-cli audit [pattern]  what the audit recorded, newest first
 xmip-cli subscriptions [pattern]
                           the Subscriptions the nodes route by; pause or resume one
@@ -114,6 +118,22 @@ runs as — `ScopeOperation.Who`, the rule `Suspend-XmipScope -Who` and the GUI
 follow. Over `--remote` no name crosses the wire: the web host takes an act as
 the subject of the client certificate this side presented, only where its role
 may act, and refuses it in words otherwise (ADR-0009, amendment 2026-10-03).
+
+**A person's certificate.** `certificate` makes and signs the certificate a
+person's surface — the phone first — presents to a node's operate listener
+(ADR-0034, amendment 2026-10-15): client authentication alone, its subject
+the person, `CN=<person>`, the caller the listener proves and grants its
+`[operate]` role. `xmip-cli certificate --operator alice@example.org --out
+phone` makes a fresh key and a request naming the person as
+`phone/operator.key` and `phone/operator.csr`; `xmip-cli certificate
+phone/operator.csr --sign node.toml --out phone/operator.pem` signs it by the
+authority that node configuration's `[provision.operator]` names, for its
+`lifetime`, the chain to stdout where `--out` names no file. Running `--sign`
+is the approval, out of band. A request asking more than client
+authentication for a person is refused in the runtime's words, nothing is
+overwritten, and both exit 1 when refused. The files are `OperatorCertificate`'s
+in `Xmip.Surface`, the rules the runtime's (`xmip_operate.h` section 19), the
+same `New-XmipCertificate` uses. It is no MCP tool: it makes a key or signs.
 
 **The drill.** `list` with no scope lists what is beneath the cluster the
 surface publishes at (`IOperatorSurface.Root`), never the one row of the

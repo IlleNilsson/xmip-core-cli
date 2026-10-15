@@ -38,6 +38,11 @@ public enum Command
     /// <summary>Check a node configuration without starting it.</summary>
     Validate,
 
+    /// <summary>A person's certificate: a key and a request made, or a
+    /// request signed by the authority a node's configuration names
+    /// (ADR-0034, amendment 2026-10-15).</summary>
+    Certificate,
+
     /// <summary>What the audit recorded, as the audit capability reads it
     /// back (ADR-0062, amendment 2026-09-29).</summary>
     Audit,
