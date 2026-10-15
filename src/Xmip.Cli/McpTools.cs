@@ -18,7 +18,8 @@ namespace Xmip.Cli;
 /// (<see cref="NounArguments.Options"/>) are left out, and so is
 /// <c>--who</c>. Read only is the Observer's reach (ADR-0009, amendment
 /// 2026-09-06). <c>probe</c> is not a tool either: it loads the library it is
-/// given, and running a library's code is not a reading.
+/// given, and running a library's code is not a reading; nor is
+/// <c>certificate</c>, which makes a key or signs.
 /// </remarks>
 public static class McpTools
 {

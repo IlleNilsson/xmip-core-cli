@@ -67,6 +67,7 @@ public static class CommandRun
                 .ConfigureAwait(false),
             Command.Validate => ValidateCommand.Over(
                 SurfaceOpen.Runtime(invocation), invocation.Argument, json, output, error),
+            Command.Certificate => CertificateCommand.Over(invocation, json, output, error),
 
             // The audit read back from where this executable's own records go.
             Command.Audit => AuditCommand.Run(

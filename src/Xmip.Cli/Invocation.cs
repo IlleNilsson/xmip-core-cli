@@ -10,7 +10,8 @@ namespace Xmip.Cli;
 /// </summary>
 /// <param name="Command">The command named first on the line.</param>
 /// <param name="Argument">The command's argument — a status code, a library
-/// path, a scope, a configuration path — or empty for the ones without.</param>
+/// path, a scope, a configuration path, a request — or empty for the ones
+/// without.</param>
 /// <param name="Json">Emit one JSON document instead of text for a person.
 /// ADR-0014 clause 10.</param>
 /// <param name="Follow">Emit JSON Lines of health or figures as they change,
@@ -81,6 +82,9 @@ public sealed record Invocation(
     /// names none.</summary>
     public string? Local { get; init; }
 
+    /// <summary>What <c>certificate</c> asks; null for every other command.</summary>
+    public CertificateQuery? Certificate { get; init; }
+
     /// <summary>What this line states about the surface to read, for the one
     /// precedence every surface shares (<see cref="SurfaceChoice.Stated"/>).</summary>
     public SurfaceLine Line => new(Remote, Snapshot, Runtime, Local);
@@ -100,6 +104,7 @@ public sealed record Invocation(
             ["pause"] = (Command.Pause, 1, 1),
             ["resume"] = (Command.Resume, 1, 1),
             ["validate"] = (Command.Validate, 1, 1),
+            ["certificate"] = (Command.Certificate, 0, 1),
             ["audit"] = (Command.Audit, 0, 1),
             ["event-subscriptions"] = (Command.EventSubscriptions, 0, 1),
             ["subscriptions"] = (Command.Subscriptions, 0, 1),
@@ -130,6 +135,7 @@ public sealed record Invocation(
         string? name = null;
         string? message = null;
         string? act = null;
+        CertificateQuery? certificate = null;
         List<string> nounOptions = [];
 
         for (int i = 0; i < args.Count; i++)
@@ -151,7 +157,8 @@ public sealed record Invocation(
             if (EventSubscriptionArguments.Take(args, ref i, ref id, out unobeyed)
                 || SubscriptionArguments.Take(args, ref i, ref name, out unobeyed)
                 || DeadMessageArguments.Take(args, ref i, ref message, out unobeyed)
-                || NounArguments.Take(args, i, ref act, out unobeyed))
+                || NounArguments.Take(args, i, ref act, out unobeyed)
+                || CertificateArguments.Take(args, ref i, ref certificate, out unobeyed))
             {
                 if (unobeyed is not null)
                 {
@@ -302,7 +309,9 @@ public sealed record Invocation(
             return null;
         }
 
-        if (NounArguments.Stray(known.Command, nounOptions) is { } stray)
+        if ((NounArguments.Stray(known.Command, nounOptions)
+            ?? CertificateArguments.Refusal(known.Command, certificate, arguments == 1))
+            is { } stray)
         {
             problem = stray;
             return null;
@@ -383,6 +392,7 @@ public sealed record Invocation(
             known.Command is Command.Journey ? (uint)Math.Max(audit?.Limit ?? 0, 0) : 0)
         {
             Local = local,
+            Certificate = certificate,
         };
     }
 }

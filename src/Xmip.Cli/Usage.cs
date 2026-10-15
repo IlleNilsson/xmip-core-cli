@@ -17,6 +17,11 @@ public static class Usage
           xmip-cli pause <scope>    pause everything at and beneath a scope
           xmip-cli resume <scope>   resume everything at and beneath a scope
           xmip-cli validate <toml>  check a node configuration without starting it
+          xmip-cli certificate [request]
+                                    with --operator, make a person's key and
+                                    certificate request; with --sign, sign
+                                    one by the authority a node configuration
+                                    names
           xmip-cli audit [pattern]  what the audit recorded, newest first
           xmip-cli subscriptions [pattern]
                                     the Subscriptions the nodes route by; with an
@@ -225,6 +230,33 @@ public static class Usage
 
           xmip-cli journey <id> --location xmip:///C1/node/S1/send/invoices --retry
           xmip-cli journey <id> --location xmip:///C1/node/S1 --dismiss --who ilian
+
+        certificate makes and signs a person's certificate for reaching a
+        node's operate listener — the phone first (ADR-0034, amendment
+        2026-10-15): client authentication alone, its subject the person,
+        CN=<person>, which is the caller the listener proves and grants its
+        [operate] role.
+
+          --operator <person>       make a fresh key and a request naming the
+                                    person, as their directory knows them —
+                                    alice@example.org — into --out, the
+                                    current folder unless said:
+                                    operator.key and operator.csr
+          --sign <toml>             sign <request> by the authority the node
+                                    configuration's [provision.operator]
+                                    names, valid for its lifetime; a request
+                                    asking more than client authentication
+                                    for a person is REFUSED
+          --out <path>              the folder a request is made into, or the
+                                    file the chain is written to; the chain
+                                    goes to stdout unless said. Nothing is
+                                    overwritten.
+
+          xmip-cli certificate --operator alice@example.org --out phone
+          xmip-cli certificate phone/operator.csr --sign node.toml --out phone/operator.pem
+
+        Running --sign is the approval: whoever may read the authority's key
+        signs, after checking out of band that the request is the person's.
 
         An act names one, by --location at its node and --name, --id,
         --message or journey's <id>; the node applies it and audits it, or

@@ -86,7 +86,8 @@ public static class NounArguments
     {
         ArgumentNullException.ThrowIfNull(nounOptions);
 
-        foreach (string option in nounOptions)
+        // certificate's own are CertificateArguments.Refusal's to judge.
+        foreach (string option in nounOptions.Except(CertificateArguments.Options))
         {
             string? owner = EventSubscriptionArguments.Options.Contains(option)
                 ? command is Command.EventSubscriptions ? null : "'event-subscriptions'"
