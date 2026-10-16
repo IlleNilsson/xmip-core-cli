@@ -209,10 +209,17 @@ public static class Usage
         Failed, with why, and waits in its Port's queue. With no <id>, every
         one at or beneath --location is listed, Port by Port: how many wait,
         and a page of them with why — read from Xmip Storage where the node
-        runs in this process, or the oldest hundred its publication carries.
+        runs in this process, or the oldest its publication carries
+        ([tuning] failed_window of each Port, a hundred by default).
 
-          --offset <place>          the place in each Port's queue to read
-                                    from, as the last page's 'more' said
+          --offset <place>          where each Port's page starts, 0 the
+                                    oldest: read from Xmip Storage, a place
+                                    in the Port's index of failed Journeys,
+                                    as the last page's 'more' said; read
+                                    from a publication, which carries only
+                                    its node's window and no index places,
+                                    a place in the Port's queue, and no
+                                    'more' follows
           --limit <count>           the most of each Port; a hundred if unsaid
 
           xmip-cli journey --location xmip:///C1/node/S1

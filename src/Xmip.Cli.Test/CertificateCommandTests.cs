@@ -1,7 +1,6 @@
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
-using Xmip.Surface;
 
 namespace Xmip.Cli.Test;
 
@@ -57,10 +56,9 @@ public sealed class CertificateCommandTests
             StringWriter output = new();
 
             Assert.Equal(0, Answer(output, "certificate", "--operator", Person, "--out", phone));
-            Assert.Contains(OperatorCertificate.RequestFile, output.ToString(),
-                StringComparison.Ordinal);
+            Assert.Contains("operator.csr", output.ToString(), StringComparison.Ordinal);
 
-            string request = Path.Combine(phone, OperatorCertificate.RequestFile);
+            string request = Path.Combine(phone, "operator.csr");
             output = new StringWriter();
             Assert.Equal(0, Answer(output, "certificate", request, "--sign", configuration));
             using X509Certificate2 leaf = X509Certificate2.CreateFromPem(output.ToString());

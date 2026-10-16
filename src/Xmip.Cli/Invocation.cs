@@ -52,8 +52,10 @@ namespace Xmip.Cli;
 /// <param name="Location">Where <c>journey</c>'s Journey is sent: its node, or
 /// the Send Port's scope beneath it — or, listing, where the Journeys that
 /// failed are listed at or beneath; null for every other command.</param>
-/// <param name="From">The place in each Send Port's queue <c>journey</c>'s
-/// list reads from: <c>--offset</c>, as the last page's next said.</param>
+/// <param name="From">Where each Send Port's page of <c>journey</c>'s list
+/// starts: <c>--offset</c>, as the last page's next said — a place in the
+/// Port's index of failed Journeys read from Xmip Storage, a place in its
+/// queue read from a publication (<c>IOperatorSurface.FailedJourneys</c>).</param>
 /// <param name="Most">The most Journeys of each Send Port <c>journey</c>'s
 /// list holds: <c>--limit</c>; 0 for a hundred.</param>
 public sealed record Invocation(

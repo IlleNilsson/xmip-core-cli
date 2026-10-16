@@ -131,9 +131,11 @@ authority that node configuration's `[provision.operator]` names, for its
 `lifetime`, the chain to stdout where `--out` names no file. Running `--sign`
 is the approval, out of band. A request asking more than client
 authentication for a person is refused in the runtime's words, nothing is
-overwritten, and both exit 1 when refused. The files are `OperatorCertificate`'s
-in `Xmip.Surface`, the rules the runtime's (`xmip_operate.h` section 19), the
-same `New-XmipCertificate` uses. It is no MCP tool: it makes a key or signs.
+overwritten, and both exit 1 when refused. The key and the request are written
+by the runtime as private files — readable by the user it runs as alone, the
+key never in the CLI's memory — and they and the rules are the runtime's
+(`xmip_operate.h` section 19), reached through `OperatorCertificate` in
+`Xmip.Surface`, the same `New-XmipCertificate` uses. It is no MCP tool: it makes a key or signs.
 
 **The drill.** `list` with no scope lists what is beneath the cluster the
 surface publishes at (`IOperatorSurface.Root`), never the one row of the
@@ -329,9 +331,16 @@ failed and why. With no Journey named, every one that failed at or beneath
 `--location` — a cluster, a node or one Send Port's scope — is listed Port by
 Port: how many wait, and a page of them, each its identifier, its place in
 the queue and why — read from Xmip Storage where the node runs in the
-process, or the oldest hundred its publication carries. `--offset` is the
-place to read from, as the last page's `more:` said, and `--limit` the most
-of each Port:
+process, or the oldest its publication carries (`[tuning] failed_window` of
+each Port, a hundred by default). `--offset` is where each Port's page
+starts, 0 the oldest, and `--limit` the most of each Port. Read from Xmip
+Storage, the list is the Port's index of failed Journeys, in the order they
+failed: `--offset` is a place in that index, as the last page's `more:`
+said. A publication carries only its node's window, each Journey with its
+place in the Port's queue and none in the index, so read from one
+`--offset` is a place in the Port's queue and no `more:` follows — the two
+lists are kept in two places, and a `more:` is only ever given back to the
+surface that said it:
 
 ```text
 xmip-cli journey --location <scope> --offset <place> --limit <count> --json
