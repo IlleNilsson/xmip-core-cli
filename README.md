@@ -133,7 +133,8 @@ is the approval, out of band. A request asking more than client
 authentication for a person is refused in the runtime's words, nothing is
 overwritten, and both exit 1 when refused. The key and the request are written
 by the runtime as private files — readable by the user it runs as alone, the
-key never in the CLI's memory — and they and the rules are the runtime's
+key never in the CLI's memory — and the chain whole and synced by the runtime
+too; they and the rules are the runtime's
 (`xmip_operate.h` section 19), reached through `OperatorCertificate` in
 `Xmip.Surface`, the same `New-XmipCertificate` uses. It is no MCP tool: it makes a key or signs.
 
