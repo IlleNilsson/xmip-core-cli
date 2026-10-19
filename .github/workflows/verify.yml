@@ -21,19 +21,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out this repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: module/core/operation/cli
 
       - name: Check out xmip-core-abi beside it
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: IlleNilsson/xmip-core-abi
           ref: main
           path: module/foundation/abi
 
       - name: Set up .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           global-json-file: module/core/operation/cli/global.json
 
