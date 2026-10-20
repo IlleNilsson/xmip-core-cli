@@ -15,7 +15,7 @@ public sealed class AuditCommandTests
     private static readonly TestCluster Cluster = TestCluster.Read();
 
     [Fact]
-    public void EveryOptionIsTheQuerysWordAndTheArgumentItsPattern()
+    public void EveryOptionIsAWordOfTheQueryAndTheArgumentItsPattern()
     {
         Invocation? parsed = Invocation.Parse(
             [
@@ -105,7 +105,7 @@ public sealed class AuditCommandTests
     }
 
     [Fact]
-    public void WhatTheOperatorAskedIsRecordedInTheQuerysWords()
+    public void WhatTheOperatorAskedIsRecordedInTheWordsOfTheQuery()
     {
         Invocation? parsed = Invocation.Parse(
             ["audit", $"{Cluster.Scope}/*", "--severity", "Error", "--limit", "5"], out _);

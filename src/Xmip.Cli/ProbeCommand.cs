@@ -7,7 +7,7 @@ namespace Xmip.Cli;
 /// report what it says it is. The first of the seven conformance rules in
 /// section 11 of the ABI's specification, driven from outside the module. A
 /// module's log lines go to stderr as they arrive. Whether it conforms is
-/// <see cref="ModuleProbe.Result.Complaint"/>'s judgement, and whether it loaded
+/// <see cref="ModuleProbe.Result.Complaint"/>'s judgment, and whether it loaded
 /// at all <see cref="ModuleProbe.Result.Unloadable"/>'s, the ones
 /// <c>Get-XmipModuleDescriptor</c> reports too.
 /// </summary>
