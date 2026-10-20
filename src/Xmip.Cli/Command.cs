@@ -43,6 +43,10 @@ public enum Command
     /// (ADR-0034, amendment 2026-10-15).</summary>
     Certificate,
 
+    /// <summary>The scripts that upgrade each database on a server from one
+    /// schema version to a later one (ADR-0015, amendment 2026-10-20).</summary>
+    Database,
+
     /// <summary>What the audit recorded, as the audit capability reads it
     /// back (ADR-0062, amendment 2026-09-29).</summary>
     Audit,
