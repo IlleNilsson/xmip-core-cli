@@ -22,6 +22,9 @@ public static class Usage
                                     certificate request; with --sign, sign
                                     one by the authority a node configuration
                                     names
+          xmip-cli database <server>
+                                    the scripts that upgrade each database on
+                                    a server from the schema version it holds
           xmip-cli audit [pattern]  what the audit recorded, newest first
           xmip-cli subscriptions [pattern]
                                     the Subscriptions the nodes route by; with an
@@ -264,6 +267,24 @@ public static class Usage
 
         Running --sign is the approval: whoever may read the authority's key
         signs, after checking out of band that the request is the person's.
+
+        database writes the scripts that bring each Xmip database on a server
+        IT runs — <server> is postgresql, mssql or mariadb — from the schema
+        version it holds to this build's (ADR-0015, amendment 2026-10-20). Every
+        database records its version, and every surface shows it, at
+        xmip:///<cluster>/node/<node>/storage/<domain>. An upgrade only adds:
+        tables, columns and indexes, and the version it reached. One script to
+        each database, 04-<domain>-upgrade-<from>-<to>.sql, run as the schema's
+        owner, as deploy/database/<server>/README.md says.
+
+          --from <version>          the schema version the databases hold
+          --to <version>            the version to bring them to; this build's
+                                    unless said
+          --out <folder>            write the scripts there, made where it is
+                                    missing; printed unless said. Nothing is
+                                    overwritten.
+
+          xmip-cli database postgresql --from 1 --out upgrade
 
         An act names one, by --location at its node and --name, --id,
         --message or journey's <id>; the node applies it and audits it, or

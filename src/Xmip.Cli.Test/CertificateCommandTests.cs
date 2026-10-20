@@ -40,7 +40,8 @@ public sealed class CertificateCommandTests
             StringComparison.Ordinal);
         Assert.Contains("needs a path", Refused("certificate", "--out"), StringComparison.Ordinal);
         Assert.Equal(
-            "--operator, --sign and --out only apply to 'certificate'.",
+            "--operator and --sign only apply to 'certificate', and --out to "
+                + "'certificate' and 'database'.",
             Refused("validate", "node.toml", "--operator", Person));
     }
 

@@ -69,8 +69,10 @@ public static class NounArguments
         bool noun = command
             is Command.EventSubscriptions or Command.Subscriptions or Command.DeadMessages;
 
-        string? foreign = command is Command.Journey
-            ? auditOptions.FirstOrDefault(option => !JourneyArguments.Shared.Contains(option))
+        string? foreign = command is Command.Journey or Command.Database
+            ? auditOptions.FirstOrDefault(option => !(command is Command.Journey
+                ? JourneyArguments.Shared
+                : DatabaseArguments.Shared).Contains(option))
             : noun
                 ? auditOptions.FirstOrDefault(option => !Shared.Contains(option))
                 : command is Command.Audit ? null : auditOptions.FirstOrDefault();

@@ -28,6 +28,9 @@ xmip-cli certificate [request]
                           with --operator, make a person's key and certificate
                           request; with --sign, sign one by the authority a
                           node configuration names
+xmip-cli database <server>
+                          the scripts that upgrade each database on a server from
+                          the schema version it holds (--from, --to, --out)
 xmip-cli audit [pattern]  what the audit recorded, newest first
 xmip-cli subscriptions [pattern]
                           the Subscriptions the nodes route by; pause or resume one

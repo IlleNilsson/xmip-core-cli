@@ -91,29 +91,9 @@ public sealed record Invocation(
     /// precedence every surface shares (<see cref="SurfaceChoice.Stated"/>).</summary>
     public SurfaceLine Line => new(Remote, Snapshot, Runtime, Local);
 
-    // Each command, and how many arguments it takes: none, one, or one at most.
-    private static readonly Dictionary<string, (Command Command, int Minimum, int Maximum)>
-        Known = new(StringComparer.Ordinal)
-        {
-            ["help"] = (Command.Help, 0, 0),
-            ["abi"] = (Command.Abi, 0, 0),
-            ["status"] = (Command.Status, 1, 1),
-            ["probe"] = (Command.Probe, 1, 1),
-            ["health"] = (Command.Health, 1, 1),
-            ["measure"] = (Command.Measure, 0, 1),
-            ["list"] = (Command.List, 0, 1),
-            ["show"] = (Command.Show, 1, 1),
-            ["pause"] = (Command.Pause, 1, 1),
-            ["resume"] = (Command.Resume, 1, 1),
-            ["validate"] = (Command.Validate, 1, 1),
-            ["certificate"] = (Command.Certificate, 0, 1),
-            ["audit"] = (Command.Audit, 0, 1),
-            ["event-subscriptions"] = (Command.EventSubscriptions, 0, 1),
-            ["subscriptions"] = (Command.Subscriptions, 0, 1),
-            ["dead-messages"] = (Command.DeadMessages, 0, 1),
-            ["journey"] = (Command.Journey, 0, 1),
-            ["mcp"] = (Command.Mcp, 0, 0),
-        };
+    /// <summary>What <c>database</c> asks (<see cref="DatabaseArguments"/>);
+    /// null for every other command.</summary>
+    public DatabaseQuery? Database { get; init; }
 
     /// <summary>
     /// Parse a command line. Options may sit anywhere; the first bare word is
@@ -256,7 +236,8 @@ public sealed record Invocation(
             };
         }
 
-        if (!Known.TryGetValue(words[0], out (Command Command, int Minimum, int Maximum) known))
+        if (!CommandWords.Known.TryGetValue(
+            words[0], out (Command Command, int Minimum, int Maximum) known))
         {
             problem = $"'{words[0]}' is not an xmip-cli command. Try 'xmip-cli help'.";
             return null;
@@ -330,13 +311,17 @@ public sealed record Invocation(
             ? JourneyArguments.Act(act, arguments == 1, out refused)
             : null;
 
+        string argument = arguments == 1 ? words[1] : string.Empty;
+        DatabaseQuery? database = known.Command is Command.Database
+            ? DatabaseArguments.Query(argument, audit, certificate, ref refused)
+            : null;
+
         if (refused is not null)
         {
             problem = refused;
             return null;
         }
 
-        string argument = arguments == 1 ? words[1] : string.Empty;
         string? pattern = argument.Length > 0 ? argument : null;
 
         problem = string.Empty;
@@ -394,7 +379,8 @@ public sealed record Invocation(
             known.Command is Command.Journey ? (uint)Math.Max(audit?.Limit ?? 0, 0) : 0)
         {
             Local = local,
-            Certificate = certificate,
+            Certificate = known.Command is Command.Certificate ? certificate : null,
+            Database = database,
         };
     }
 }

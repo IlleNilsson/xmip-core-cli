@@ -6,7 +6,8 @@ namespace Xmip.Cli;
 /// request as the argument and <c>--sign &lt;configuration&gt;</c> to sign
 /// it by the authority that node configuration names; <c>--out</c> where
 /// the files go. One of the two acts, never both, and none of the three
-/// options on another command.
+/// options on another command but <c>--out</c> on <c>database</c>, the
+/// folder its scripts are written to (<see cref="DatabaseArguments"/>).
 /// </summary>
 public static class CertificateArguments
 {
@@ -62,9 +63,12 @@ public static class CertificateArguments
     {
         if (command is not Command.Certificate)
         {
-            return query is null
+            // --out is database's too: the folder its scripts are written to.
+            return query is null || (command is Command.Database
+                && query is { Operator: null, Sign: null })
                 ? null
-                : "--operator, --sign and --out only apply to 'certificate'.";
+                : "--operator and --sign only apply to 'certificate', and --out to "
+                    + "'certificate' and 'database'.";
         }
 
         return query switch
