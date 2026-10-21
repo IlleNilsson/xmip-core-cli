@@ -21,7 +21,9 @@ public static class Usage
                                     with --operator, make a person's key and
                                     certificate request; with --sign, sign
                                     one by the authority a node configuration
-                                    names
+                                    names; with --node, issue a node its key
+                                    and certificate from the cluster's
+                                    authority
           xmip-cli database <server>
                                     the scripts that upgrade each database on
                                     a server from the schema version it holds
@@ -257,13 +259,26 @@ public static class Usage
                                     names, valid for its lifetime; a request
                                     asking more than client authentication
                                     for a person is REFUSED
-          --out <path>              the folder a request is made into, or the
-                                    file the chain is written to; the chain
-                                    goes to stdout unless said. Nothing is
-                                    overwritten.
+          --node <node>             issue the node a fresh key and a
+                                    certificate for server and client
+                                    authentication, from the cluster's
+                                    authority kept in --authority <folder>,
+                                    made there where none is, for --cluster
+                                    <cluster>, for its own name and every one
+                                    of --names <name,name>, into --out:
+                                    node.pem, node.key and anchors.pem, in
+                                    place of what was there — what a node put
+                                    on a machine of its own is given
+                                    (ADR-0015, amendment 2026-10-21)
+          --out <path>              the folder a request is made into, the
+                                    file the chain is written to, or the
+                                    folder a node's files are written into;
+                                    the chain goes to stdout unless said.
+                                    Nothing of a person's is overwritten.
 
           xmip-cli certificate --operator alice@example.org --out phone
           xmip-cli certificate phone/operator.csr --sign node.toml --out phone/operator.pem
+          xmip-cli certificate --node R1 --cluster C1 --authority ca --names R1.xmip.test --out R1
 
         Running --sign is the approval: whoever may read the authority's key
         signs, after checking out of band that the request is the person's.

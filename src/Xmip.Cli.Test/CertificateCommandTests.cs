@@ -15,6 +15,11 @@ public sealed class CertificateCommandTests
 {
     private const string Person = "alice@example.org";
 
+    // The node and the cluster a node's certificate is issued for: the test
+    // cluster's, never a literal (ADR-0056, amendment 2026-10-03).
+    private static readonly TestCluster Cluster = TestCluster.Read();
+    private static readonly string Node = Cluster.Nodes[0];
+
     [Fact]
     public void TheLineNamesOneActAndItsOptionsApplyToNoOtherCommand()
     {
@@ -40,9 +45,55 @@ public sealed class CertificateCommandTests
             StringComparison.Ordinal);
         Assert.Contains("needs a path", Refused("certificate", "--out"), StringComparison.Ordinal);
         Assert.Equal(
-            "--operator and --sign only apply to 'certificate', and --out to "
-                + "'certificate' and 'database'.",
+            "--operator, --sign, --node, --cluster, --authority and --names only apply to "
+                + "'certificate', and --out to 'certificate' and 'database'.",
             Refused("validate", "node.toml", "--operator", Person));
+
+        Invocation issuing = Parse(
+            "certificate", "--node", Node, "--cluster", Cluster.Name, "--authority", "ca",
+            "--names", $"{Node}.example");
+        Assert.Equal(Node, issuing.Certificate?.Node);
+        Assert.Equal($"{Node}.example", issuing.Certificate?.Names);
+        Assert.Contains(
+            "needs --cluster", Refused("certificate", "--node", Node),
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "one of them",
+            Refused(
+                "certificate", "--node", Node, "--cluster", Cluster.Name, "--authority", "ca",
+                "--operator", Person),
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "go with 'certificate --node",
+            Refused("certificate", "--operator", Person, "--cluster", Cluster.Name),
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ANodeIsIssuedItsKeyCertificateAndAnchorsFromTheClustersAuthority()
+    {
+        string place = Directory.CreateTempSubdirectory("xmip-cli-node-").FullName;
+
+        try
+        {
+            string folder = Path.Combine(place, "node");
+            StringWriter output = new();
+            Assert.Equal(0, Answer(
+                output, "certificate", "--node", Node, "--cluster", Cluster.Name,
+                "--authority", Path.Combine(place, "authority"), "--names", $"{Node}.example",
+                "--out", folder, "--json"));
+            using JsonDocument document = JsonDocument.Parse(output.ToString());
+            string certificate = document.RootElement.GetProperty("certificate").GetString()!;
+            Assert.Equal(Path.Combine(folder, "node.pem"), certificate);
+            Assert.True(File.Exists(Path.Combine(folder, "anchors.pem")));
+            using X509Certificate2 leaf = X509Certificate2.CreateFromPemFile(
+                certificate, Path.Combine(folder, "node.key"));
+            Assert.Equal($"CN={Node}", leaf.Subject);
+        }
+        finally
+        {
+            Directory.Delete(place, recursive: true);
+        }
     }
 
     [Fact]

@@ -52,6 +52,24 @@ public static class CertificateCommand
         ArgumentNullException.ThrowIfNull(output);
         ArgumentNullException.ThrowIfNull(error);
 
+        if (query.Node is { } node)
+        {
+            string[] names = (query.Names ?? string.Empty)
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            NodeCertified issued = NodeCertificate.Issue(
+                certificates, Path.GetFullPath(query.Authority ?? string.Empty),
+                query.Cluster ?? string.Empty, node, names, Path.GetFullPath(query.Out ?? "."));
+
+            return Said(issued.Ok, issued.Refused, json, output, error, writer =>
+            {
+                writer.WriteString("node", issued.Node);
+                writer.WriteString("certificate", issued.Certificate);
+                writer.WriteString("key", issued.Key);
+                writer.WriteString("anchors", issued.Anchors);
+            }, $"Issued {issued.Node} {issued.Certificate}, {issued.Key} and {issued.Anchors}. "
+                + "Give the node the three as its [operate] names them; the key is its alone.");
+        }
+
         if (query.Operator is { } person)
         {
             OperatorRequested made = OperatorCertificate.Request(

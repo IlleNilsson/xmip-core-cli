@@ -41,7 +41,8 @@ public sealed class DatabaseCommandTests
         Assert.Contains(
             "exactly one argument", Refused("database", "--from", "1"), StringComparison.Ordinal);
         Assert.Contains(
-            "--operator and --sign only apply to 'certificate'",
+            "--operator, --sign, --node, --cluster, --authority and --names only apply to "
+                + "'certificate'",
             Refused("database", "mariadb", "--from", "1", "--operator", "alice@example.org"),
             StringComparison.Ordinal);
         Assert.Equal(
