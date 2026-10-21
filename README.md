@@ -27,7 +27,8 @@ xmip-cli validate <toml>  check a node configuration without starting it
 xmip-cli certificate [request]
                           with --operator, make a person's key and certificate
                           request; with --sign, sign one by the authority a
-                          node configuration names
+                          node configuration names; with --node, issue a node
+                          its key and certificate from the cluster's authority
 xmip-cli database <server>
                           the scripts that upgrade each database on a server from
                           the schema version it holds (--from, --to, --out)
@@ -140,6 +141,16 @@ key never in the CLI's memory — and the chain whole and synced by the runtime
 too; they and the rules are the runtime's
 (`xmip_operate.h` section 19), reached through `OperatorCertificate` in
 `Xmip.Surface`, the same `New-XmipCertificate` uses. It is no MCP tool: it makes a key or signs.
+
+**A node's certificate.** `xmip-cli certificate --node R1 --cluster C1
+--authority <folder> --names R1.xmip.test,C1 --out <folder>` issues a node
+put on a machine of its own a fresh key and a certificate for server and
+client authentication from the cluster's own authority kept in that folder,
+made there where none is, for its own name and every one of `--names`,
+written as `node.pem`, `node.key` and `anchors.pem` — the files its
+`[operate]` names — in place of what was there (ADR-0015, amendment
+2026-10-21; `xmip_operate.h` section 22, through `NodeCertificate` in
+`Xmip.Surface`, the same `New-XmipCertificate -Node` uses).
 
 **The drill.** `list` with no scope lists what is beneath the cluster the
 surface publishes at (`IOperatorSurface.Root`), never the one row of the

@@ -14,7 +14,23 @@ public sealed record CertificateQuery
     /// names the authority that signs: <c>--sign</c>.</summary>
     public string? Sign { get; init; }
 
-    /// <summary>The folder a request is made into, or the file a chain is
-    /// written to: <c>--out</c>.</summary>
+    /// <summary>The folder a request is made into, the file a chain is
+    /// written to, or the folder a node's files are written into:
+    /// <c>--out</c>.</summary>
     public string? Out { get; init; }
+
+    /// <summary>The node a key and certificate are issued to:
+    /// <c>--node</c>.</summary>
+    public string? Node { get; init; }
+
+    /// <summary>The cluster that node is of: <c>--cluster</c>.</summary>
+    public string? Cluster { get; init; }
+
+    /// <summary>The folder the cluster's authority is kept in:
+    /// <c>--authority</c>.</summary>
+    public string? Authority { get; init; }
+
+    /// <summary>Every name the node is reached by besides its own, comma
+    /// separated: <c>--names</c>.</summary>
+    public string? Names { get; init; }
 }
