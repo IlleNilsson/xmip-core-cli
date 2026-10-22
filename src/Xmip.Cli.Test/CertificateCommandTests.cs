@@ -5,7 +5,7 @@ using System.Text.Json;
 namespace Xmip.Cli.Test;
 
 /// <summary>
-/// <c>xmip-cli certificate</c> (ADR-0034, amendment 2026-10-15): the line
+/// <c>xmip certificate</c> (ADR-0034, amendment 2026-10-15): the line
 /// read — one act, its options on no other command — and the act answered
 /// through the runtime this estate built: a key and a request made into a
 /// folder, the request signed by an authority a node configuration names,
@@ -32,9 +32,9 @@ public sealed class CertificateCommandTests
         Assert.Equal("operator.csr", signing.Argument);
         Assert.Equal("node.toml", signing.Certificate?.Sign);
 
-        Assert.Contains("needs --operator", Refused("certificate"), StringComparison.Ordinal);
+        Assert.Contains("needs an act", Refused("certificate"), StringComparison.Ordinal);
         Assert.Contains(
-            "not both",
+            "one act a line",
             Refused("certificate", "x.csr", "--operator", Person, "--sign", "n.toml"),
             StringComparison.Ordinal);
         Assert.Contains(
@@ -45,8 +45,8 @@ public sealed class CertificateCommandTests
             StringComparison.Ordinal);
         Assert.Contains("needs a path", Refused("certificate", "--out"), StringComparison.Ordinal);
         Assert.Equal(
-            "--operator, --sign, --node, --cluster, --authority and --names only apply to "
-                + "'certificate', and --out to 'certificate' and 'database'.",
+            "The options of 'certificate' only apply to 'certificate', and --out to "
+                + "'certificate' and 'database'.",
             Refused("validate", "node.toml", "--operator", Person));
 
         Invocation issuing = Parse(
@@ -55,24 +55,35 @@ public sealed class CertificateCommandTests
         Assert.Equal(Node, issuing.Certificate?.Node);
         Assert.Equal($"{Node}.example", issuing.Certificate?.Names);
         Assert.Contains(
-            "needs --cluster", Refused("certificate", "--node", Node),
+            "needs --cluster",
+            Refused("certificate", "--node", Node, "--authority", "ca"),
             StringComparison.Ordinal);
         Assert.Contains(
-            "one of them",
+            "one act a line",
             Refused(
                 "certificate", "--node", Node, "--cluster", Cluster.Name, "--authority", "ca",
                 "--operator", Person),
             StringComparison.Ordinal);
         Assert.Contains(
-            "go with 'certificate --node",
-            Refused("certificate", "--operator", Person, "--cluster", Cluster.Name),
+            "needs --authority",
+            Refused("certificate", "--revoke", "0A"),
             StringComparison.Ordinal);
+        Assert.Contains(
+            "needs the chain",
+            Refused("certificate", "--import", "tls"),
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "takes no --cluster",
+            Refused("certificate", "r.csr", "--authority", "ca", "--cluster", Cluster.Name),
+            StringComparison.Ordinal);
+        Invocation carried = Parse("certificate", "--node", Node, "--out", "tls");
+        Assert.Null(carried.Certificate?.Authority);
     }
 
     [Fact]
     public void ANodeIsIssuedItsKeyCertificateAndAnchorsFromTheClustersAuthority()
     {
-        string place = Directory.CreateTempSubdirectory("xmip-cli-node-").FullName;
+        string place = Directory.CreateTempSubdirectory("xmip-node-").FullName;
 
         try
         {
@@ -99,7 +110,7 @@ public sealed class CertificateCommandTests
     [Fact]
     public void ARequestIsMadeAndSignedByTheAuthorityTheConfigurationNames()
     {
-        string place = Directory.CreateTempSubdirectory("xmip-cli-certificate-").FullName;
+        string place = Directory.CreateTempSubdirectory("xmip-certificate-").FullName;
 
         try
         {
@@ -129,6 +140,61 @@ public sealed class CertificateCommandTests
                 Parse("certificate", "--operator", Person, "--out", phone), false,
                 new StringWriter(), error));
             Assert.Contains("nothing is overwritten", error.ToString(), StringComparison.Ordinal);
+        }
+        finally
+        {
+            Directory.Delete(place, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void ANodeCertificateCarriedAcrossAnAirGapIsRequestedSignedImportedAndInspected()
+    {
+        string place = Directory.CreateTempSubdirectory("xmip-carried-").FullName;
+
+        try
+        {
+            string authority = Path.Combine(place, "authority");
+            string tls = Path.Combine(place, "tls");
+            string chain = Path.Combine(place, "carried.pem");
+            StringWriter output = new();
+            Assert.Equal(0, Answer(
+                output, "certificate", "--authority", authority, "--cluster", Cluster.Name,
+                "--publish", "http://ca.example:8080"));
+            Assert.Contains("published at http://ca.example:8080", output.ToString(),
+                StringComparison.Ordinal);
+
+            Assert.Equal(0, Answer(
+                new StringWriter(), "certificate", "--node", Node, "--names", $"{Node}.example",
+                "--out", tls));
+            Assert.Equal(0, Answer(
+                new StringWriter(), "certificate", Path.Combine(tls, "node.csr"),
+                "--authority", authority, "--names", $"{Node},{Node}.example", "--out", chain));
+            output = new StringWriter();
+            Assert.Equal(0, Answer(output, "certificate", chain, "--import", tls));
+            Assert.Contains("compare it by another way", output.ToString(),
+                StringComparison.Ordinal);
+
+            output = new StringWriter();
+            Assert.Equal(0, Answer(
+                output, "certificate", "--inspect", Path.Combine(tls, "node.pem"), "--json"));
+            using JsonDocument read = JsonDocument.Parse(output.ToString());
+            Assert.Equal("current", read.RootElement.GetProperty("standing").GetString());
+            string serial = read.RootElement.GetProperty("serial").GetString()!;
+
+            Assert.Equal(0, Answer(
+                new StringWriter(), "certificate", "--revoke", serial, "--authority", authority,
+                "--reason", "keyCompromise"));
+            output = new StringWriter();
+            Assert.Equal(0, Answer(output, "certificate", "--inspect", authority));
+            Assert.Contains("1 revoked", output.ToString(), StringComparison.Ordinal);
+            Assert.Contains("revoked", output.ToString().Split('\n')[^2],
+                StringComparison.Ordinal);
+
+            StringWriter error = new();
+            Assert.Equal(1, CertificateCommand.Over(
+                Parse("certificate", chain, "--import", tls), false, new StringWriter(), error));
+            Assert.Contains("no request is waiting", error.ToString(), StringComparison.Ordinal);
         }
         finally
         {

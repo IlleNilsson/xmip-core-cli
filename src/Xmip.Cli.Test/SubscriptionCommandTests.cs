@@ -4,7 +4,7 @@ using Xmip.Surface;
 namespace Xmip.Cli.Test;
 
 /// <summary>
-/// <c>xmip-cli subscriptions</c> (ADR-0013, amendment 2026-09-30): one
+/// <c>xmip subscriptions</c> (ADR-0013, amendment 2026-09-30): one
 /// command for the noun, the act an option on it. The line becomes the one
 /// query every surface asks; what a snapshot of the test cluster lists is
 /// rendered, drilled and sorted; an act names one Subscription or is refused
@@ -21,7 +21,7 @@ public sealed class SubscriptionCommandTests : IDisposable
     private static readonly string Second = Cluster.Nodes[1];
 
     private readonly string _place = Path.Combine(
-        Path.GetTempPath(), $"xmip-cli-subscriptions-{Guid.NewGuid():N}");
+        Path.GetTempPath(), $"xmip-subscriptions-{Guid.NewGuid():N}");
 
     public SubscriptionCommandTests()
     {
@@ -101,7 +101,7 @@ public sealed class SubscriptionCommandTests : IDisposable
     [InlineData("subscriptions --id 3", "--id only applies to 'event-subscriptions'")]
     [InlineData("event-subscriptions --name edi", "--name only applies to 'subscriptions'")]
     [InlineData("list --pause", "--pause only applies to 'event-subscriptions',")]
-    [InlineData("subscriptions --program xmip-cli", "--program only applies to 'audit'")]
+    [InlineData("subscriptions --program xmip", "--program only applies to 'audit'")]
     [InlineData("subscriptions --who ilian", "--who only applies")]
     public void ALineThatCannotBeObeyedIsSaidSo(string line, string said)
     {

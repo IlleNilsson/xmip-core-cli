@@ -4,7 +4,7 @@ using Xmip.Surface;
 namespace Xmip.Cli;
 
 /// <summary>
-/// What <c>xmip-cli database &lt;server&gt;</c> takes (ADR-0015, amendment
+/// What <c>xmip database &lt;server&gt;</c> takes (ADR-0015, amendment
 /// 2026-10-20): <c>--from &lt;version&gt;</c>, the schema version the
 /// databases hold, required; <c>--to &lt;version&gt;</c>, this build's unless
 /// said; and <c>--out &lt;folder&gt;</c>, where the scripts are written. It

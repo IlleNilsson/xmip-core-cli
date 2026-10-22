@@ -5,7 +5,7 @@ using Xmip.Surface;
 namespace Xmip.Cli;
 
 /// <summary>
-/// <c>xmip-cli event-subscriptions</c>: the Event subscriptions the cluster's
+/// <c>xmip event-subscriptions</c>: the Event subscriptions the cluster's
 /// nodes hold, and pause, resume or remove on one of them (ADR-0065,
 /// amendment 2026-09-29) — not the Subscriptions that pick a published
 /// Message up, which are <see cref="SubscriptionCommand"/>'s. One command for

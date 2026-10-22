@@ -4,7 +4,7 @@ using Xmip.Surface;
 namespace Xmip.Cli;
 
 /// <summary>
-/// The resources <c>xmip-cli mcp</c> offers (ADR-0071): every scope is an
+/// The resources <c>xmip mcp</c> offers (ADR-0071): every scope is an
 /// Xmip URI (ADR-0027 clause 3), and so a resource. The list is the scopes the
 /// surface publishes; the templates are the scope tree's shape; and reading
 /// one is how an operator drills — <c>show</c> for its row, <c>list</c> for

@@ -4,7 +4,7 @@ using Xmip.Surface;
 namespace Xmip.Cli;
 
 /// <summary>
-/// The options of <c>xmip-cli audit</c>: one per word of an audit query
+/// The options of <c>xmip audit</c>: one per word of an audit query
 /// (<see cref="AuditQuery"/>, ADR-0062, amendment 2026-09-29), named as the
 /// query names it — <c>--location</c> is <c>location</c>. Only the line is
 /// read here; whether a severity, a time or a column is one the capability

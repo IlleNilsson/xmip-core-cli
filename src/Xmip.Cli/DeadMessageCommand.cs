@@ -6,7 +6,7 @@ using Xmip.Surface;
 namespace Xmip.Cli;
 
 /// <summary>
-/// <c>xmip-cli dead-messages</c>: what each node's Dead Message Queue keeps
+/// <c>xmip dead-messages</c>: what each node's Dead Message Queue keeps
 /// — every accepted Message no Subscription matched — one opened with its
 /// gate verdicts, promoted properties and every Subscription's decline, and
 /// Replay on one of them (ADR-0052, amendment 2026-10-01). It is not a dead

@@ -5,7 +5,7 @@ using Xmip.Surface;
 namespace Xmip.Cli;
 
 /// <summary>
-/// <c>xmip-cli database &lt;server&gt; --from &lt;version&gt;</c>: the scripts
+/// <c>xmip database &lt;server&gt; --from &lt;version&gt;</c>: the scripts
 /// that bring each database on a server — <c>postgresql</c>, <c>mssql</c> or
 /// <c>mariadb</c> — from the schema version it holds to this build's, or to
 /// <c>--to</c>, adding only (open problem 41; ADR-0015, amendment

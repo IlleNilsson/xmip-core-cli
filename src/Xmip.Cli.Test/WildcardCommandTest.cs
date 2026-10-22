@@ -214,6 +214,6 @@ public sealed class WildcardCommandTest
     {
         Assert.Contains("wildcard", Usage.Text, StringComparison.Ordinal);
         Assert.Contains("REFUSED", Usage.Text, StringComparison.Ordinal);
-        Assert.Matches("xmip-cli health \"xmip:///[^\"]*\\*\"", Usage.Text);
+        Assert.Matches("xmip health \"xmip:///[^\"]*\\*\"", Usage.Text);
     }
 }

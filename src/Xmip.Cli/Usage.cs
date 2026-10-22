@@ -1,49 +1,50 @@
 namespace Xmip.Cli;
 
-/// <summary>The text behind <c>xmip-cli help</c>.</summary>
+/// <summary>The text behind <c>xmip help</c>.</summary>
 public static class Usage
 {
     /// <summary>The usage text, one line per command and one per option.</summary>
     public const string Text = """
-        xmip-cli — the Xmip command line
+        xmip — the Xmip command line
 
-          xmip-cli abi              the two boundaries this build speaks
-          xmip-cli status <code>    what a status code means
-          xmip-cli probe <library>  load a module and report what it says it is
-          xmip-cli health <scope>   health at and beneath a scope, from the runtime
-          xmip-cli measure [scope]  streams, messages, journeys, bytes, retrying, failed
-          xmip-cli list [scope]     the direct children of a scope, the cluster by default
-          xmip-cli show <scope>     one scope: its mood, its worst leaf and why, its figures
-          xmip-cli pause <scope>    pause everything at and beneath a scope
-          xmip-cli resume <scope>   resume everything at and beneath a scope
-          xmip-cli validate <toml>  check a node configuration without starting it
-          xmip-cli certificate [request]
-                                    with --operator, make a person's key and
-                                    certificate request; with --sign, sign
-                                    one by the authority a node configuration
-                                    names; with --node, issue a node its key
-                                    and certificate from the cluster's
-                                    authority
-          xmip-cli database <server>
+          xmip abi                  the two boundaries this build speaks
+          xmip status <code>        what a status code means
+          xmip probe <library>      load a module and report what it says it is
+          xmip health <scope>       health at and beneath a scope, from the runtime
+          xmip measure [scope]      streams, messages, journeys, bytes, retrying, failed
+          xmip list [scope]         the direct children of a scope, the cluster by default
+          xmip show <scope>         one scope: its mood, its worst leaf and why, its figures
+          xmip pause <scope>        pause everything at and beneath a scope
+          xmip resume <scope>       resume everything at and beneath a scope
+          xmip validate <toml>      check a node configuration without starting it
+          xmip certificate [file]
+                                    a person's key and request (--operator) or
+                                    its signing (--sign); a node's key and
+                                    certificate from the cluster's authority
+                                    (--node), or its request, signing and
+                                    import across an air gap; the authority
+                                    set up, inspected, revoked from, exported
+                                    and backed up
+          xmip database <server>
                                     the scripts that upgrade each database on
                                     a server from the schema version it holds
-          xmip-cli audit [pattern]  what the audit recorded, newest first
-          xmip-cli subscriptions [pattern]
+          xmip audit [pattern]      what the audit recorded, newest first
+          xmip subscriptions [pattern]
                                     the Subscriptions the nodes route by; with an
                                     act, pause or resume one
-          xmip-cli event-subscriptions [pattern]
+          xmip event-subscriptions [pattern]
                                     the Event subscriptions the nodes hold; with an
                                     act, pause, resume or remove one
-          xmip-cli dead-messages [pattern]
+          xmip dead-messages [pattern]
                                     the Messages no Subscription matched, in each
                                     node's Dead Message Queue; open one, or
                                     replay it
-          xmip-cli journey [id]     list the Journeys that failed, or retry or
+          xmip journey [id]         list the Journeys that failed, or retry or
                                     dismiss one
-          xmip-cli mcp              a Model Context Protocol server on stdin and
+          xmip mcp                  a Model Context Protocol server on stdin and
                                     stdout: the read commands as its tools, the
                                     scopes as its resources
-          xmip-cli help             this text
+          xmip help                 this text
 
           --json                    one JSON document instead of text
           --follow                  with health or measure: JSON Lines as they change
@@ -63,8 +64,8 @@ public static class Usage
         literal, case-insensitive — what PowerShell's -like matches and what
         the GUI's filter box matches (ADR-0059 clauses 7 and 8).
 
-          xmip-cli health "xmip:///C1/node/R*"  every node of cluster C1 named R…
-          xmip-cli list "xmip:///C1/*/receive"  beneath every receive
+          xmip health "xmip:///C1/node/R*"      every node of cluster C1 named R…
+          xmip list "xmip:///C1/*/receive"      beneath every receive
 
         C1 and R1 are names a tester gave; they mean nothing to Xmip, and a
         node receives because it declared receive, never because of its name.
@@ -100,7 +101,7 @@ public static class Usage
         every answer reads, and each answer is audited as its command. On
         another machine it is the same line over SSH.
 
-        Every invocation is audited as program xmip-cli (ADR-0062): the
+        Every invocation is audited as program xmip (ADR-0062): the
         command as it begins and ends, a non-zero exit as a failure with what
         it said here, a line that could not be obeyed, anything unhandled.
         Records go to Xmip:AuditDirectory in the configuration, else
@@ -129,8 +130,8 @@ public static class Usage
                                     matched and say where it breaks, or OK, and
                                     say each record whose write was interrupted
 
-          xmip-cli audit "xmip:///C1/*" --severity Error
-          xmip-cli audit --location xmip:///C1 --from 2026-09-29
+          xmip audit "xmip:///C1/*" --severity Error
+          xmip audit --location xmip:///C1 --from 2026-09-29
 
         [pattern] is * and ? over the location each record's process declared;
         a record with none is at the root, which only * names. Beneath the
@@ -156,8 +157,8 @@ public static class Usage
                                     pause survives a restart of the node
           --resume                  pick up what it held, oldest first
 
-          xmip-cli subscriptions --location xmip:///C1/node/P1
-          xmip-cli subscriptions --location xmip:///C1/node/P1 --name edi --pause --who ilian
+          xmip subscriptions --location xmip:///C1/node/P1
+          xmip subscriptions --location xmip:///C1/node/P1 --name edi --pause --who ilian
 
         There is no --remove: a Subscription is added and removed in the TOML
         configuration of the Xmip Application that draws it, and the line is
@@ -181,8 +182,8 @@ public static class Usage
           --resume                  deliver again, what queued first
           --remove                  unsubscribe it
 
-          xmip-cli event-subscriptions --location xmip:///C1/node/R1
-          xmip-cli event-subscriptions --location xmip:///C1/node/R1 --id 2 --pause --who ilian
+          xmip event-subscriptions --location xmip:///C1/node/R1
+          xmip event-subscriptions --location xmip:///C1/node/R1 --id 2 --pause --who ilian
 
         dead-messages lists what each node's Dead Message Queue keeps
         (ADR-0052, amendment 2026-10-01): every accepted Message that no
@@ -204,9 +205,9 @@ public static class Usage
                                     take it out of the queue; a Message that
                                     still matches nothing stays
 
-          xmip-cli dead-messages --location xmip:///C1/node/R1
-          xmip-cli dead-messages --location xmip:///C1/node/R1 --message <id>
-          xmip-cli dead-messages --location xmip:///C1/node/R1 --message <id> --replay
+          xmip dead-messages --location xmip:///C1/node/R1
+          xmip dead-messages --location xmip:///C1/node/R1 --message <id>
+          xmip dead-messages --location xmip:///C1/node/R1 --message <id> --replay
 
         journey lists the Journeys that failed and acts on one
         (runtime-model.md section 13): a Journey leads to one Send Port, and
@@ -227,8 +228,8 @@ public static class Usage
                                     'more' follows
           --limit <count>           the most of each Port; a hundred if unsaid
 
-          xmip-cli journey --location xmip:///C1/node/S1
-          xmip-cli journey --location xmip:///C1/node/S1/send/invoices --offset 40
+          xmip journey --location xmip:///C1/node/S1
+          xmip journey --location xmip:///C1/node/S1/send/invoices --offset 40
 
         With an <id>, --location names the node that sends its Port, or the
         Port's scope beneath it, and one act is required:
@@ -240,14 +241,13 @@ public static class Usage
                                     Message and Stream kept, and taken out of
                                     the Port's queue
 
-          xmip-cli journey <id> --location xmip:///C1/node/S1/send/invoices --retry
-          xmip-cli journey <id> --location xmip:///C1/node/S1 --dismiss --who ilian
+          xmip journey <id> --location xmip:///C1/node/S1/send/invoices --retry
+          xmip journey <id> --location xmip:///C1/node/S1 --dismiss --who ilian
 
-        certificate makes and signs a person's certificate for reaching a
-        node's operate listener — the phone first (ADR-0034, amendment
-        2026-10-15): client authentication alone, its subject the person,
-        CN=<person>, which is the caller the listener proves and grants its
-        [operate] role.
+        certificate makes and signs the certificates a cluster's own
+        authority stands behind (ADR-0034, amendments 2026-10-15 and
+        2026-10-22). A person's, for reaching a node's operate listener —
+        client authentication alone, CN=<person>:
 
           --operator <person>       make a fresh key and a request naming the
                                     person, as their directory knows them —
@@ -259,29 +259,85 @@ public static class Usage
                                     names, valid for its lifetime; a request
                                     asking more than client authentication
                                     for a person is REFUSED
-          --node <node>             issue the node a fresh key and a
-                                    certificate for server and client
-                                    authentication, from the cluster's
-                                    authority kept in --authority <folder>,
-                                    made there where none is, for --cluster
-                                    <cluster>, for its own name and every one
-                                    of --names <name,name>, into --out:
-                                    node.pem, node.key and anchors.pem, in
-                                    place of what was there — what a node put
-                                    on a machine of its own is given
-                                    (ADR-0015, amendment 2026-10-21)
-          --out <path>              the folder a request is made into, the
-                                    file the chain is written to, or the
-                                    folder a node's files are written into;
-                                    the chain goes to stdout unless said.
-                                    Nothing of a person's is overwritten.
 
-          xmip-cli certificate --operator alice@example.org --out phone
-          xmip-cli certificate phone/operator.csr --sign node.toml --out phone/operator.pem
-          xmip-cli certificate --node R1 --cluster C1 --authority ca --names R1.xmip.test --out R1
+        A node's, for server and client authentication, valid ninety days:
 
-        Running --sign is the approval: whoever may read the authority's key
-        signs, after checking out of band that the request is the person's.
+          --node <node>             with --authority <folder> and --cluster
+                                    <cluster>, issue the node a fresh key and
+                                    a certificate from the authority kept
+                                    there, made where none is, for its own
+                                    name and every one of --names
+                                    <name,name>, into --out: node.pem,
+                                    node.key and anchors.pem (ADR-0015,
+                                    amendment 2026-10-21). Without
+                                    --authority, on a node no network route
+                                    reaches the authority from: write a fresh
+                                    key, node.next.key, which stays, and a
+                                    request, node.csr, into --out, to carry
+          <request> --authority <folder>
+                                    sign a carried node.csr by the authority
+                                    kept there, never made: its signature
+                                    verified, its names exactly --names where
+                                    given; the chain to --out, never over a
+                                    file, or to stdout, to carry back
+          <chain> --import <folder> on the node, import the chain into the
+                                    folder its request was made in: every
+                                    signature checked, the leaf for
+                                    node.next.key and the request's names,
+                                    valid now, reaching anchors.pem where the
+                                    node holds one; then node.pem, node.key
+                                    and anchors.pem are written. Where the
+                                    node held no anchor it says the
+                                    authority's SHA-256: compare it by
+                                    another way
+          --inspect <path>          a certificate file: its leaf and whether
+                                    its renewal is due — make the next request
+                                    when it says RENEWAL DUE; an authority's
+                                    folder: the authority and every
+                                    certificate it signed with its standing
+
+        The cluster's authority — the premises' own ACME service, which a
+        node serves where [provision.node] names internal-ca and serve:
+
+          --authority <folder> --cluster <cluster>
+                                    set it up: kept there, made where none
+                                    is; --publish http://host:port records
+                                    the plain-HTTP address its revocation
+                                    list (/crl) and certificate
+                                    (/authority.cer) are fetched from, which
+                                    every certificate it signs from then names
+          --revoke <serial>         with --authority, revoke a certificate it
+                                    signed, --reason <word> (keyCompromise,
+                                    superseded, affiliationChanged,
+                                    cessationOfOperation, privilegeWithdrawn;
+                                    unspecified unless said), listed at once
+          --export <file>           with --authority, write its certificate,
+                                    --format pem (the default, a .crt for a
+                                    Linux trust store), der (a .cer for
+                                    Windows) or crl (its revocation list),
+                                    never over a file
+          --backup <folder>         with --authority, copy the whole
+                                    authority, its key among it, into an
+                                    empty folder; the copy is the same
+                                    authority
+          --out <path>              where a request, a chain or a node's files
+                                    are written. Nothing of a person's is
+                                    overwritten.
+
+          xmip certificate --operator alice@example.org --out phone
+          xmip certificate phone/operator.csr --sign node.toml --out phone/operator.pem
+          xmip certificate --node R1 --cluster C1 --authority ca --names R1.xmip.test --out R1
+          xmip certificate --node R1 --names R1.xmip.test --out tls
+          xmip certificate tls/node.csr --authority ca --names R1,R1.xmip.test --out R1.pem
+          xmip certificate R1.pem --import tls
+          xmip certificate --inspect tls/node.pem
+          xmip certificate --authority ca --cluster C1 --publish http://ca.xmip.test:8080
+          xmip certificate --revoke 5B8E9CC6D36BF3DB --authority ca --reason keyCompromise
+          xmip certificate --export ca.cer --authority ca --format der
+
+        Running a signing is the approval: whoever may read the authority's
+        key signs, after checking out of band that the request is the
+        person's or the node's. Every act is audited.
 
         database writes the scripts that bring each Xmip database on a server
         IT runs — <server> is postgresql, mssql or mariadb — from the schema
@@ -299,7 +355,7 @@ public static class Usage
                                     missing; printed unless said. Nothing is
                                     overwritten.
 
-          xmip-cli database postgresql --from 1 --out upgrade
+          xmip database postgresql --from 1 --out upgrade
 
         An act names one, by --location at its node and --name, --id,
         --message or journey's <id>; the node applies it and audits it, or

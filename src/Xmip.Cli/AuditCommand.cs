@@ -5,7 +5,7 @@ using Xmip.Surface;
 namespace Xmip.Cli;
 
 /// <summary>
-/// <c>xmip-cli audit</c>: what the audit recorded, read back by the audit
+/// <c>xmip audit</c>: what the audit recorded, read back by the audit
 /// capability's one reader (<see cref="ProgramAudit.Read"/>, ADR-0062,
 /// amendment 2026-09-29) from where this executable's own records go — the
 /// directory <see cref="CommandAudit.Open"/> states, else

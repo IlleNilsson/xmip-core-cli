@@ -43,7 +43,7 @@ static async Task<int> RunAsync(Invocation invocation, ProgramAudit audit)
     // What this process says of itself while it runs (ADR-0053): the scope it was
     // asked about, or the whole tree, and the purpose its document states.
     using ProcessDeclaration? declared = ProcessDeclaration.Declare(
-        "xmip-cli",
+        "xmip",
         invocation.Argument.StartsWith("xmip:", StringComparison.Ordinal)
             ? invocation.Argument
             : invocation.Remote ?? ScopeTree.Root,

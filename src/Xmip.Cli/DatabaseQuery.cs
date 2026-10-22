@@ -1,6 +1,6 @@
 namespace Xmip.Cli;
 
-/// <summary>What <c>xmip-cli database</c> was asked
+/// <summary>What <c>xmip database</c> was asked
 /// (<see cref="DatabaseArguments"/>).</summary>
 /// <param name="Server">The database server: <c>postgresql</c>, <c>mssql</c>
 /// or <c>mariadb</c>, as the line named it.</param>

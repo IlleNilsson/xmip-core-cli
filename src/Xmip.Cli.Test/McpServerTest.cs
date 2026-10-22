@@ -5,7 +5,7 @@ using Xmip.Surface;
 namespace Xmip.Cli.Test;
 
 /// <summary>
-/// <c>xmip-cli mcp</c> (ADR-0071), one scripted session over in-memory
+/// <c>xmip mcp</c> (ADR-0071), one scripted session over in-memory
 /// streams against the test cluster's names: initialize, the lists, a read of
 /// an Xmip URI as an operator drills, a tool that is a read command, an act
 /// refused, and what is not a method or not JSON answered with JSON-RPC's
@@ -72,7 +72,7 @@ public sealed class McpServerTest
         Assert.Equal(
             McpServer.ProtocolVersion, initialized.GetProperty("protocolVersion").GetString());
         Assert.Equal(
-            "xmip-cli", initialized.GetProperty("serverInfo").GetProperty("name").GetString());
+            "xmip", initialized.GetProperty("serverInfo").GetProperty("name").GetString());
         Assert.True(initialized.GetProperty("capabilities").TryGetProperty("resources", out _));
 
         // The tools are the read commands, and no act is one.

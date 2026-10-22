@@ -5,7 +5,7 @@ using Xmip.Surface;
 namespace Xmip.Cli.Test;
 
 /// <summary>
-/// <c>xmip-cli journey</c> (runtime-model.md section 13; ADR-0013): the
+/// <c>xmip journey</c> (runtime-model.md section 13; ADR-0013): the
 /// Journeys that failed listed where no Journey is named, and Retry or
 /// Dismiss on one, the act an option and required, the Journey the argument
 /// and its node <c>--location</c> — the node, or the Send Port's scope. A
@@ -23,7 +23,7 @@ public sealed class JourneyCommandTests : IDisposable
     private static readonly string Port = $"{Sending}/send/invoices";
 
     private readonly string _place = Path.Combine(
-        Path.GetTempPath(), $"xmip-cli-journey-{Guid.NewGuid():N}");
+        Path.GetTempPath(), $"xmip-journey-{Guid.NewGuid():N}");
 
     public JourneyCommandTests()
     {

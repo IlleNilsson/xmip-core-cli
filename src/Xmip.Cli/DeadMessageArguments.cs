@@ -3,7 +3,7 @@ using Xmip.Surface;
 namespace Xmip.Cli;
 
 /// <summary>
-/// The option only <c>xmip-cli dead-messages</c> takes (ADR-0052, amendment
+/// The option only <c>xmip dead-messages</c> takes (ADR-0052, amendment
 /// 2026-10-01): <c>--message</c>, the identifier of a Message in its node's
 /// Dead Message Queue; and the act the line named
 /// (<see cref="NounArguments"/>) as such a Message takes it — replay, its one
