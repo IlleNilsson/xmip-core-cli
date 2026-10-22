@@ -5,7 +5,7 @@ using Xmip.Surface;
 namespace Xmip.Cli;
 
 /// <summary>
-/// What <c>xmip-cli</c> records of itself through the audit capability
+/// What <c>xmip</c> records of itself through the audit capability
 /// (ADR-0062): each command an operator runs as it begins, its end as
 /// Finished, and a command that exits non-zero — refused, or answering that
 /// the thing asked about is wrong — as a Failure with its exit code and what
@@ -16,7 +16,7 @@ namespace Xmip.Cli;
 public static class CommandAudit
 {
     /// <summary>The program's name on every record.</summary>
-    public const string Program = "xmip-cli";
+    public const string Program = "xmip";
 
     /// <summary>The action a line that could not be obeyed is recorded as.</summary>
     public const string Refusal = "refused";

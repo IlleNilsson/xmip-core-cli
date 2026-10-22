@@ -4,7 +4,7 @@ using Xmip.Surface;
 namespace Xmip.Cli.Test;
 
 /// <summary>
-/// <c>xmip-cli dead-messages</c> (ADR-0052, amendment 2026-10-01): one
+/// <c>xmip dead-messages</c> (ADR-0052, amendment 2026-10-01): one
 /// command for the noun, the act an option on it. The line becomes the one
 /// query every surface asks; what a snapshot of the test cluster lists is
 /// rendered, drilled and sorted; one Message named is opened with its gate
@@ -22,7 +22,7 @@ public sealed class DeadMessageCommandTests : IDisposable
     private static readonly string Second = Cluster.Nodes[1];
 
     private readonly string _place = Path.Combine(
-        Path.GetTempPath(), $"xmip-cli-dead-messages-{Guid.NewGuid():N}");
+        Path.GetTempPath(), $"xmip-dead-messages-{Guid.NewGuid():N}");
 
     public DeadMessageCommandTests()
     {
@@ -108,7 +108,7 @@ public sealed class DeadMessageCommandTests : IDisposable
     [InlineData("event-subscriptions --replay", "--replay only applies to 'dead-messages'")]
     [InlineData("subscriptions --message m-1", "--message only applies to 'dead-messages'")]
     [InlineData("dead-messages --name edi", "--name only applies to 'subscriptions'")]
-    [InlineData("dead-messages --program xmip-cli", "--program only applies to 'audit'")]
+    [InlineData("dead-messages --program xmip", "--program only applies to 'audit'")]
     [InlineData("dead-messages --who ilian", "--who only applies")]
     public void ALineThatCannotBeObeyedIsSaidSo(string line, string said)
     {

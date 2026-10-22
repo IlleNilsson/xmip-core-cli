@@ -4,7 +4,7 @@ using Xmip.Surface;
 namespace Xmip.Cli.Test;
 
 /// <summary>
-/// <c>xmip-cli event-subscriptions</c> (ADR-0065, amendment 2026-09-29): one
+/// <c>xmip event-subscriptions</c> (ADR-0065, amendment 2026-09-29): one
 /// command for the noun, the act an option on it. The line becomes the one
 /// query every surface asks; what a snapshot of the test cluster lists is
 /// rendered; an act names one Event subscription or is refused before any
@@ -20,7 +20,7 @@ public sealed class EventSubscriptionCommandTests : IDisposable
     private static readonly string Second = Cluster.Nodes[1];
 
     private readonly string _place = Path.Combine(
-        Path.GetTempPath(), $"xmip-cli-event-subscriptions-{Guid.NewGuid():N}");
+        Path.GetTempPath(), $"xmip-event-subscriptions-{Guid.NewGuid():N}");
 
     public EventSubscriptionCommandTests()
     {

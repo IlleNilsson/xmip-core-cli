@@ -2,10 +2,10 @@ namespace Xmip.Cli;
 
 /// <summary>
 /// What the nouns a node publishes for an operator to act on share on the
-/// line (<c>observe::Noun</c>): <c>xmip-cli event-subscriptions</c>
-/// (ADR-0065, amendment 2026-09-29), <c>xmip-cli subscriptions</c>
-/// (ADR-0013, amendment 2026-09-30), <c>xmip-cli dead-messages</c>
-/// (ADR-0052, amendment 2026-10-01) and <c>xmip-cli journey</c>
+/// line (<c>observe::Noun</c>): <c>xmip event-subscriptions</c>
+/// (ADR-0065, amendment 2026-09-29), <c>xmip subscriptions</c>
+/// (ADR-0013, amendment 2026-09-30), <c>xmip dead-messages</c>
+/// (ADR-0052, amendment 2026-10-01) and <c>xmip journey</c>
 /// (runtime-model.md section 13). The act — <c>--pause</c>, <c>--resume</c>,
 /// <c>--remove</c>, <c>--replay</c>, <c>--retry</c> or <c>--dismiss</c>, one
 /// at most — read

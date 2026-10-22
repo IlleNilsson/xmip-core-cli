@@ -4,7 +4,7 @@ using Xmip.Surface;
 namespace Xmip.Cli;
 
 /// <summary>
-/// The option only <c>xmip-cli event-subscriptions</c> takes (ADR-0065,
+/// The option only <c>xmip event-subscriptions</c> takes (ADR-0065,
 /// amendment 2026-09-29): <c>--id</c>, the number that names an Event
 /// subscription on its node; and the act the line named
 /// (<see cref="NounArguments"/>) as an Event subscription takes it — pause,

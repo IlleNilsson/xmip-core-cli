@@ -4,7 +4,7 @@ using System.Text.Json;
 namespace Xmip.Cli;
 
 /// <summary>
-/// The tools <c>xmip-cli mcp</c> offers (ADR-0071): exactly the command
+/// The tools <c>xmip mcp</c> offers (ADR-0071): exactly the command
 /// line's read commands, each named by its word on the line, its arguments
 /// the command's options without their dashes. A call becomes the line an
 /// operator would type — the word, its argument, its options, and

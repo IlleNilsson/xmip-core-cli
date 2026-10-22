@@ -4,7 +4,7 @@ using Xmip.Surface;
 namespace Xmip.Cli;
 
 /// <summary>
-/// <c>xmip-cli subscriptions</c>: the Subscriptions the cluster's nodes route
+/// <c>xmip subscriptions</c>: the Subscriptions the cluster's nodes route
 /// by, and pause or resume on one of them (ADR-0013, amendment 2026-09-30).
 /// A Subscription picks a published Message up and opens a Journey; it is
 /// configuration, so an operator never removes one

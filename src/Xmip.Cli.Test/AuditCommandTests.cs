@@ -5,7 +5,7 @@ using Xmip.Surface;
 namespace Xmip.Cli.Test;
 
 /// <summary>
-/// <c>xmip-cli audit</c> (ADR-0062, amendment 2026-09-29): the line becomes
+/// <c>xmip audit</c> (ADR-0062, amendment 2026-09-29): the line becomes
 /// the query in the capability's words, and what the capability read back
 /// from a directory the test wrote through <see cref="ProgramAudit"/> is
 /// rendered — or its refusal said, in its words.
@@ -20,7 +20,7 @@ public sealed class AuditCommandTests
         Invocation? parsed = Invocation.Parse(
             [
                 "audit", $"{Cluster.Scope}/*", "--location", Cluster.Scope, "--host", "H1",
-                "--program", "xmip-cli", "--record", "r1", "--severity", "Error",
+                "--program", "xmip", "--record", "r1", "--severity", "Error",
                 "--action", "pause", "--from", "2026-09-29", "--to", "2026-09-30T12:00",
                 "--sort", "node", "--order", "ascending", "--offset", "5", "--limit", "7",
                 "--json",
@@ -36,7 +36,7 @@ public sealed class AuditCommandTests
                 Pattern = $"{Cluster.Scope}/*",
                 Location = Cluster.Scope,
                 Host = "H1",
-                Program = "xmip-cli",
+                Program = "xmip",
                 Record = "r1",
                 Severity = "Error",
                 Action = "pause",
@@ -302,7 +302,7 @@ public sealed class AuditCommandTests
     private static string Written()
     {
         string directory =
-            Path.Combine(Path.GetTempPath(), $"xmip-cli-audit-read-{Guid.NewGuid():n}");
+            Path.Combine(Path.GetTempPath(), $"xmip-audit-read-{Guid.NewGuid():n}");
         ProgramAudit audit = Audit(directory);
 
         Assert.Equal(

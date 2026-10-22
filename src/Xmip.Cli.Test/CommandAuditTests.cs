@@ -5,7 +5,7 @@ using Xmip.Surface;
 namespace Xmip.Cli.Test;
 
 /// <summary>
-/// What <c>xmip-cli</c> records of itself (ADR-0062), through the audit
+/// What <c>xmip</c> records of itself (ADR-0062), through the audit
 /// capability in the runtime's library: a command, its end, a failure, a
 /// line that could not be obeyed — and that the executable itself does so.
 /// </summary>
@@ -25,7 +25,7 @@ public sealed class CommandAuditTests
         Assert.Equal(AuditKept.Persisted, outcome.Kept);
         string text = Records(directory);
         Assert.Contains("[[record]]", text, StringComparison.Ordinal);
-        Assert.Contains("program = \"xmip-cli\"", text, StringComparison.Ordinal);
+        Assert.Contains("program = \"xmip\"", text, StringComparison.Ordinal);
         Assert.Contains("action = \"validate\"", text, StringComparison.Ordinal);
         Assert.Contains("phase = \"Begin\"", text, StringComparison.Ordinal);
         Assert.Contains("phase = \"Failure\"", text, StringComparison.Ordinal);
@@ -77,7 +77,7 @@ public sealed class CommandAuditTests
         string directory = Scratch();
         ProcessStartInfo start = new("dotnet")
         {
-            ArgumentList = { Path.Combine(AppContext.BaseDirectory, "xmip-cli.dll"), "nonsense" },
+            ArgumentList = { Path.Combine(AppContext.BaseDirectory, "xmip.dll"), "nonsense" },
             RedirectStandardError = true,
             RedirectStandardOutput = true,
             Environment = { ["XMIP_AUDIT_DIRECTORY"] = directory },
@@ -89,9 +89,9 @@ public sealed class CommandAuditTests
 
         Assert.Equal(2, run.ExitCode);
         Assert.Contains(
-            "'nonsense' is not an xmip-cli command", complaint, StringComparison.Ordinal);
+            "'nonsense' is not an xmip command", complaint, StringComparison.Ordinal);
         string text = Records(directory);
-        Assert.Contains("program = \"xmip-cli\"", text, StringComparison.Ordinal);
+        Assert.Contains("program = \"xmip\"", text, StringComparison.Ordinal);
         Assert.Contains("action = \"refused\"", text, StringComparison.Ordinal);
         Assert.Contains("phase = \"Failure\"", text, StringComparison.Ordinal);
         Directory.Delete(directory, recursive: true);
@@ -99,7 +99,7 @@ public sealed class CommandAuditTests
 
     private static string Scratch()
     {
-        return Path.Combine(Path.GetTempPath(), $"xmip-cli-audit-{Guid.NewGuid():n}");
+        return Path.Combine(Path.GetTempPath(), $"xmip-audit-{Guid.NewGuid():n}");
     }
 
     private static string Records(string directory)

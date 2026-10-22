@@ -3,7 +3,7 @@ using Xmip.Surface;
 namespace Xmip.Cli;
 
 /// <summary>
-/// The option only <c>xmip-cli subscriptions</c> takes (ADR-0013,
+/// The option only <c>xmip subscriptions</c> takes (ADR-0013,
 /// amendment 2026-09-30): <c>--name</c>, the configured name of a
 /// Subscription on its node; and the act the line named
 /// (<see cref="NounArguments"/>) as a Subscription takes it — pause or

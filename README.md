@@ -1,6 +1,6 @@
 # xmip-core-cli
 
-The .NET 11 `xmip-cli` executable — the command line over a running Xmip,
+The .NET 11 `xmip` executable — the command line over a running Xmip,
 named as every System Process Xmip owns is named (ADR-0053). A
 surface module (ADR-0011, ADR-0012 clause 11) among the operator surfaces
 ADR-0014 names, and the executable ADR-0052 clause 5 describes: text for a
@@ -11,39 +11,40 @@ It is argument parsing and rendering over two libraries in xmip-core-abi:
 `Xmip.Abi`, the one .NET declaration of `xmip_module.h` and `xmip_operate.h`,
 and `Xmip.Surface`, the model every .NET operator surface shares (ADR-0052).
 The PowerShell module and the two GUI hosts read the same surface, so what
-`xmip-cli` says and what a screen says cannot disagree.
+`xmip` says and what a screen says cannot disagree.
 
 ```text
-xmip-cli abi              the two boundaries this build speaks
-xmip-cli status <code>    what a status code means
-xmip-cli probe <library>  load a module and report what it says it is
-xmip-cli health <scope>   health at and beneath a scope, from the runtime
-xmip-cli measure [scope]  streams, messages, journeys, bytes, retrying, failed
-xmip-cli list [scope]     the direct children of a scope, the cluster by default
-xmip-cli show <scope>     one scope: its mood, its worst leaf and why, its figures
-xmip-cli pause <scope>    pause everything at and beneath a scope
-xmip-cli resume <scope>   resume everything at and beneath a scope
-xmip-cli validate <toml>  check a node configuration without starting it
-xmip-cli certificate [request]
-                          with --operator, make a person's key and certificate
-                          request; with --sign, sign one by the authority a
-                          node configuration names; with --node, issue a node
-                          its key and certificate from the cluster's authority
-xmip-cli database <server>
+xmip abi                  the two boundaries this build speaks
+xmip status <code>        what a status code means
+xmip probe <library>      load a module and report what it says it is
+xmip health <scope>       health at and beneath a scope, from the runtime
+xmip measure [scope]      streams, messages, journeys, bytes, retrying, failed
+xmip list [scope]         the direct children of a scope, the cluster by default
+xmip show <scope>         one scope: its mood, its worst leaf and why, its figures
+xmip pause <scope>        pause everything at and beneath a scope
+xmip resume <scope>       resume everything at and beneath a scope
+xmip validate <toml>      check a node configuration without starting it
+xmip certificate [file]
+                          a person's key and request (--operator) or its signing
+                          (--sign); a node's key and certificate from the
+                          cluster's authority (--node), or its request, signing
+                          and import across an air gap; the authority set up,
+                          inspected, revoked from, exported and backed up
+xmip database <server>
                           the scripts that upgrade each database on a server from
                           the schema version it holds (--from, --to, --out)
-xmip-cli audit [pattern]  what the audit recorded, newest first
-xmip-cli subscriptions [pattern]
+xmip audit [pattern]      what the audit recorded, newest first
+xmip subscriptions [pattern]
                           the Subscriptions the nodes route by; pause or resume one
-xmip-cli event-subscriptions [pattern]
+xmip event-subscriptions [pattern]
                           the Event subscriptions the nodes hold; pause, resume or
                           remove one
-xmip-cli dead-messages [pattern]
+xmip dead-messages [pattern]
                           the Messages no Subscription matched, in each node's Dead
                           Message Queue; open one, or replay it
-xmip-cli journey [id]     list the Journeys that failed, or retry or dismiss one
-xmip-cli mcp              a Model Context Protocol server on stdin and stdout
-xmip-cli help             this text
+xmip journey [id]         list the Journeys that failed, or retry or dismiss one
+xmip mcp                  a Model Context Protocol server on stdin and stdout
+xmip help                 this text
 
 --json                    one JSON document instead of text
 --follow                  with health or measure: JSON Lines as they change
@@ -63,7 +64,7 @@ module — `Surface = "local" | "snapshot" | "remote"`, `Local`, `Address`,
 `RuntimeLibrary`, `Snapshot` — and never guessed (ADR-0052 clause 3). As shipped, in a
 developer's clone, it follows the Playground roll started as cluster C1 — a
 name the walkthrough picked, and nothing Xmip knows — the same file the
-PowerShell prompt follows, so `xmip-cli show xmip:///C1` answers while a roll
+PowerShell prompt follows, so `xmip show xmip:///C1` answers while a roll
 runs and says `SNAPSHOT — no file at ...` before one has. Roll under another
 name and `Snapshot` names that file instead. With no surface named, no node
 is named, and a command says so. The runtime library — what every command
@@ -127,9 +128,9 @@ may act, and refuses it in words otherwise (ADR-0009, amendment 2026-10-03).
 person's surface — the phone first — presents to a node's operate listener
 (ADR-0034, amendment 2026-10-15): client authentication alone, its subject
 the person, `CN=<person>`, the caller the listener proves and grants its
-`[operate]` role. `xmip-cli certificate --operator alice@example.org --out
+`[operate]` role. `xmip certificate --operator alice@example.org --out
 phone` makes a fresh key and a request naming the person as
-`phone/operator.key` and `phone/operator.csr`; `xmip-cli certificate
+`phone/operator.key` and `phone/operator.csr`; `xmip certificate
 phone/operator.csr --sign node.toml --out phone/operator.pem` signs it by the
 authority that node configuration's `[provision.operator]` names, for its
 `lifetime`, the chain to stdout where `--out` names no file. Running `--sign`
@@ -142,7 +143,7 @@ too; they and the rules are the runtime's
 (`xmip_operate.h` section 19), reached through `OperatorCertificate` in
 `Xmip.Surface`, the same `New-XmipCertificate` uses. It is no MCP tool: it makes a key or signs.
 
-**A node's certificate.** `xmip-cli certificate --node R1 --cluster C1
+**A node's certificate.** `xmip certificate --node R1 --cluster C1
 --authority <folder> --names R1.xmip.test,C1 --out <folder>` issues a node
 put on a machine of its own a fresh key and a certificate for server and
 client authentication from the cluster's own authority kept in that folder,
@@ -151,6 +152,33 @@ written as `node.pem`, `node.key` and `anchors.pem` — the files its
 `[operate]` names — in place of what was there (ADR-0015, amendment
 2026-10-21; `xmip_operate.h` section 22, through `NodeCertificate` in
 `Xmip.Surface`, the same `New-XmipCertificate -Node` uses).
+
+**The cluster's authority** (ADR-0034, amendment 2026-10-22), the premises'
+own ACME service. `xmip certificate --authority <folder> --cluster C1
+--publish http://ca.xmip.test:8080` sets it up — kept there, made where none
+is — and the plain-HTTP address its revocation list and certificate are
+fetched from, which every certificate it signs from then names.
+`--inspect <folder>` says the authority, its SHA-256, its list and every
+certificate it signed with its standing; `--revoke <serial> --authority
+<folder> --reason keyCompromise` revokes one, listed at once; `--export
+<file> --authority <folder> --format pem|der|crl` writes its certificate
+for a Linux or Windows trust store, or its list, never over a file;
+`--backup <folder> --authority <folder>` copies the whole authority, its
+key among it, into an empty folder.
+
+**A node's certificate across an air gap.** On the node, `xmip certificate
+--node R1 --names R1.xmip.test --out <folder>` — no `--authority` — writes
+a fresh key, `node.next.key`, which stays, and the request `node.csr`, to
+carry. Where the authority is kept, `xmip certificate node.csr --authority
+<folder> --names R1,R1.xmip.test --out node.pem` verifies and signs it for
+ninety days. Back on the node, `xmip certificate node.pem --import
+<folder>` checks every signature, the key, the names and the anchor, and
+only then writes `node.pem`, `node.key` and `anchors.pem`; where the node
+held no anchor it says the authority's SHA-256 to compare by another way.
+`--inspect <file>` says whether a certificate's renewal is due. Each act is
+the runtime's (`xmip_operate.h` section 23, through `AuthorityCertificate`
+in `Xmip.Surface`, the same `New-XmipCertificate` and `Get-XmipCertificate`
+use), audited as every command is, and no MCP tool.
 
 **The drill.** `list` with no scope lists what is beneath the cluster the
 surface publishes at (`IOperatorSurface.Root`), never the one row of the
@@ -163,7 +191,7 @@ owner, 2026-09-26: *drill-down does not work*). JSON carries it as `worst`.
 
 ## What it audits
 
-Every invocation is audited as program `xmip-cli` through the audit
+Every invocation is audited as program `xmip` through the audit
 capability, reached through the runtime's library (ADR-0062; `CommandAudit`
 over `ProgramAudit` in `Xmip.Surface`): the command as it begins (action the
 command's word, phase `Begin`, the arguments and options as properties — a
@@ -181,7 +209,7 @@ record the directory cannot.
 
 ## MCP
 
-`xmip-cli mcp` is a Model Context Protocol server (ADR-0071): an MCP client
+`xmip mcp` is a Model Context Protocol server (ADR-0071): an MCP client
 starts it and speaks JSON-RPC 2.0 on its standard input and output, one
 message a line, protocol revision `2025-11-25` (and `2025-06-18` and
 `2025-03-26` when a client asks for one of them). Stdout carries protocol
@@ -217,12 +245,12 @@ resource; the tools take wildcards. A scope with nothing at it is MCP's
 surface every answer reads, as they do for any command. Every answer is
 audited as its command (`CommandAudit`), the session as `mcp`. On another
 machine it is the same line over SSH, as every command is (ADR-0014 clause
-6): a client configured to start `ssh <host> xmip-cli mcp` reaches that
+6): a client configured to start `ssh <host> xmip mcp` reaches that
 machine's Xmip with SSH's authentication, and Xmip adds no listener.
 
 ## Subscriptions
 
-`xmip-cli subscriptions` lists the Subscriptions the cluster's nodes route by
+`xmip subscriptions` lists the Subscriptions the cluster's nodes route by
 (ADR-0013, amendment 2026-09-30; ADR-0052). A Subscription picks a published
 Message up and opens a Journey; it is drawn in an Xmip Application and bound
 in a node's TOML. Each one's name, the cluster, the node, its filter, where
@@ -230,9 +258,9 @@ it leads, its state, what it picked up, what it holds and since. One command
 for the noun, and the act an option on it:
 
 ```text
-xmip-cli subscriptions [pattern] --location <scope> --name <subscription>
+xmip subscriptions [pattern] --location <scope> --name <subscription>
   --sort <column> --order ascending|descending --json
-xmip-cli subscriptions --location <node scope> --name <subscription> --pause|--resume
+xmip subscriptions --location <node scope> --name <subscription> --pause|--resume
   --who <name> --json
 ```
 
@@ -257,7 +285,7 @@ when it was not.
 
 ## Event subscriptions
 
-`xmip-cli event-subscriptions` lists the Event subscriptions the cluster's
+`xmip event-subscriptions` lists the Event subscriptions the cluster's
 nodes hold (ADR-0065, amendment 2026-09-29): each one's number on its node,
 the subscriber (a Party), the cluster, the node, the action it subscribes to,
 its state, queued against capacity, delivered, missed and since. The node is
@@ -273,9 +301,9 @@ An Event subscription is not a Subscription: it hands Events to a Party, and pic
 Message up. One command for the noun, and the act an option on it:
 
 ```text
-xmip-cli event-subscriptions [pattern] --location <scope> --id <n>
+xmip event-subscriptions [pattern] --location <scope> --id <n>
   --sort <column> --order ascending|descending --json
-xmip-cli event-subscriptions --location <node scope> --id <n>
+xmip event-subscriptions --location <node scope> --id <n>
   --pause|--resume|--remove --who <name> --json
 ```
 
@@ -296,7 +324,7 @@ was not.
 
 ## Dead Message Queue
 
-`xmip-cli dead-messages` lists what each node's Dead Message Queue keeps
+`xmip dead-messages` lists what each node's Dead Message Queue keeps
 (ADR-0052, amendment 2026-10-01): every accepted Message that no
 Subscription matched, kept in the Ledger with its receive context, what its
 gates concluded, its promoted properties and every Subscription's reason for
@@ -307,9 +335,9 @@ Subscriptions declined it; a node publishes its oldest hundred. One command
 for the noun, and the act an option on it:
 
 ```text
-xmip-cli dead-messages [pattern] --location <scope> --message <id>
+xmip dead-messages [pattern] --location <scope> --message <id>
   --sort <column> --order ascending|descending --json
-xmip-cli dead-messages --location <node scope> --message <id> --replay
+xmip dead-messages --location <node scope> --message <id> --replay
   --who <name> --json
 ```
 
@@ -336,7 +364,7 @@ applied or left, `REFUSED:` and exit 1 when it was not.
 
 ## A Journey that failed
 
-`xmip-cli journey` lists the Journeys that failed and retries or dismisses
+`xmip journey` lists the Journeys that failed and retries or dismisses
 one (runtime-model.md section 13; ADR-0013). A Journey leads to one Send
 Port; when every Send Location of its Port failed its tries it is written
 Failed, with why, and waits in its Port's queue. The node publishes, at the
@@ -358,7 +386,7 @@ lists are kept in two places, and a `more:` is only ever given back to the
 surface that said it:
 
 ```text
-xmip-cli journey --location <scope> --offset <place> --limit <count> --json
+xmip journey --location <scope> --offset <place> --limit <count> --json
 ```
 
 A list says plainly which of three it is. An answer exits 0, and where none
@@ -374,7 +402,7 @@ With a Journey named, it is the argument, `--location` names the node that
 sends the Port or the Port's scope beneath it, and one act is required:
 
 ```text
-xmip-cli journey <id> --location <node or Send Port scope> --retry|--dismiss
+xmip journey <id> --location <node or Send Port scope> --retry|--dismiss
   --who <name> --json
 ```
 
@@ -396,7 +424,7 @@ and `result`.
 
 ## Reading the audit
 
-`xmip-cli audit` reads that file back — every program's records in it, not
+`xmip audit` reads that file back — every program's records in it, not
 only this one's — through the audit capability's one reader
 (`ProgramAudit.Read` in `Xmip.Surface`, over `xmip_audit_read_v1`; ADR-0062,
 amendment 2026-09-29), the reader the web's Audit view and `Get-XmipAudit`
@@ -404,7 +432,7 @@ call. Its argument and options are the query's words, and what each means is
 the capability's:
 
 ```text
-xmip-cli audit [pattern] --location <scope> --host <name> --program <name>
+xmip audit [pattern] --location <scope> --host <name> --program <name>
   --record <id> --severity <word> --action <word> --from <time> --to <time>
   --sort <column> --order ascending|descending --offset <n> --limit <n>
   --include-hidden --verify --json
@@ -515,7 +543,7 @@ compiles without a single Xmip source file is the test.
 
 `dotnet build` and `dotnet test` on `src/Xmip.Cli.Test`; the workflow in
 `.github/workflows/verify.yml` does the same with `xmip-core-abi` checked out
-beside this repository. `xmip-cli probe` against a conforming module is the first
+beside this repository. `xmip probe` against a conforming module is the first
 of the seven conformance rules in section 11 of `doc/specification.md` in
 xmip-core-abi.
 

@@ -11,10 +11,11 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <RootNamespace>Xmip.Cli</RootNamespace>
-    <!-- xmip-cli, not xmip: every System Process Xmip owns matches xmip-*, the
-         executable included, so a forgotten follow session is found and
-         stopped with the rest (ADR-0053; the owner, 2026-09-18). -->
-    <AssemblyName>xmip-cli</AssemblyName>
+    <!-- xmip, the command a person types: the owner, 2026-10-22, "Xmip CLI
+         should be named just xmip". Every System Process Xmip owns is xmip
+         or matches xmip-*, so a forgotten follow session is found and
+         stopped with the rest (ADR-0053, amendment 2026-10-22). -->
+    <AssemblyName>xmip</AssemblyName>
     <PublishAot>true</PublishAot>
   </PropertyGroup>
 

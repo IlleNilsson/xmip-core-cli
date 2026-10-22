@@ -6,7 +6,7 @@ using Xmip.Surface;
 namespace Xmip.Cli;
 
 /// <summary>
-/// <c>xmip-cli mcp</c>: a Model Context Protocol server over standard input
+/// <c>xmip mcp</c>: a Model Context Protocol server over standard input
 /// and output (ADR-0071) — JSON-RPC 2.0, one message per line, the fifth way
 /// into the operator boundary. Its tools are the command line's read
 /// commands (<see cref="McpTools"/>) and its resources the scope tree, each
@@ -65,7 +65,7 @@ public sealed class McpServer(
         ArgumentNullException.ThrowIfNull(input);
         ArgumentNullException.ThrowIfNull(output);
 
-        diagnostics.WriteLine($"xmip-cli mcp: speaking MCP {ProtocolVersion} on stdin and stdout.");
+        diagnostics.WriteLine($"xmip mcp: speaking MCP {ProtocolVersion} on stdin and stdout.");
 
         while (await input.ReadLineAsync(stop).ConfigureAwait(false) is { } line)
         {
@@ -125,7 +125,7 @@ public sealed class McpServer(
             {
                 // A notification: notifications/initialized and the rest are
                 // taken and never answered.
-                diagnostics.WriteLine($"xmip-cli mcp: {method}.");
+                diagnostics.WriteLine($"xmip mcp: {method}.");
                 return null;
             }
 
@@ -145,7 +145,7 @@ public sealed class McpServer(
     }
 
     /// <summary>
-    /// Answer a command line as <c>xmip-cli</c> would, audited as that
+    /// Answer a command line as <c>xmip</c> would, audited as that
     /// command: its exit, what it wrote on its output and on its error
     /// writer. A line that cannot be obeyed, or that names an act, is
     /// answered exit 2 with why.
@@ -312,7 +312,7 @@ public sealed class McpServer(
         "Xmip, read through its operator boundary, read only. Resources are Xmip URIs "
         + "(xmip:///<cluster>/node/<node>/...): read one for its row - mood, worst leaf "
         + "and why, figures - and the scopes beneath it, and read those to drill to a "
-        + "cause. Tools are xmip-cli's read commands; each answers one JSON document, "
+        + "cause. Tools are xmip's read commands; each answers one JSON document, "
         + "and every row in it names its scope.";
 
     private async Task<string> CallAsync(JsonElement id, JsonElement? parameters)

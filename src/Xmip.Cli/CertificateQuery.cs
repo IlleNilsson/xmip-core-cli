@@ -1,9 +1,10 @@
 namespace Xmip.Cli;
 
-/// <summary>What <c>xmip-cli certificate</c> was asked
+/// <summary>What <c>xmip certificate</c> was asked
 /// (<see cref="CertificateArguments"/>): the person a request is made for,
-/// the node configuration whose authority signs one, and where the files
-/// go; each null where the line names none.</summary>
+/// the node configuration whose authority signs one, the cluster's
+/// authority and what is done with it, and where the files go; each null
+/// where the line names none.</summary>
 public sealed record CertificateQuery
 {
     /// <summary>The person a key and request are made for:
@@ -33,4 +34,44 @@ public sealed record CertificateQuery
     /// <summary>Every name the node is reached by besides its own, comma
     /// separated: <c>--names</c>.</summary>
     public string? Names { get; init; }
+    /// <summary>The plain-HTTP address the authority publishes its list
+    /// and certificate at, set up with <c>--authority</c> and
+    /// <c>--cluster</c>: <c>--publish</c>.</summary>
+    public string? Publish { get; init; }
+
+    /// <summary>The authority's folder, or a certificate file, to inspect:
+    /// <c>--inspect</c>.</summary>
+    public string? Inspect { get; init; }
+
+    /// <summary>The serial of a certificate the authority signed, to
+    /// revoke: <c>--revoke</c>.</summary>
+    public string? Revoke { get; init; }
+
+    /// <summary>Why, an RFC 5280 word: <c>--reason</c>.</summary>
+    public string? Reason { get; init; }
+
+    /// <summary>The file the authority's certificate or list is written
+    /// to: <c>--export</c>.</summary>
+    public string? Export { get; init; }
+
+    /// <summary>pem, der or crl: <c>--format</c>.</summary>
+    public string? Format { get; init; }
+
+    /// <summary>The empty folder the whole authority is copied into:
+    /// <c>--backup</c>.</summary>
+    public string? Backup { get; init; }
+
+    /// <summary>The node's folder a carried chain is imported into:
+    /// <c>--import</c>.</summary>
+    public string? Import { get; init; }
+
+    /// <summary>The acts the line names, each by its option; exactly one
+    /// is obeyed.</summary>
+    public IReadOnlyList<string> Acts =>
+        new (string? Value, string Option)[]
+        {
+            (Operator, "--operator"), (Sign, "--sign"), (Node, "--node"),
+            (Inspect, "--inspect"), (Revoke, "--revoke"), (Export, "--export"),
+            (Backup, "--backup"), (Import, "--import"),
+        }.Where(one => one.Value is not null).Select(one => one.Option).ToArray();
 }

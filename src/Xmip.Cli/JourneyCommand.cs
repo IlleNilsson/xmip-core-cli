@@ -4,7 +4,7 @@ using Xmip.Surface;
 namespace Xmip.Cli;
 
 /// <summary>
-/// <c>xmip-cli journey</c>: the Journeys that failed, listed, and Retry or
+/// <c>xmip journey</c>: the Journeys that failed, listed, and Retry or
 /// Dismiss on one (runtime-model.md section 13; ADR-0013). A Journey leads to
 /// one Send Port; when every Send Location of its Port failed its tries it is
 /// written Failed and waits in its Port's queue. With no Journey named, every

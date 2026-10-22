@@ -3,7 +3,7 @@ using Xmip.Surface;
 namespace Xmip.Cli;
 
 /// <summary>
-/// The act <c>xmip-cli journey</c> takes (runtime-model.md section 13;
+/// The act <c>xmip journey</c> takes (runtime-model.md section 13;
 /// ADR-0013): the word the line named (<see cref="NounArguments"/>) as a
 /// Journey that failed takes it — retry or dismiss — and every other word
 /// refused in words. The Journey is the command's argument and its node the

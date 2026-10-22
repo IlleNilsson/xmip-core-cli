@@ -3,7 +3,7 @@ using System.Text.Json;
 namespace Xmip.Cli.Test;
 
 /// <summary>
-/// <c>xmip-cli database</c> (open problem 41; ADR-0015, amendment
+/// <c>xmip database</c> (open problem 41; ADR-0015, amendment
 /// 2026-10-20): the line read — a server, <c>--from</c> required, versions as
 /// whole numbers, <c>--out</c> shared with <c>certificate</c> and the act's
 /// other options on no other command — and the act answered through the
@@ -41,8 +41,7 @@ public sealed class DatabaseCommandTests
         Assert.Contains(
             "exactly one argument", Refused("database", "--from", "1"), StringComparison.Ordinal);
         Assert.Contains(
-            "--operator, --sign, --node, --cluster, --authority and --names only apply to "
-                + "'certificate'",
+            "The options of 'certificate' only apply to 'certificate'",
             Refused("database", "mariadb", "--from", "1", "--operator", "alice@example.org"),
             StringComparison.Ordinal);
         Assert.Equal(
@@ -54,7 +53,7 @@ public sealed class DatabaseCommandTests
     public void TheRuntimeRefusesAnUpgradeThatIsNoneAndNothingIsWritten()
     {
         string place = Path.Combine(
-            Path.GetTempPath(), $"xmip-cli-database-{Guid.NewGuid():n}");
+            Path.GetTempPath(), $"xmip-database-{Guid.NewGuid():n}");
         StringWriter output = new();
         StringWriter error = new();
         Invocation asked = Parse("database", "postgresql", "--from", "1", "--out", place, "--json");
