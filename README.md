@@ -407,8 +407,8 @@ xmip journey <id> --location <node or Send Port scope> --retry|--dismiss
 ```
 
 `--retry` writes it Active, its tries begun anew, and sends it again from
-the end of its Port's queue — or from its place, where it blocks a
-Sequential Send Port; `--dismiss` writes it Dismissed, its history, Message
+the end of its Port's queue — or from its place, where it blocks its
+sequence; `--dismiss` writes it Dismissed, its history, Message
 and Stream kept, and takes it out of the queue. A Journey named with no
 act, an act with no Journey, or `--pause`, `--resume`, `--remove` or
 `--replay` cannot be obeyed (exit 2),
