@@ -32,7 +32,7 @@ public sealed class JourneyCommandTests : IDisposable
             Snapshot,
             $"node = \"{Cluster.Scope}\"\norders = '{Orders}'\n\n"
                 + $"[[failed_journeys]]\nnode = \"{Sending}\"\nsend_port = \"invoices\"\n"
-                + "count = 2\n\n[[failed_journeys.journeys]]\njourney = \"j-1\"\n"
+                + "count = 2\nblocked = true\n\n[[failed_journeys.journeys]]\njourney = \"j-1\"\n"
                 + "sequence = 3\nreason = \"invoices: the far end refused it\"\n\n"
                 + "[[failed_journeys.journeys]]\njourney = \"j-2\"\nsequence = 7\n"
                 + "reason = \"invoices: the far end refused it again\"\n");
@@ -123,6 +123,7 @@ public sealed class JourneyCommandTests : IDisposable
         Assert.Contains(
             "j-1  place 3  invoices: the far end refused it", said, StringComparison.Ordinal);
         Assert.Contains("j-2", said, StringComparison.Ordinal);
+        Assert.Contains("BLOCKED: every Journey of its key waits", said, StringComparison.Ordinal);
 
         using StringWriter paged = new();
         JourneyCommand.List(
@@ -131,6 +132,7 @@ public sealed class JourneyCommandTests : IDisposable
         JsonElement port = document.RootElement.GetProperty("failed_journeys")[0];
         Assert.Equal("invoices", port.GetProperty("send_port").GetString());
         Assert.Equal(2UL, port.GetProperty("count").GetUInt64());
+        Assert.True(port.GetProperty("blocked").GetBoolean(), "a blocked key is loud");
         JsonElement journeys = port.GetProperty("journeys");
         Assert.Equal(1, journeys.GetArrayLength());
         Assert.Equal("j-2", journeys[0].GetProperty("journey").GetString());

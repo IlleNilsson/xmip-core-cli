@@ -235,7 +235,7 @@ public static class Usage
         Port's scope beneath it, and one act is required:
 
           --retry                   send it again, its tries begun anew; where
-                                    it blocks a Sequential Send Port it keeps
+                                    it blocks its sequence it keeps
                                     its place
           --dismiss                 give it up: written Dismissed, its history,
                                     Message and Stream kept, and taken out of
