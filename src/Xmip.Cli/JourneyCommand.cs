@@ -109,6 +109,13 @@ public static class JourneyCommand
             output.WriteLine(
                 $"{port.Node} Send Port {port.SendPort}: {port.Count} failed in its queue");
 
+            if (port.Blocked)
+            {
+                output.WriteLine(
+                    "  BLOCKED: every Journey of its key waits behind the first that failed "
+                    + "until it is retried or dismissed");
+            }
+
             foreach (FailedJourneyRecord journey in port.Journeys)
             {
                 output.WriteLine(
@@ -144,6 +151,7 @@ public static class JourneyCommand
                 writer.WriteString("node", port.Node);
                 writer.WriteString("send_port", port.SendPort);
                 writer.WriteNumber("count", port.Count);
+                writer.WriteBoolean("blocked", port.Blocked);
 
                 if (port.Next is { } next)
                 {
