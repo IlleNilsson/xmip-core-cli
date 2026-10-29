@@ -43,6 +43,8 @@ xmip dead-messages [pattern]
                           the Messages no Subscription matched, in each node's Dead
                           Message Queue; open one, or replay it
 xmip journey [id]         list the Journeys that failed, or retry or dismiss one
+xmip secret [name]        the secrets a node keeps, never a value; with --set,
+                          set one through the node
 xmip mcp                  a Model Context Protocol server on stdin and stdout
 xmip help                 this text
 
@@ -421,6 +423,31 @@ longer Failed, or a node that does not send its Port, is REFUSED in the
 node's words. `OK.` and exit 0 when it was applied or left, `REFUSED:` and
 exit 1 when it was not; `--json` carries `node`, `journey`, `act`, `applied`
 and `result`.
+
+## A secret
+
+A Location names the proof it presents to the party it connects to with
+`secret = "<name>"`; the secret is kept in the Administration Database, its
+value sealed by Xmip, and never in the TOML (ADR-0019 and ADR-0063,
+amendments 2026-10-29).
+
+```text
+xmip secret --location <node scope> --json
+xmip secret <name> --set --kind password|key|certificate --file <path>
+  --location <node scope> --who <name>
+```
+
+`secret` alone lists what the node keeps: each secret's name, kind, and when
+and by whom it was set — never a value; no surface reads one back. `--set`
+sets the secret the argument names, through the node at `--location` — the
+one node the surface reaches where it names none — admitted by role and
+audited with the name, never the value (`xmip_operate.h` section 24,
+`xmip_secret_v1` and `xmip_secrets_v1`). The value is never typed on the
+line, where every process on the machine could read it: it is read from
+`--file`, or from standard input where the line names none, its line end
+taken off. Exit 0 when it was set, 1 when it was not, 2 for a line the
+command does not take — a name with no `--set`, a set with no `--kind`, or
+`--set` on another noun. `Set-XmipSecret` is the same act in PowerShell.
 
 ## Reading the audit
 

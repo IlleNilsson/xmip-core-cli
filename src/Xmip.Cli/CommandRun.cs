@@ -112,6 +112,13 @@ public static class CommandRun
                 invocation, open, error, surface => JourneyCommand.List(
                     surface, invocation.Location, (invocation.From, invocation.Most),
                     json, output, error)),
+            Command.Secret when invocation.Secret is { Set: true } asked => On(
+                invocation, open, error, surface => SecretCommand.Set(
+                    surface, invocation.Location ?? string.Empty, asked, Console.In, who,
+                    json, output, error)),
+            Command.Secret => On(
+                invocation, open, error, surface => SecretCommand.List(
+                    surface, invocation.Location ?? string.Empty, json, output, error)),
             _ => Usage.Print(output),
         };
     }

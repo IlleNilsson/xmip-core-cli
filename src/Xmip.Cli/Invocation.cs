@@ -95,6 +95,10 @@ public sealed record Invocation(
     /// null for every other command.</summary>
     public DatabaseQuery? Database { get; init; }
 
+    /// <summary>What <c>secret</c> asks (<see cref="SecretArguments"/>); null
+    /// for every other command.</summary>
+    public SecretAsk? Secret { get; init; }
+
     /// <summary>
     /// Parse a command line. Options may sit anywhere; the first bare word is
     /// the command and the second its argument. Null with a problem in
@@ -118,6 +122,7 @@ public sealed record Invocation(
         string? message = null;
         string? act = null;
         CertificateQuery? certificate = null;
+        SecretAsk? secretAsk = null;
         List<string> nounOptions = [];
 
         for (int i = 0; i < args.Count; i++)
@@ -140,7 +145,8 @@ public sealed record Invocation(
                 || SubscriptionArguments.Take(args, ref i, ref name, out unobeyed)
                 || DeadMessageArguments.Take(args, ref i, ref message, out unobeyed)
                 || NounArguments.Take(args, i, ref act, out unobeyed)
-                || CertificateArguments.Take(args, ref i, ref certificate, out unobeyed))
+                || CertificateArguments.Take(args, ref i, ref certificate, out unobeyed)
+                || SecretArguments.Take(args, ref i, ref secretAsk, out unobeyed))
             {
                 if (unobeyed is not null)
                 {
@@ -263,26 +269,19 @@ public sealed record Invocation(
 
         bool noun = known.Command
             is Command.EventSubscriptions or Command.Subscriptions or Command.DeadMessages
-            or Command.Journey;
+            or Command.Journey or Command.Secret;
 
         if (who is not null && known.Command is not Command.Pause && !(noun && act is not null))
         {
             problem = "--who only applies to 'pause' and to an act of 'event-subscriptions', "
-                + "'subscriptions', 'dead-messages' or 'journey'.";
+                + "'subscriptions', 'dead-messages', 'journey' or 'secret'.";
             return null;
         }
 
-        // Replay is a Message's act alone; the other nouns never see the word.
-        if (act == "replay" && known.Command is not Command.DeadMessages)
+        // Replay, Retry, Dismiss and Set are one noun's acts each.
+        if (NounArguments.Misplaced(known.Command, act) is { } misplaced)
         {
-            problem = "--replay only applies to 'dead-messages'.";
-            return null;
-        }
-
-        // Retry and Dismiss are a Journey's acts alone.
-        if (act is "retry" or "dismiss" && known.Command is not Command.Journey)
-        {
-            problem = $"--{act} only applies to 'journey'.";
+            problem = misplaced;
             return null;
         }
 
@@ -314,6 +313,9 @@ public sealed record Invocation(
         string argument = arguments == 1 ? words[1] : string.Empty;
         DatabaseQuery? database = known.Command is Command.Database
             ? DatabaseArguments.Query(argument, audit, certificate, ref refused)
+            : null;
+        SecretAsk? secret = known.Command is Command.Secret && refused is null
+            ? SecretArguments.Ask(act, argument, secretAsk, out refused)
             : null;
 
         if (refused is not null)
@@ -374,13 +376,14 @@ public sealed record Invocation(
                 : null,
             replay,
             journeyAct,
-            known.Command is Command.Journey ? audit?.Location : null,
+            known.Command is Command.Journey or Command.Secret ? audit?.Location : null,
             known.Command is Command.Journey ? (ulong)Math.Max(audit?.Offset ?? 0, 0) : 0,
             known.Command is Command.Journey ? (uint)Math.Max(audit?.Limit ?? 0, 0) : 0)
         {
             Local = local,
             Certificate = known.Command is Command.Certificate ? certificate : null,
             Database = database,
+            Secret = secret,
         };
     }
 }
