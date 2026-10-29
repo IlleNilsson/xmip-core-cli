@@ -41,6 +41,8 @@ public static class Usage
                                     replay it
           xmip journey [id]         list the Journeys that failed, or retry or
                                     dismiss one
+          xmip secret [name]        the secrets a node keeps, never a value; with
+                                    --set, set one through the node
           xmip mcp                  a Model Context Protocol server on stdin and
                                     stdout: the read commands as its tools, the
                                     scopes as its resources
@@ -208,6 +210,20 @@ public static class Usage
           xmip dead-messages --location xmip:///C1/node/R1
           xmip dead-messages --location xmip:///C1/node/R1 --message <id>
           xmip dead-messages --location xmip:///C1/node/R1 --message <id> --replay
+
+        secret lists the secrets a node keeps — each by name, kind, and when
+        and by whom it was set, never a value — and with --set sets one: the
+        proof a Location presents to the party it connects to, named by its
+        secret = "<name>" and kept in the Administration Database, sealed by
+        Xmip (ADR-0019, amendment 2026-10-29). The value is never typed on
+        the line: it is read from --file, or from standard input.
+
+          --set                     set the secret [name] through the node
+          --kind <kind>             password, key or certificate
+          --file <path>             the file holding the value
+
+          xmip secret
+          xmip secret partner-x --set --kind key --file partner-x.key
 
         journey lists the Journeys that failed and acts on one
         (runtime-model.md section 13): a Journey leads to one Send Port, and

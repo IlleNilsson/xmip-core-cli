@@ -68,6 +68,10 @@ public enum Command
     /// Send Port (runtime-model.md section 13; ADR-0013).</summary>
     Journey,
 
+    /// <summary>The secrets a node keeps, never a value, and Set on one
+    /// (ADR-0019, amendment 2026-10-29).</summary>
+    Secret,
+
     /// <summary>A Model Context Protocol server over standard input and
     /// output: the read commands as its tools, the scope tree as its
     /// resources (ADR-0071).</summary>

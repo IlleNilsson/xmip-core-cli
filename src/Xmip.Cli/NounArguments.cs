@@ -18,7 +18,7 @@ public static class NounArguments
 {
     /// <summary>Every act option, as typed.</summary>
     public static IReadOnlyList<string> Options { get; } =
-        ["--pause", "--resume", "--remove", "--replay", "--retry", "--dismiss"];
+        ["--pause", "--resume", "--remove", "--replay", "--retry", "--dismiss", "--set"];
 
     /// <summary>The query options every noun shares with <c>audit</c>.</summary>
     public static IReadOnlyList<string> Shared { get; } = ["--location", "--sort", "--order"];
@@ -47,8 +47,8 @@ public static class NounArguments
 
         if (act is { } before && before != named)
         {
-            problem = "--pause, --resume, --remove, --replay, --retry and --dismiss are one "
-                + "act; name one.";
+            problem = "--pause, --resume, --remove, --replay, --retry, --dismiss and --set are "
+                + "one act; name one.";
             return true;
         }
 
@@ -69,10 +69,13 @@ public static class NounArguments
         bool noun = command
             is Command.EventSubscriptions or Command.Subscriptions or Command.DeadMessages;
 
-        string? foreign = command is Command.Journey or Command.Database
-            ? auditOptions.FirstOrDefault(option => !(command is Command.Journey
-                ? JourneyArguments.Shared
-                : DatabaseArguments.Shared).Contains(option))
+        string? foreign = command is Command.Journey or Command.Database or Command.Secret
+            ? auditOptions.FirstOrDefault(option => !(command switch
+            {
+                Command.Journey => JourneyArguments.Shared,
+                Command.Secret => SecretArguments.Shared,
+                _ => DatabaseArguments.Shared,
+            }).Contains(option))
             : noun
                 ? auditOptions.FirstOrDefault(option => !Shared.Contains(option))
                 : command is Command.Audit ? null : auditOptions.FirstOrDefault();
@@ -97,8 +100,10 @@ public static class NounArguments
                     ? command is Command.Subscriptions ? null : "'subscriptions'"
                     : DeadMessageArguments.Options.Contains(option)
                         ? command is Command.DeadMessages ? null : "'dead-messages'"
+                        : SecretArguments.Options.Contains(option)
+                            ? command is Command.Secret ? null : "'secret'"
                         : command is Command.EventSubscriptions or Command.Subscriptions
-                            or Command.DeadMessages or Command.Journey
+                            or Command.DeadMessages or Command.Journey or Command.Secret
                             ? null
                             : "'event-subscriptions', 'subscriptions', 'dead-messages' "
                                 + "and 'journey'";
@@ -110,5 +115,23 @@ public static class NounArguments
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Why <paramref name="act"/> is no act of <paramref name="command"/>
+    /// where it is one noun's alone — Replay a Message's, Retry and Dismiss a
+    /// Journey's, Set a secret's — or null.
+    /// </summary>
+    public static string? Misplaced(Command command, string? act)
+    {
+        return act switch
+        {
+            "replay" when command is not Command.DeadMessages =>
+                "--replay only applies to 'dead-messages'.",
+            "retry" or "dismiss" when command is not Command.Journey =>
+                $"--{act} only applies to 'journey'.",
+            "set" when command is not Command.Secret => "--set only applies to 'secret'.",
+            _ => null,
+        };
     }
 }
