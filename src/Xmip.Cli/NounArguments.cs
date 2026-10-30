@@ -5,7 +5,7 @@ namespace Xmip.Cli;
 /// line (<c>observe::Noun</c>): <c>xmip event-subscriptions</c>
 /// (ADR-0065, amendment 2026-09-29), <c>xmip subscriptions</c>
 /// (ADR-0013, amendment 2026-09-30), <c>xmip dead-messages</c>
-/// (ADR-0052, amendment 2026-10-01) and <c>xmip journey</c>
+/// (ADR-0052, amendment 2026-10-01) and <c>xmip message</c>
 /// (runtime-model.md section 13). The act — <c>--pause</c>, <c>--resume</c>,
 /// <c>--remove</c>, <c>--replay</c>, <c>--retry</c> or <c>--dismiss</c>, one
 /// at most — read
@@ -59,7 +59,7 @@ public static class NounArguments
     /// <summary>
     /// The first of audit's options <paramref name="command"/> does not take,
     /// said as the line's problem; null when there is none. Every noun shares
-    /// where it stands and its order with audit, a Journey where it stands and
+    /// where it stands and its order with audit, a failed Message where it stands and
     /// the page of its list; the rest of audit's words are audit's.
     /// </summary>
     public static string? Foreign(Command command, IEnumerable<string> auditOptions)
@@ -69,10 +69,10 @@ public static class NounArguments
         bool noun = command
             is Command.EventSubscriptions or Command.Subscriptions or Command.DeadMessages;
 
-        string? foreign = command is Command.Journey or Command.Database or Command.Secret
+        string? foreign = command is Command.Message or Command.Database or Command.Secret
             ? auditOptions.FirstOrDefault(option => !(command switch
             {
-                Command.Journey => JourneyArguments.Shared,
+                Command.Message => MessageArguments.Shared,
                 Command.Secret => SecretArguments.Shared,
                 _ => DatabaseArguments.Shared,
             }).Contains(option))
@@ -103,10 +103,10 @@ public static class NounArguments
                         : SecretArguments.Options.Contains(option)
                             ? command is Command.Secret ? null : "'secret'"
                         : command is Command.EventSubscriptions or Command.Subscriptions
-                            or Command.DeadMessages or Command.Journey or Command.Secret
+                            or Command.DeadMessages or Command.Message or Command.Secret
                             ? null
                             : "'event-subscriptions', 'subscriptions', 'dead-messages' "
-                                + "and 'journey'";
+                                + "and 'message'";
 
             if (owner is not null)
             {
@@ -120,7 +120,7 @@ public static class NounArguments
     /// <summary>
     /// Why <paramref name="act"/> is no act of <paramref name="command"/>
     /// where it is one noun's alone — Replay a Message's, Retry and Dismiss a
-    /// Journey's, Set a secret's — or null.
+    /// failed Message's, Set a secret's — or null.
     /// </summary>
     public static string? Misplaced(Command command, string? act)
     {
@@ -128,8 +128,8 @@ public static class NounArguments
         {
             "replay" when command is not Command.DeadMessages =>
                 "--replay only applies to 'dead-messages'.",
-            "retry" or "dismiss" when command is not Command.Journey =>
-                $"--{act} only applies to 'journey'.",
+            "retry" or "dismiss" when command is not Command.Message =>
+                $"--{act} only applies to 'message'.",
             "set" when command is not Command.Secret => "--set only applies to 'secret'.",
             _ => null,
         };

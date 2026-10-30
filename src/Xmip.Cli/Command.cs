@@ -64,9 +64,9 @@ public enum Command
     /// 2026-10-01).</summary>
     DeadMessages,
 
-    /// <summary>Retry or Dismiss one Journey that failed, sent by a node's
-    /// Send Port (runtime-model.md section 13; ADR-0013).</summary>
-    Journey,
+    /// <summary>The Messages that failed at a node's Send Ports, and Retry or
+    /// Dismiss on one (runtime-model.md section 13; ADR-0013).</summary>
+    Message,
 
     /// <summary>The secrets a node keeps, never a value, and Set on one
     /// (ADR-0019, amendment 2026-10-29).</summary>

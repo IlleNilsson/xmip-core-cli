@@ -62,10 +62,10 @@ public sealed class SecretCommandTests : IDisposable
         Assert.Contains("needs --set", Refused("secret", "partner-x"));
         Assert.Contains("name it and its kind", Refused("secret", "--set"));
         Assert.Contains("name it and its kind", Refused("secret", "partner-x", "--set"));
-        Assert.Contains("--set only applies to 'secret'", Refused("journey", "j-1", "--set"));
+        Assert.Contains("--set only applies to 'secret'", Refused("message", "j-1", "--set"));
         Assert.Contains("only applies to 'secret'", Refused("health", "x", "--kind", "key"));
         Assert.Contains("--set is its act", Refused("secret", "partner-x", "--pause"));
-        Assert.Contains("only applies to 'journey'", Refused("secret", "partner-x", "--retry"));
+        Assert.Contains("only applies to 'message'", Refused("secret", "partner-x", "--retry"));
         Assert.Contains("not an xmip option", Refused("secret", "partner-x", "--value", "x"));
     }
 

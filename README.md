@@ -42,7 +42,7 @@ xmip event-subscriptions [pattern]
 xmip dead-messages [pattern]
                           the Messages no Subscription matched, in each node's Dead
                           Message Queue; open one, or replay it
-xmip journey [id]         list the Journeys that failed, or retry or dismiss one
+xmip message [id]         list the Messages that failed, or retry or dismiss one
 xmip secret [name]        the secrets a node keeps, never a value; with --set,
                           set one through the node
 xmip mcp                  a Model Context Protocol server on stdin and stdout
@@ -55,7 +55,7 @@ xmip help                 this text
 --local <endpoint>        a node on this machine, at its local endpoint
 --snapshot <path>         a published snapshot to read, instead of the document's
 --who <name>              with pause, or the act of subscriptions, event-subscriptions,
-                          dead-messages or journey: who acts, instead of the current user;
+                          dead-messages or message: who acts, instead of the current user;
                           over --remote the node takes the act as your certificate's
                           subject, over --local as the user you run as
 ```
@@ -223,7 +223,7 @@ answers any other method with JSON-RPC's *method not found*.
 
 **Its tools are the read commands**, named by their word on the line —
 `abi`, `status`, `health`, `measure`, `list`, `show`, `validate`, `audit`,
-`subscriptions`, `event-subscriptions`, `dead-messages` and `journey` — each
+`subscriptions`, `event-subscriptions`, `dead-messages` and `message` — each
 taking its options without the dashes as arguments (`McpTools`: `scope` or
 `pattern`, `location`, `severity`, `verify` and the rest). A call is the line
 an operator would type, `--json` added, parsed by `Invocation` and answered
@@ -330,7 +330,7 @@ was not.
 (ADR-0052, amendment 2026-10-01): every accepted Message that no
 Subscription matched, kept in the Ledger with its receive context, what its
 gates concluded, its promoted properties and every Subscription's reason for
-declining. It is not a dead letter queue: a failed Journey never goes there.
+declining. It is not a dead letter queue: a failed Message never goes there.
 A row is when it was received, the Message's identifier, the cluster, the
 node whose queue keeps it, the Receive Location it arrived at and how many
 Subscriptions declined it; a node publishes its oldest hundred. One command
@@ -364,47 +364,47 @@ as `dead-message.replay`; over a snapshot it is left where the publication
 says, for the node to take within a round. `OK.` and exit 0 when it was
 applied or left, `REFUSED:` and exit 1 when it was not.
 
-## A Journey that failed
+## A Message that failed
 
-`xmip journey` lists the Journeys that failed and retries or dismisses
-one (runtime-model.md section 13; ADR-0013). A Journey leads to one Send
-Port; when every Send Location of its Port failed its tries it is written
+`xmip message` lists the Messages that failed and retries or dismisses
+one (runtime-model.md section 13; ADR-0013). A Message travels to one Send
+Port on each Journey; when every Send Location of its Port failed its tries it is written
 Failed, with why, and waits in its Port's queue. The node publishes, at the
 Port's scope `xmip:///<cluster>/node/<node>/send/<Port>`, what the Port
 sent, what failed, how many failed wait in its queue and the last that
-failed and why. With no Journey named, every one that failed at or beneath
+failed and why. With no Journey named, every Message that failed at or beneath
 `--location` — a cluster, a node or one Send Port's scope — is listed Port by
-Port: how many wait, and a page of them, each its identifier, its place in
+Port: how many wait, and a page of them, each its Journey's identifier, its place in
 the queue and why — read from Xmip Storage where the node runs in the
 process, or the oldest its publication carries (`[tuning] failed_window` of
 each Port, a hundred by default). `--offset` is where each Port's page
 starts, 0 the oldest, and `--limit` the most of each Port. Read from Xmip
-Storage, the list is the Port's index of failed Journeys, in the order they
+Storage, the list is the Port's index of failed Messages, in the order they
 failed: `--offset` is a place in that index, as the last page's `more:`
-said. A publication carries only its node's window, each Journey with its
+said. A publication carries only its node's window, each Message with its
 place in the Port's queue and none in the index, so read from one
 `--offset` is a place in the Port's queue and no `more:` follows — the two
 lists are kept in two places, and a `more:` is only ever given back to the
 surface that said it:
 
 ```text
-xmip journey --location <scope> --offset <place> --limit <count> --json
+xmip message --location <scope> --offset <place> --limit <count> --json
 ```
 
 A list says plainly which of three it is. An answer exits 0, and where none
-fails it says *No Journey that failed waits at or beneath* and the scope. A surface
-that cannot list failed Journeys — no node reached, no runtime loaded, no
+fails it says *No Message that failed waits at or beneath* and the scope. A surface
+that cannot list failed Messages — no node reached, no runtime loaded, no
 publication read yet — says `NOT LISTED:` on stderr, that whether any wait is
 not known and not that none do, and exits 1. A surface that asked and was
 not answered, Xmip Storage not answering the node, says `FAILED:` with the
 runtime's words and exits 1. `--json` carries the same as `listed` and
-`failure` beside `failed_journeys`, with the same exit.
+`failure` beside `failed_messages`, with the same exit.
 
-With a Journey named, it is the argument, `--location` names the node that
+With a Message's Journey named, the identifier is the argument, `--location` names the node that
 sends the Port or the Port's scope beneath it, and one act is required:
 
 ```text
-xmip journey <id> --location <node or Send Port scope> --retry|--dismiss
+xmip message <id> --location <node or Send Port scope> --retry|--dismiss
   --who <name> --json
 ```
 
@@ -412,13 +412,13 @@ xmip journey <id> --location <node or Send Port scope> --retry|--dismiss
 the end of its Port's queue — or from its place, where it blocks its
 sequence; `--dismiss` writes it Dismissed, its history, Message
 and Stream kept, and takes it out of the queue. A Journey named with no
-act, an act with no Journey, or `--pause`, `--resume`, `--remove` or
+act, an act with none named, or `--pause`, `--resume`, `--remove` or
 `--replay` cannot be obeyed (exit 2),
 and `--retry` and `--dismiss` apply to no other command; one with no
 `--location` on a node is REFUSED before any node is asked (exit 2). Over a
 live node the act is applied in its process and audited there as
-`journey.retry` or `journey.dismiss`; over a snapshot it is left where the
-publication says, for the node to take within a round. A Journey that is no
+`message.retry` or `message.dismiss`; over a snapshot it is left where the
+publication says, for the node to take within a round. A Message that is no
 longer Failed, or a node that does not send its Port, is REFUSED in the
 node's words. `OK.` and exit 0 when it was applied or left, `REFUSED:` and
 exit 1 when it was not; `--json` carries `node`, `journey`, `act`, `applied`

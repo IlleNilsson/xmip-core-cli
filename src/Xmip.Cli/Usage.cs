@@ -39,7 +39,7 @@ public static class Usage
                                     the Messages no Subscription matched, in each
                                     node's Dead Message Queue; open one, or
                                     replay it
-          xmip journey [id]         list the Journeys that failed, or retry or
+          xmip message [id]         list the Messages that failed, or retry or
                                     dismiss one
           xmip secret [name]        the secrets a node keeps, never a value; with
                                     --set, set one through the node
@@ -56,7 +56,7 @@ public static class Usage
           --snapshot <path>         a published snapshot to read, instead of the document's
           --who <name>              with pause, or the act of subscriptions,
                                     event-subscriptions, dead-messages or
-                                    journey: who acts, instead of the
+                                    message: who acts, instead of the
                                     current user; over --remote the node takes
                                     the act as your certificate's subject, over
                                     --local as the user you run as
@@ -96,7 +96,7 @@ public static class Usage
         stdin and stdout, one message a line, and nothing else on stdout. Its
         tools are the read commands — abi, status, health, measure, list,
         show, validate, audit, subscriptions, event-subscriptions,
-        dead-messages and journey, each with its options as arguments — and
+        dead-messages and message, each with its options as arguments — and
         never an act. Its resources are the scopes, each an Xmip URI, read as
         an operator drills: the scope's row, then the rows beneath it.
         --runtime, --remote, --local and --snapshot on its line choose the surface
@@ -190,7 +190,7 @@ public static class Usage
         dead-messages lists what each node's Dead Message Queue keeps
         (ADR-0052, amendment 2026-10-01): every accepted Message that no
         Subscription matched, kept in the Ledger with its receive context. It
-        is not a dead letter queue: a failed Journey never goes there. A row
+        is not a dead letter queue: a failed Message never goes there. A row
         is when it was received, the Message's identifier, the cluster and the
         node whose queue keeps it, the Receive Location it arrived at and how
         many Subscriptions declined it; a node lists its oldest hundred.
@@ -225,10 +225,10 @@ public static class Usage
           xmip secret
           xmip secret partner-x --set --kind key --file partner-x.key
 
-        journey lists the Journeys that failed and acts on one
-        (runtime-model.md section 13): a Journey leads to one Send Port, and
-        when every Send Location of its Port failed its tries it is written
-        Failed, with why, and waits in its Port's queue. With no <id>, every
+        message lists the Messages that failed and acts on one
+        (runtime-model.md section 13): a Message travels to one Send Port on
+        each Journey, and when every Send Location of its Port failed its
+        tries it is written Failed, with why, and waits in its Port's queue. With no <id>, every
         one at or beneath --location is listed, Port by Port: how many wait,
         and a page of them with why — read from Xmip Storage where the node
         runs in this process, or the oldest its publication carries
@@ -236,7 +236,7 @@ public static class Usage
 
           --offset <place>          where each Port's page starts, 0 the
                                     oldest: read from Xmip Storage, a place
-                                    in the Port's index of failed Journeys,
+                                    in the Port's index of failed Messages,
                                     as the last page's 'more' said; read
                                     from a publication, which carries only
                                     its node's window and no index places,
@@ -244,8 +244,8 @@ public static class Usage
                                     'more' follows
           --limit <count>           the most of each Port; a hundred if unsaid
 
-          xmip journey --location xmip:///C1/node/S1
-          xmip journey --location xmip:///C1/node/S1/send/invoices --offset 40
+          xmip message --location xmip:///C1/node/S1
+          xmip message --location xmip:///C1/node/S1/send/invoices --offset 40
 
         With an <id>, --location names the node that sends its Port, or the
         Port's scope beneath it, and one act is required:
@@ -257,8 +257,8 @@ public static class Usage
                                     Message and Stream kept, and taken out of
                                     the Port's queue
 
-          xmip journey <id> --location xmip:///C1/node/S1/send/invoices --retry
-          xmip journey <id> --location xmip:///C1/node/S1 --dismiss --who ilian
+          xmip message <id> --location xmip:///C1/node/S1/send/invoices --retry
+          xmip message <id> --location xmip:///C1/node/S1 --dismiss --who ilian
 
         certificate makes and signs the certificates a cluster's own
         authority stands behind (ADR-0034, amendments 2026-10-15 and
@@ -374,7 +374,7 @@ public static class Usage
           xmip database postgresql --from 1 --out upgrade
 
         An act names one, by --location at its node and --name, --id,
-        --message or journey's <id>; the node applies it and audits it, or
+        --message or message's <id>; the node applies it and audits it, or
         — read through a snapshot — takes it within a round from where its
         publication says.
         An act not taken is REFUSED in words and exits 1.

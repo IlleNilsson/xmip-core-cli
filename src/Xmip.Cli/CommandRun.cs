@@ -75,7 +75,7 @@ public static class CommandRun
                 audit, invocation.Audit ?? new AuditQuery(), json, output, error),
 
             // The Event subscriptions, the Subscriptions, the Dead Message
-            // Queues and a Journey that failed, over the surface the line and
+            // Queues and a Message that failed, over the surface the line and
             // the document choose; the pattern is each query's, not a scope.
             Command.EventSubscriptions => On(invocation, open, error, surface =>
                 EventSubscriptionCommand.Over(
@@ -104,12 +104,12 @@ public static class CommandRun
                     json,
                     output,
                     error)),
-            Command.Journey when invocation.JourneyAct is { } act => On(
-                invocation, open, error, surface => JourneyCommand.Over(
+            Command.Message when invocation.MessageAct is { } act => On(
+                invocation, open, error, surface => MessageCommand.Over(
                     surface, invocation.Location, invocation.Argument, act, who,
                     json, output, error)),
-            Command.Journey => On(
-                invocation, open, error, surface => JourneyCommand.List(
+            Command.Message => On(
+                invocation, open, error, surface => MessageCommand.List(
                     surface, invocation.Location, (invocation.From, invocation.Most),
                     json, output, error)),
             Command.Secret when invocation.Secret is { Set: true } asked => On(

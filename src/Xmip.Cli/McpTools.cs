@@ -113,12 +113,12 @@ public static class McpTools
             [.. NounArguments.Shared, .. DeadMessageArguments.Options],
             []),
         new(
-            "journey",
-            "The Journeys that failed at the Send Ports at or beneath location, Port "
+            "message",
+            "The Messages that failed at the Send Ports at or beneath location, Port "
                 + "by Port.",
             null,
             false,
-            JourneyArguments.Shared,
+            MessageArguments.Shared,
             []),
     ];
 
