@@ -278,7 +278,7 @@ public sealed class McpServer(
             || invocation.EventAct is not null
             || invocation.Act is not null
             || invocation.Replay is not null
-            || invocation.JourneyAct is not null;
+            || invocation.MessageAct is not null;
     }
 
     private static void Initialize(Utf8JsonWriter writer, JsonElement? parameters)

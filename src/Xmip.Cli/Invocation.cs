@@ -46,17 +46,17 @@ namespace Xmip.Cli;
 /// command.</param>
 /// <param name="Replay">The act <c>dead-messages</c> takes on the one Message
 /// it names; null to list or open.</param>
-/// <param name="JourneyAct">The act <c>journey</c> takes on the Journey its
-/// argument names (<see cref="JourneyArguments"/>); null for every other
+/// <param name="MessageAct">The act <c>message</c> takes on the Message whose Journey its
+/// argument names (<see cref="MessageArguments"/>); null for every other
 /// command.</param>
-/// <param name="Location">Where <c>journey</c>'s Journey is sent: its node, or
-/// the Send Port's scope beneath it — or, listing, where the Journeys that
+/// <param name="Location">Where <c>message</c>'s Message is sent: its node, or
+/// the Send Port's scope beneath it — or, listing, where the Messages that
 /// failed are listed at or beneath; null for every other command.</param>
-/// <param name="From">Where each Send Port's page of <c>journey</c>'s list
+/// <param name="From">Where each Send Port's page of <c>message</c>'s list
 /// starts: <c>--offset</c>, as the last page's next said — a place in the
-/// Port's index of failed Journeys read from Xmip Storage, a place in its
-/// queue read from a publication (<c>IOperatorSurface.FailedJourneys</c>).</param>
-/// <param name="Most">The most Journeys of each Send Port <c>journey</c>'s
+/// Port's index of failed Messages read from Xmip Storage, a place in its
+/// queue read from a publication (<c>IOperatorSurface.FailedMessages</c>).</param>
+/// <param name="Most">The most Messages of each Send Port <c>message</c>'s
 /// list holds: <c>--limit</c>; 0 for a hundred.</param>
 public sealed record Invocation(
     Command Command,
@@ -74,7 +74,7 @@ public sealed record Invocation(
     SubscriptionAct? Act = null,
     DeadMessageQuery? DeadMessages = null,
     DeadMessageAct? Replay = null,
-    JourneyAct? JourneyAct = null,
+    MessageAct? MessageAct = null,
     string? Location = null,
     ulong From = 0,
     uint Most = 0)
@@ -269,12 +269,12 @@ public sealed record Invocation(
 
         bool noun = known.Command
             is Command.EventSubscriptions or Command.Subscriptions or Command.DeadMessages
-            or Command.Journey or Command.Secret;
+            or Command.Message or Command.Secret;
 
         if (who is not null && known.Command is not Command.Pause && !(noun && act is not null))
         {
             problem = "--who only applies to 'pause' and to an act of 'event-subscriptions', "
-                + "'subscriptions', 'dead-messages', 'journey' or 'secret'.";
+                + "'subscriptions', 'dead-messages', 'message' or 'secret'.";
             return null;
         }
 
@@ -306,8 +306,8 @@ public sealed record Invocation(
         DeadMessageAct? replay = known.Command is Command.DeadMessages
             ? DeadMessageArguments.Act(act, out refused)
             : null;
-        JourneyAct? journeyAct = known.Command is Command.Journey
-            ? JourneyArguments.Act(act, arguments == 1, out refused)
+        MessageAct? messageAct = known.Command is Command.Message
+            ? MessageArguments.Act(act, arguments == 1, out refused)
             : null;
 
         string argument = arguments == 1 ? words[1] : string.Empty;
@@ -375,10 +375,10 @@ public sealed record Invocation(
                 }
                 : null,
             replay,
-            journeyAct,
-            known.Command is Command.Journey or Command.Secret ? audit?.Location : null,
-            known.Command is Command.Journey ? (ulong)Math.Max(audit?.Offset ?? 0, 0) : 0,
-            known.Command is Command.Journey ? (uint)Math.Max(audit?.Limit ?? 0, 0) : 0)
+            messageAct,
+            known.Command is Command.Message or Command.Secret ? audit?.Location : null,
+            known.Command is Command.Message ? (ulong)Math.Max(audit?.Offset ?? 0, 0) : 0,
+            known.Command is Command.Message ? (uint)Math.Max(audit?.Limit ?? 0, 0) : 0)
         {
             Local = local,
             Certificate = known.Command is Command.Certificate ? certificate : null,

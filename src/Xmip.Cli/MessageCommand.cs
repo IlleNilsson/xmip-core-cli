@@ -4,22 +4,22 @@ using Xmip.Surface;
 namespace Xmip.Cli;
 
 /// <summary>
-/// <c>xmip journey</c>: the Journeys that failed, listed, and Retry or
-/// Dismiss on one (runtime-model.md section 13; ADR-0013). A Journey leads to
-/// one Send Port; when every Send Location of its Port failed its tries it is
-/// written Failed and waits in its Port's queue. With no Journey named, every
-/// one that failed at or beneath <c>--location</c> is listed, Port by Port —
+/// <c>xmip message</c>: the Messages that failed, listed, and Retry or
+/// Dismiss on one (runtime-model.md section 13; ADR-0013). A Message travels
+/// to one Send Port on each Journey; when every Send Location of its Port
+/// failed its tries it is written Failed and waits in its Port's queue. With
+/// none named, every one that failed at or beneath <c>--location</c> is listed, Port by Port —
 /// how many wait, and a page of them with why, read from Xmip Storage in the
 /// process that runs the node or as its publication carries them; with one
 /// named, the act is the command, as the PowerShell module takes it as a
 /// parameter. How the list is read and the act reaches the node is the
 /// surface's; only the rendering is here. A list exits 0 when it is an
 /// answer, none failing among them, and 1 when it is not: the surface
-/// cannot list failed Journeys, or asked and Xmip Storage did not answer.
+/// cannot list failed Messages, or asked and Xmip Storage did not answer.
 /// An act exits 0 when it was applied or left for the node, 1 when it was
 /// not, 2 for a line that names no node.
 /// </summary>
-public static class JourneyCommand
+public static class MessageCommand
 {
     /// <summary>Take <paramref name="act"/> on <paramref name="journey"/>, sent
     /// by the node at <paramref name="location"/> — the node, or its Send
@@ -28,7 +28,7 @@ public static class JourneyCommand
         IOperatorSurface surface,
         string? location,
         string journey,
-        JourneyAct act,
+        MessageAct act,
         string who,
         bool json,
         TextWriter output,
@@ -41,13 +41,13 @@ public static class JourneyCommand
         if (location is not { Length: > 0 } || ScopeTree.Node(location).Length == 0)
         {
             error.WriteLine(
-                $"REFUSED: to {JourneyOperation.Word(act)} a Journey, name the node that sends "
+                $"REFUSED: to {MessageOperation.Word(act)} a Message, name the node that sends "
                 + "its Send Port with --location xmip:///<cluster>/node/<name>, or the Send "
                 + "Port's scope beneath it.");
             return 2;
         }
 
-        JourneyOperation done = surface.Act(location, journey, act, who);
+        MessageOperation done = surface.Act(location, journey, act, who);
 
         if (json)
         {
@@ -63,7 +63,7 @@ public static class JourneyCommand
     }
 
     /// <summary>
-    /// List the Journeys that failed at the Send Ports at or beneath
+    /// List the Messages that failed at the Send Ports at or beneath
     /// <paramref name="location"/> — the surface's root where none is named —
     /// a page of each Port's from <c>page.From</c>, at most <c>page.Most</c>
     /// (0: a hundred). Exit 0 for an answer, none failing among them; 1, said
@@ -84,7 +84,7 @@ public static class JourneyCommand
         ArgumentNullException.ThrowIfNull(error);
 
         string scope = location is { Length: > 0 } ? location : surface.Root();
-        FailedJourneyList failed = surface.FailedJourneys(scope, page.From, page.Most);
+        FailedMessageList failed = surface.FailedMessages(scope, page.From, page.Most);
 
         if (json)
         {
@@ -94,17 +94,17 @@ public static class JourneyCommand
 
         if (!failed.Listed)
         {
-            error.WriteLine(JourneyOperation.Unlisted(failed, scope, surface.Source));
+            error.WriteLine(MessageOperation.Unlisted(failed, scope, surface.Source));
             return 1;
         }
 
         if (failed.Ports.Count == 0)
         {
-            output.WriteLine($"No Journey that failed waits at or beneath {scope}.");
+            output.WriteLine($"No Message that failed waits at or beneath {scope}.");
             return 0;
         }
 
-        foreach (FailedJourneyPort port in failed.Ports)
+        foreach (FailedMessagePort port in failed.Ports)
         {
             output.WriteLine(
                 $"{port.Node} Send Port {port.SendPort}: {port.Count} failed in its queue");
@@ -112,11 +112,11 @@ public static class JourneyCommand
             if (port.Blocked)
             {
                 output.WriteLine(
-                    "  BLOCKED: every Journey of its key waits behind the first that failed "
+                    "  BLOCKED: every Message of its key waits behind the first that failed "
                     + "until it is retried or dismissed");
             }
 
-            foreach (FailedJourneyRecord journey in port.Journeys)
+            foreach (FailedMessageRecord journey in port.Messages)
             {
                 output.WriteLine(
                     $"  {journey.Journey}  place {journey.Sequence}  {journey.Reason}");
@@ -131,11 +131,11 @@ public static class JourneyCommand
         return 0;
     }
 
-    /// <summary>The Journeys that failed, as one document: whether it is an
+    /// <summary>The Messages that failed, as one document: whether it is an
     /// answer and, where it was asked and not answered, why; each Port's,
     /// with its count, the place its next page reads from and its
-    /// Journeys.</summary>
-    public static string Document(FailedJourneyList failed)
+    /// Messages.</summary>
+    public static string Document(FailedMessageList failed)
     {
         ArgumentNullException.ThrowIfNull(failed);
 
@@ -143,9 +143,9 @@ public static class JourneyCommand
         {
             writer.WriteBoolean("listed", failed.Listed);
             writer.WriteString("failure", failed.Failure);
-            writer.WriteStartArray("failed_journeys");
+            writer.WriteStartArray("failed_messages");
 
-            foreach (FailedJourneyPort port in failed.Ports)
+            foreach (FailedMessagePort port in failed.Ports)
             {
                 writer.WriteStartObject();
                 writer.WriteString("node", port.Node);
@@ -162,9 +162,9 @@ public static class JourneyCommand
                     writer.WriteNull("next");
                 }
 
-                writer.WriteStartArray("journeys");
+                writer.WriteStartArray("messages");
 
-                foreach (FailedJourneyRecord journey in port.Journeys)
+                foreach (FailedMessageRecord journey in port.Messages)
                 {
                     writer.WriteStartObject();
                     writer.WriteString("journey", journey.Journey);
@@ -182,7 +182,7 @@ public static class JourneyCommand
     }
 
     /// <summary>What came of the act, as one document.</summary>
-    public static string Document(JourneyOperation done)
+    public static string Document(MessageOperation done)
     {
         ArgumentNullException.ThrowIfNull(done);
 
@@ -190,7 +190,7 @@ public static class JourneyCommand
         {
             writer.WriteString("node", done.Node);
             writer.WriteString("journey", done.Journey);
-            writer.WriteString("act", JourneyOperation.Word(done.Act));
+            writer.WriteString("act", MessageOperation.Word(done.Act));
             writer.WriteBoolean("applied", done.Applied);
             writer.WriteString("result", done.Result);
         });

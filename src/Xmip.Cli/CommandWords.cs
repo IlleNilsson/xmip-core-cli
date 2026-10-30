@@ -25,7 +25,7 @@ public static class CommandWords
             ["event-subscriptions"] = (Command.EventSubscriptions, 0, 1),
             ["subscriptions"] = (Command.Subscriptions, 0, 1),
             ["dead-messages"] = (Command.DeadMessages, 0, 1),
-            ["journey"] = (Command.Journey, 0, 1),
+            ["message"] = (Command.Message, 0, 1),
             ["secret"] = (Command.Secret, 0, 1),
             ["mcp"] = (Command.Mcp, 0, 0),
         };

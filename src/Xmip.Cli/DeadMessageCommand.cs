@@ -10,7 +10,7 @@ namespace Xmip.Cli;
 /// — every accepted Message no Subscription matched — one opened with its
 /// gate verdicts, promoted properties and every Subscription's decline, and
 /// Replay on one of them (ADR-0052, amendment 2026-10-01). It is not a dead
-/// letter queue: a failed Journey never goes there. One command for the
+/// letter queue: a failed Message never goes there. One command for the
 /// noun, the act an option on it, as the PowerShell module's one cmdlet
 /// takes it as a parameter. Which entries a line selects and in what order
 /// is <see cref="DeadMessageQuery"/>'s, the one every surface asks; how a
