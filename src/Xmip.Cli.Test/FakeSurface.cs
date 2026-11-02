@@ -84,21 +84,23 @@ public sealed class FakeSurface(IReadOnlyList<HealthRecord> records) : IOperator
     }
 
     /// <inheritdoc />
-    public string PauseScope(string scope, string who)
+    public string PauseScope(string scope, string who, HeldCaller? caller)
     {
         return "a fake cannot be paused";
     }
 
     /// <inheritdoc />
-    public string ResumeScope(string scope)
+    public string ResumeScope(string scope, HeldCaller? caller)
     {
         return "a fake cannot be resumed";
     }
 
     /// <inheritdoc />
-    public ScopeOperation Control(string scope, ScopeAction action, string who)
+    public ScopeOperation Control(string scope, ScopeAction action, string who, HeldCaller? caller)
     {
-        string said = action == ScopeAction.Pause ? PauseScope(scope, who) : ResumeScope(scope);
+        string said = action == ScopeAction.Pause
+            ? PauseScope(scope, who, caller)
+            : ResumeScope(scope, caller);
 
         return new ScopeOperation(scope, action, false, said);
     }

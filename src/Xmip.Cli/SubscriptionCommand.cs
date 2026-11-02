@@ -182,7 +182,7 @@ public static class SubscriptionCommand
             return 1;
         }
 
-        SubscriptionOperation done = surface.Act(one, act, who);
+        SubscriptionOperation done = surface.Act(one, act, who, caller: null);
 
         if (json)
         {

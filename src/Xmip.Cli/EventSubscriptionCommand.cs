@@ -212,7 +212,7 @@ public static class EventSubscriptionCommand
             return 1;
         }
 
-        EventSubscriptionOperation done = surface.Act(one, act, who);
+        EventSubscriptionOperation done = surface.Act(one, act, who, caller: null);
 
         if (json)
         {
