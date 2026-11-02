@@ -30,7 +30,7 @@ public static class SecretCommand
 
         try
         {
-            secrets = surface.Secrets(node);
+            secrets = surface.Secrets(node, caller: null);
         }
         catch (InvalidOperationException refused)
         {
@@ -87,7 +87,7 @@ public static class SecretCommand
         }
 
         SecretOperation done = surface.SetSecret(
-            node, asked.Name, asked.Kind ?? string.Empty, value, who);
+            node, asked.Name, asked.Kind ?? string.Empty, value, who, caller: null);
         string said = json
             ? JsonText.Document(writer =>
             {

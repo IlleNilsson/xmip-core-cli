@@ -222,7 +222,7 @@ public static class DeadMessageCommand
             return 1;
         }
 
-        DeadMessageOperation done = surface.Act(one, act, who);
+        DeadMessageOperation done = surface.Act(one, act, who, caller: null);
 
         if (json)
         {

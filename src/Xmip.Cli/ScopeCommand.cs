@@ -127,7 +127,7 @@ public static class ScopeCommand
         }
 
         List<ScopeOperation> done =
-            [.. chosen.Scopes.Select(scope => surface.Control(scope, action, who))];
+            [.. chosen.Scopes.Select(scope => surface.Control(scope, action, who, caller: null))];
 
         if (json)
         {
@@ -202,7 +202,7 @@ public static class ScopeCommand
         IOperatorSurface surface, string scope, ScopeAction action, string who,
         bool json, TextWriter output, TextWriter error)
     {
-        ScopeOperation operation = surface.Control(scope, action, who);
+        ScopeOperation operation = surface.Control(scope, action, who, caller: null);
 
         if (json)
         {

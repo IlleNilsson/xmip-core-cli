@@ -47,7 +47,7 @@ public static class MessageCommand
             return 2;
         }
 
-        MessageOperation done = surface.Act(location, journey, act, who);
+        MessageOperation done = surface.Act(location, journey, act, who, caller: null);
 
         if (json)
         {
