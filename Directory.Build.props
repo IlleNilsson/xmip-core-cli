@@ -9,9 +9,7 @@
 
   <PropertyGroup>
     <!-- ADR-0014, amendment of 2026-08-30: an executable owns its runtime and
-         targets net11.0; the binding it references targets net10.0 because
-         pwsh hosts that, and a net11.0 executable references it without
-         complaint. -->
+         targets net11.0, as the binding it references does. -->
     <TargetFramework>net11.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
