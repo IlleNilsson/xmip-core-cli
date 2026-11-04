@@ -17,6 +17,9 @@
          stopped with the rest (ADR-0053, amendment 2026-10-22). -->
     <AssemblyName>xmip</AssemblyName>
     <PublishAot>true</PublishAot>
+    <!-- The Xmip mark as the executable's Windows icon, the estate's
+         Sync-XmipEstate -Brand copies it here from asset/brand. -->
+    <ApplicationIcon>xmip-x.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
