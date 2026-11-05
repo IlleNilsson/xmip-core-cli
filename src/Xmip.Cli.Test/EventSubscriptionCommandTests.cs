@@ -40,7 +40,7 @@ public sealed class EventSubscriptionCommandTests : IDisposable
             + "since_unix_nanos = 1790000000000000000\nwhy = \"connection refused\"\n");
     }
 
-    private string Snapshot => Path.Combine(_place, $"{Cluster.Name}-snapshot.toml");
+    private string Snapshot => Path.Combine(_place, $"{Cluster.Name}-snapshot.xmip");
 
     private string Orders => Path.Combine(_place, "orders");
 
@@ -162,6 +162,6 @@ public sealed class EventSubscriptionCommandTests : IDisposable
         Assert.StartsWith(
             $"OK. resume of Event subscription 2 left for {Second}", said,
             StringComparison.Ordinal);
-        Assert.Single(Directory.GetFiles(Path.Combine(Orders, Second), "*-resume.toml"));
+        Assert.Single(Directory.GetFiles(Path.Combine(Orders, Second), "*-resume.xmip"));
     }
 }

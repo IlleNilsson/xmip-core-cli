@@ -28,26 +28,26 @@ public sealed class CertificateCommandTests
         Assert.Equal(Person, made.Certificate?.Operator);
         Assert.Equal("phone", made.Certificate?.Out);
 
-        Invocation signing = Parse("certificate", "operator.csr", "--sign", "node.toml");
+        Invocation signing = Parse("certificate", "operator.csr", "--sign", "node.xmip");
         Assert.Equal("operator.csr", signing.Argument);
-        Assert.Equal("node.toml", signing.Certificate?.Sign);
+        Assert.Equal("node.xmip", signing.Certificate?.Sign);
 
         Assert.Contains("needs an act", Refused("certificate"), StringComparison.Ordinal);
         Assert.Contains(
             "one act a line",
-            Refused("certificate", "x.csr", "--operator", Person, "--sign", "n.toml"),
+            Refused("certificate", "x.csr", "--operator", Person, "--sign", "n.xmip"),
             StringComparison.Ordinal);
         Assert.Contains(
             "takes no argument", Refused("certificate", "x.csr", "--operator", Person),
             StringComparison.Ordinal);
         Assert.Contains(
-            "needs the request", Refused("certificate", "--sign", "n.toml"),
+            "needs the request", Refused("certificate", "--sign", "n.xmip"),
             StringComparison.Ordinal);
         Assert.Contains("needs a path", Refused("certificate", "--out"), StringComparison.Ordinal);
         Assert.Equal(
             "The options of 'certificate' only apply to 'certificate', and --out to "
                 + "'certificate' and 'database'.",
-            Refused("validate", "node.toml", "--operator", Person));
+            Refused("validate", "node.xmip", "--operator", Person));
 
         Invocation issuing = Parse(
             "certificate", "--node", Node, "--cluster", Cluster.Name, "--authority", "ca",
@@ -235,7 +235,7 @@ public sealed class CertificateCommandTests
         File.WriteAllText(Path.Combine(kept, "authority.pem"), authority.ExportCertificatePem());
         File.WriteAllText(Path.Combine(kept, "authority.key"), key.ExportPkcs8PrivateKeyPem());
 
-        string configuration = Path.Combine(place, "node.toml");
+        string configuration = Path.Combine(place, "node.xmip");
         File.WriteAllText(
             configuration,
             "[service]\nname = \"n\"\ncluster_name = \"c\"\nnode_name = \"d\"\n\n"

@@ -41,7 +41,7 @@ public sealed class DeadMessageCommandTests : IDisposable
             + Entry(Second, "m-3", 1, string.Empty));
     }
 
-    private string Snapshot => Path.Combine(_place, $"{Cluster.Name}-snapshot.toml");
+    private string Snapshot => Path.Combine(_place, $"{Cluster.Name}-snapshot.xmip");
 
     private string Orders => Path.Combine(_place, "orders");
 
@@ -209,6 +209,6 @@ public sealed class DeadMessageCommandTests : IDisposable
         Assert.Equal(0, exit);
         Assert.StartsWith(
             $"OK. replay of Message m-2 left for {First}", said, StringComparison.Ordinal);
-        Assert.Single(Directory.GetFiles(Path.Combine(Orders, First), "*-replay.toml"));
+        Assert.Single(Directory.GetFiles(Path.Combine(Orders, First), "*-replay.xmip"));
     }
 }

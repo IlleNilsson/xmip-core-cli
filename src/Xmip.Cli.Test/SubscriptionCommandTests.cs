@@ -35,7 +35,7 @@ public sealed class SubscriptionCommandTests : IDisposable
             + Entry(Second, "flat", "active", 40, 0));
     }
 
-    private string Snapshot => Path.Combine(_place, $"{Cluster.Name}-snapshot.toml");
+    private string Snapshot => Path.Combine(_place, $"{Cluster.Name}-snapshot.xmip");
 
     private string Orders => Path.Combine(_place, "orders");
 
@@ -198,6 +198,6 @@ public sealed class SubscriptionCommandTests : IDisposable
         Assert.StartsWith(
             $"OK. resume of Subscription 'edi' left for {First}", said,
             StringComparison.Ordinal);
-        Assert.Single(Directory.GetFiles(Path.Combine(Orders, First), "*-resume.toml"));
+        Assert.Single(Directory.GetFiles(Path.Combine(Orders, First), "*-resume.xmip"));
     }
 }

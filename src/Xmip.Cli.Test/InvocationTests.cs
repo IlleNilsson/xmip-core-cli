@@ -50,11 +50,11 @@ public sealed class InvocationTests
     public void OptionsSitAnywhere()
     {
         Invocation? parsed = Invocation.Parse(
-            ["--json", "validate", "--runtime", "lib.dll", "node.toml"], out _);
+            ["--json", "validate", "--runtime", "lib.dll", "node.xmip"], out _);
 
         Assert.NotNull(parsed);
         Assert.Equal(Command.Validate, parsed.Command);
-        Assert.Equal("node.toml", parsed.Argument);
+        Assert.Equal("node.xmip", parsed.Argument);
         Assert.True(parsed.Json);
         Assert.Equal("lib.dll", parsed.Runtime);
     }
