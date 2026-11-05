@@ -341,7 +341,7 @@ public static class Usage
                                     overwritten.
 
           xmip certificate --operator alice@example.org --out phone
-          xmip certificate phone/operator.csr --sign node.toml --out phone/operator.pem
+          xmip certificate phone/operator.csr --sign node.xmip --out phone/operator.pem
           xmip certificate --node R1 --cluster C1 --authority ca --names R1.xmip.test --out R1
           xmip certificate --node R1 --names R1.xmip.test --out tls
           xmip certificate tls/node.csr --authority ca --names R1,R1.xmip.test --out R1.pem

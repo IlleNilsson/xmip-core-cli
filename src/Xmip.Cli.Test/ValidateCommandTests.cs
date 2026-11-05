@@ -12,7 +12,7 @@ namespace Xmip.Cli.Test;
 /// </summary>
 public sealed class ValidateCommandTests
 {
-    private const string Toml = "node.toml";
+    private const string Toml = "node.xmip";
 
     [Fact]
     public void AValidDocumentIsSaidSoOnStdout()

@@ -38,7 +38,7 @@ public sealed class MessageCommandTests : IDisposable
                 + "reason = \"invoices: the far end refused it again\"\n");
     }
 
-    private string Snapshot => Path.Combine(_place, $"{Cluster.Name}-snapshot.toml");
+    private string Snapshot => Path.Combine(_place, $"{Cluster.Name}-snapshot.xmip");
 
     private string Orders => Path.Combine(_place, "orders");
 
@@ -150,7 +150,7 @@ public sealed class MessageCommandTests : IDisposable
         }
 
         // Answered, and none failing.
-        string quiet = Path.Combine(_place, "quiet-snapshot.toml");
+        string quiet = Path.Combine(_place, "quiet-snapshot.xmip");
         File.WriteAllText(quiet, $"node = \"{Cluster.Scope}\"\n");
         (int exit, string said, string error) = List(new SnapshotOperator(quiet), json: false);
         Assert.Equal((0, string.Empty), (exit, error));
@@ -210,7 +210,7 @@ public sealed class MessageCommandTests : IDisposable
             $"OK. retry of the Message of the Journey j-1 left for {Sender}",
             said,
             StringComparison.Ordinal);
-        Assert.Single(Directory.GetFiles(Path.Combine(Orders, Sender), "*-retry.toml"));
+        Assert.Single(Directory.GetFiles(Path.Combine(Orders, Sender), "*-retry.xmip"));
 
         (exit, string json, _) = Run(
             surface, Line("message", "j-1", "--location", Sending, "--dismiss", "--json"));

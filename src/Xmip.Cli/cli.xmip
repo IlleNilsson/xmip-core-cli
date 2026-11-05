@@ -1,7 +1,7 @@
 # The executable's configuration, beside it. TOML, like everything Xmip
 # configures — Xmip uses no JSON for configuration anywhere. The same keys as
-# the GUI hosts' xmip.gui.toml and the PowerShell module's
-# xmip.powershell.toml, read by the same reader (ADR-0052).
+# the GUI hosts' gui.xmip and the PowerShell module's
+# powershell.xmip, read by the same reader (ADR-0052).
 #
 # Paths are relative to this file's directory. The line wins over this
 # document: --remote <host:port> and --local <endpoint> follow a node and
@@ -10,21 +10,21 @@
 [Xmip]
 # Which surface a command reads (ADR-0052 clause 3): "local", a node on this
 # machine followed over gRPC at the local endpoint Local names (ADR-0014,
-# amendment 2026-10-13), "snapshot", a file a node or the Playground
+# amendment 2026-10-13), "snapshot", a file a node or the Essentials
 # publishes, or "remote", a node on another machine followed over gRPC at its
 # operate Address. Stated here and never guessed. With no surface named, a
 # command names no node and says so; validate asks the library the one
 # discovery rule finds — RuntimeLibrary below, else XMIP_RUNTIME_LIBRARY, else
 # the library beside the executable — since it has no node behind it.
 #
-# As shipped, in a developer's clone: the Playground roll the estate's own
+# As shipped, in a developer's clone: the Essentials roll the estate's own
 # walkthrough starts, which names its cluster C1 only because a roll must be
 # given some name — the same file the PowerShell prompt follows. Roll under
 # another name and name that file below. A deployment writes its own.
 Surface = "snapshot"
 
 # What this process is for, said in its declaration (ADR-0053): "test" or
-# "runtime". As shipped it follows a Playground roll, which is test; a
+# "runtime". As shipped it follows an Essentials roll, which is test; a
 # deployment leaves it out or says runtime.
 Purpose = "test"
 
@@ -36,9 +36,9 @@ Purpose = "test"
 # is said so — SNAPSHOT — no file at ... — not silently replaced. A relative
 # path is from the directory the executable runs from, bin/Debug/net11.0
 # under this project: eight levels up is the estate root, where a roll
-# publishes under .local-work/playground. The file is named for the cluster
+# publishes under .local-work/essentials. The file is named for the cluster
 # the roll was started as, so this line follows one roll and no other.
-Snapshot = "../../../../../../../../../.local-work/playground/C1-snapshot.toml"
+Snapshot = "../../../../../../../../../.local-work/essentials/C1-snapshot.xmip"
 
 # The node on this machine to follow when Surface = "local": its local
 # endpoint, as its [operate] local names it. The node takes every act as the
@@ -56,6 +56,6 @@ Snapshot = "../../../../../../../../../.local-work/playground/C1-snapshot.toml"
 # TrustAnchor = "anchor.pem"
 
 # Where this executable's audit records go (ADR-0062): each command, its end
-# and every failure, as <AuditDirectory>/audit.toml. Unset, the audit
+# and every failure, as <AuditDirectory>/audit.xmip. Unset, the audit
 # capability decides — XMIP_AUDIT_DIRECTORY, else the operating system's log.
 # AuditDirectory = "../../../../../../../../../.local-work/audit"

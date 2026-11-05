@@ -16,11 +16,11 @@ public sealed class CommandAuditTests
     {
         string directory = Scratch();
         ProgramAudit audit = new(CommandAudit.Program, directory);
-        Invocation invocation = Line("validate", "missing.toml");
+        Invocation invocation = Line("validate", "missing.xmip");
 
         CommandAudit.Begun(audit, invocation);
         AuditOutcome outcome = CommandAudit.Ended(
-            audit, invocation, 2, "No file at missing.toml.\n");
+            audit, invocation, 2, "No file at missing.xmip.\n");
 
         Assert.Equal(AuditKept.Persisted, outcome.Kept);
         string text = Records(directory);
@@ -29,7 +29,7 @@ public sealed class CommandAuditTests
         Assert.Contains("action = \"validate\"", text, StringComparison.Ordinal);
         Assert.Contains("phase = \"Begin\"", text, StringComparison.Ordinal);
         Assert.Contains("phase = \"Failure\"", text, StringComparison.Ordinal);
-        Assert.Contains("message = \"No file at missing.toml.\"", text, StringComparison.Ordinal);
+        Assert.Contains("message = \"No file at missing.xmip.\"", text, StringComparison.Ordinal);
         Assert.Contains("\"exit\" = \"2\"", text, StringComparison.Ordinal);
         Directory.Delete(directory, recursive: true);
     }
@@ -104,7 +104,7 @@ public sealed class CommandAuditTests
 
     private static string Records(string directory)
     {
-        return File.ReadAllText(Path.Combine(directory, "audit.toml"));
+        return File.ReadAllText(Path.Combine(directory, "audit.xmip"));
     }
 
     private static Invocation Line(params string[] words)

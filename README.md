@@ -60,11 +60,11 @@ xmip help                 this text
                           subject, over --local as the user you run as
 ```
 
-Which surface a command reads is stated in `xmip.cli.toml` beside the
+Which surface a command reads is stated in `cli.xmip` beside the
 executable, with the same `[Xmip]` keys as the GUI hosts and the PowerShell
 module — `Surface = "local" | "snapshot" | "remote"`, `Local`, `Address`,
 `RuntimeLibrary`, `Snapshot` — and never guessed (ADR-0052 clause 3). As shipped, in a
-developer's clone, it follows the Playground roll started as cluster C1 — a
+developer's clone, it follows the Essentials roll started as cluster C1 — a
 name the walkthrough picked, and nothing Xmip knows — the same file the
 PowerShell prompt follows, so `xmip show xmip:///C1` answers while a roll
 runs and says `SNAPSHOT — no file at ...` before one has. Roll under another
@@ -133,7 +133,7 @@ the person, `CN=<person>`, the caller the listener proves and grants its
 `[operate]` role. `xmip certificate --operator alice@example.org --out
 phone` makes a fresh key and a request naming the person as
 `phone/operator.key` and `phone/operator.csr`; `xmip certificate
-phone/operator.csr --sign node.toml --out phone/operator.pem` signs it by the
+phone/operator.csr --sign node.xmip --out phone/operator.pem` signs it by the
 authority that node configuration's `[provision.operator]` names, for its
 `lifetime`, the chain to stdout where `--out` names no file. Running `--sign`
 is the approval, out of band. A request asking more than client
@@ -204,7 +204,7 @@ line that could not be obeyed as `refused`, and anything unhandled as
 `unhandled` before the process ends as it would have. The records go through
 the runtime library the line states — `--runtime` reaches the audit as it
 reaches `validate` (`ProgramAudit.Library`). Records go to
-`<AuditDirectory>/audit.toml`, `AuditDirectory` in `xmip.cli.toml`'s `[Xmip]`
+`<AuditDirectory>/audit.xmip`, `AuditDirectory` in `cli.xmip`'s `[Xmip]`
 table resolved from beside the executable; unset, the capability decides —
 `XMIP_AUDIT_DIRECTORY`, else the operating system's log, which also takes a
 record the directory cannot.
