@@ -10,6 +10,9 @@ one rule rather than typed.
 It is argument parsing and rendering over two libraries in xmip-core-abi:
 `Xmip.Abi`, the one .NET declaration of `xmip_module.h` and `xmip_operate.h`,
 and `Xmip.Surface`, the model every .NET operator surface shares (ADR-0052).
+On Windows it builds with runtime async, its ahead-of-time build included:
+an `async` method is the runtime's own rather than a compiler-written state
+machine.
 The PowerShell module and the two GUI hosts read the same surface, so what
 `xmip` says and what a screen says cannot disagree.
 

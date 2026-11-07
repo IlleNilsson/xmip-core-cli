@@ -18,7 +18,7 @@
     <!-- A warning nobody has to fix is a warning nobody reads. -->
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <AnalysisLevel>preview-all</AnalysisLevel>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
     <!-- An operator surface reports identifiers, status codes and module

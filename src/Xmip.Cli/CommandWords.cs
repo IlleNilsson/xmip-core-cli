@@ -1,3 +1,5 @@
+using Arity = (Xmip.Cli.Command Command, int Minimum, int Maximum);
+
 namespace Xmip.Cli;
 
 /// <summary>The word each <see cref="Command"/> is typed as, and how many
@@ -5,8 +7,8 @@ namespace Xmip.Cli;
 public static class CommandWords
 {
     /// <summary>Each command's word, its command and its arguments.</summary>
-    public static IReadOnlyDictionary<string, (Command Command, int Minimum, int Maximum)>
-        Known { get; } = new Dictionary<string, (Command, int, int)>(StringComparer.Ordinal)
+    public static IReadOnlyDictionary<string, Arity> Known { get; } =
+        new Dictionary<string, Arity>(StringComparer.Ordinal)
         {
             ["help"] = (Command.Help, 0, 0),
             ["abi"] = (Command.Abi, 0, 0),

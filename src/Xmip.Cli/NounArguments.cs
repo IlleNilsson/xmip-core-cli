@@ -70,12 +70,11 @@ public static class NounArguments
             is Command.EventSubscriptions or Command.Subscriptions or Command.DeadMessages;
 
         string? foreign = command is Command.Message or Command.Database or Command.Secret
-            ? auditOptions.FirstOrDefault(option => !(command switch
-            {
-                Command.Message => MessageArguments.Shared,
-                Command.Secret => SecretArguments.Shared,
-                _ => DatabaseArguments.Shared,
-            }).Contains(option))
+            ? auditOptions.FirstOrDefault(option => !(command is Command.Message
+                ? MessageArguments.Shared
+                : command is Command.Secret
+                ? SecretArguments.Shared
+                : DatabaseArguments.Shared).Contains(option))
             : noun
                 ? auditOptions.FirstOrDefault(option => !Shared.Contains(option))
                 : command is Command.Audit ? null : auditOptions.FirstOrDefault();

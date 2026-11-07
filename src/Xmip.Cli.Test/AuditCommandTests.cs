@@ -306,8 +306,8 @@ public sealed class AuditCommandTests
         ProgramAudit audit = Audit(directory);
 
         Assert.Equal(
-            AuditKept.Persisted,
-            audit.Record("start", AuditPhase.Begin, AuditSeverity.Information).Kept);
+            new AuditOutcome.Kept(AuditKept.Persisted, string.Empty),
+            audit.Record("start", AuditPhase.Begin, AuditSeverity.Information).Value);
         audit.Record(
             "stop", AuditPhase.Finished, AuditSeverity.Warning, "stopped",
             new Dictionary<string, string> { ["tested"] = "yes" });
