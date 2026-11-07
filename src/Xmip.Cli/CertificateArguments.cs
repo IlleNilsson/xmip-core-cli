@@ -108,13 +108,10 @@ public static class CertificateArguments
         CertificateQuery asked = query ?? new CertificateQuery();
         IReadOnlyList<string> acts = asked.Acts;
 
-        if (acts.Count > 1)
-        {
-            return $"'certificate' takes one act a line; {string.Join(" and ", acts)} given.";
-        }
-
         return (acts.Count > 0 ? acts[0] : null) switch
         {
+            _ when acts.Count > 1 =>
+                $"'certificate' takes one act a line; {string.Join(" and ", acts)} given.",
             "--operator" when named =>
                 "'certificate --operator <person>' takes no argument: the request is made.",
             "--sign" when !named =>

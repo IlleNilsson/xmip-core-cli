@@ -119,6 +119,7 @@ public static class CommandRun
             Command.Secret => On(
                 invocation, open, error, surface => SecretCommand.List(
                     surface, invocation.Location ?? string.Empty, json, output, error)),
+            Command.Help or Command.Mcp => Usage.Print(output),
             _ => Usage.Print(output),
         };
     }

@@ -53,7 +53,7 @@ public static class CertificateCommand
         ArgumentNullException.ThrowIfNull(error);
 
         CertificateAnswer answer = new(json, output, error);
-        string? Full(string? path) => path is null ? null : Path.GetFullPath(path);
+        static string? Full(string? path) => path is null ? null : Path.GetFullPath(path);
         string authority = Full(query.Authority) ?? string.Empty;
         string[] names = (query.Names ?? string.Empty)
             .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);

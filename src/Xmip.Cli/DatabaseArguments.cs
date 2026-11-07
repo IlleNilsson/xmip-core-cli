@@ -35,13 +35,10 @@ public static class DatabaseArguments
 
         uint? to = null;
 
-        if (Version(from, "--from", ref refused) is not { } held
-            || (audit.To is { } asked && (to = Version(asked, "--to", ref refused)) is null))
-        {
-            return null;
-        }
-
-        return new DatabaseQuery(server, held, to ?? 0, certificate?.Out);
+        return Version(from, "--from", ref refused) is not { } held
+            || (audit.To is { } asked && (to = Version(asked, "--to", ref refused)) is null)
+            ? null
+            : new DatabaseQuery(server, held, to ?? 0, certificate?.Out);
     }
 
     private static uint? Version(string value, string option, ref string? refused)

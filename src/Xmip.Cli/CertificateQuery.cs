@@ -68,10 +68,12 @@ public sealed record CertificateQuery
     /// <summary>The acts the line names, each by its option; exactly one
     /// is obeyed.</summary>
     public IReadOnlyList<string> Acts =>
-        new (string? Value, string Option)[]
+    [
+        .. new (string? Value, string Option)[]
         {
             (Operator, "--operator"), (Sign, "--sign"), (Node, "--node"),
             (Inspect, "--inspect"), (Revoke, "--revoke"), (Export, "--export"),
             (Backup, "--backup"), (Import, "--import"),
-        }.Where(one => one.Value is not null).Select(one => one.Option).ToArray();
+        }.Where(one => one.Value is not null).Select(one => one.Option),
+    ];
 }

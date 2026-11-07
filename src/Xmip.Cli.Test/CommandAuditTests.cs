@@ -22,7 +22,7 @@ public sealed class CommandAuditTests
         AuditOutcome outcome = CommandAudit.Ended(
             audit, invocation, 2, "No file at missing.xmip.\n");
 
-        Assert.Equal(AuditKept.Persisted, outcome.Kept);
+        Assert.Equal(new AuditOutcome.Kept(AuditKept.Persisted, string.Empty), outcome.Value);
         string text = Records(directory);
         Assert.Contains("[[record]]", text, StringComparison.Ordinal);
         Assert.Contains("program = \"xmip\"", text, StringComparison.Ordinal);
