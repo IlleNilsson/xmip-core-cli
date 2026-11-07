@@ -95,14 +95,14 @@ public static class MeasureCommand
     }
 
     /// <summary>What a wildcard measured, as one document
-    /// (<see cref="JsonText.Selection{T}"/>): the six figures at each scope it
+    /// (<see cref="JsonSelection.Of{T}"/>): the six figures at each scope it
     /// named.</summary>
     public static string Documents(IOperatorSurface surface, ScopeSelection chosen)
     {
         ArgumentNullException.ThrowIfNull(surface);
         ArgumentNullException.ThrowIfNull(chosen);
 
-        return JsonText.Selection(
+        return JsonSelection.Of(
             surface,
             chosen,
             chosen.Scopes,

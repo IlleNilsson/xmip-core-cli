@@ -31,7 +31,7 @@ public static class ScopeCommand
 
         if (json)
         {
-            output.WriteLine(JsonText.Selection(
+            output.WriteLine(JsonSelection.Of(
                 surface,
                 chosen,
                 chosen.Scopes,
@@ -89,7 +89,7 @@ public static class ScopeCommand
         if (json)
         {
             output.WriteLine(chosen.Patterned
-                ? JsonText.Selection(surface, chosen, rows, WriteItem)
+                ? JsonSelection.Of(surface, chosen, rows, WriteItem)
                 : JsonText.Document(writer => WriteItem(writer, rows[0])));
 
             return 0;
@@ -131,7 +131,7 @@ public static class ScopeCommand
 
         if (json)
         {
-            output.WriteLine(JsonText.Selection(
+            output.WriteLine(JsonSelection.Of(
                 surface,
                 chosen,
                 done,

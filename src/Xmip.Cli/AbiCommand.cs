@@ -1,4 +1,5 @@
 using Xmip.Abi;
+using Xmip.Surface;
 
 namespace Xmip.Cli;
 
