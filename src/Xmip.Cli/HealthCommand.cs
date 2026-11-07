@@ -93,13 +93,13 @@ public static class HealthCommand
 
     /// <summary>
     /// What a wildcard answered, as one document
-    /// (<see cref="JsonText.Selection{T}"/>), with the same object per scope that
+    /// (<see cref="JsonSelection.Of{T}"/>), with the same object per scope that
     /// a single read emits. A pattern that named nothing is a document saying
     /// nothing was named — never an empty line.
     /// </summary>
     public static string Documents(IOperatorSurface surface, ScopeSelection chosen)
     {
-        return JsonText.Selection(
+        return JsonSelection.Of(
             surface,
             chosen,
             chosen.Scopes,

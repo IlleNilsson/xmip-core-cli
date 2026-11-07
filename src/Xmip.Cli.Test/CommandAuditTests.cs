@@ -72,7 +72,7 @@ public sealed class CommandAuditTests
     }
 
     [Fact]
-    public void TheExecutableRecordsALineItRefuses()
+    public async Task TheExecutableRecordsALineItRefuses()
     {
         string directory = Scratch();
         ProcessStartInfo start = new("dotnet")
@@ -83,13 +83,14 @@ public sealed class CommandAuditTests
             Environment = { ["XMIP_AUDIT_DIRECTORY"] = directory },
         };
 
-        using Process run = Process.Start(start)!;
-        string complaint = run.StandardError.ReadToEnd();
-        run.WaitForExit();
+        // Both streams read together, to the end: reading one while the other
+        // fills its pipe is how a child blocks forever.
+        ProcessTextOutput run = await Process.RunAndCaptureTextAsync(
+            start, TestContext.Current.CancellationToken);
 
-        Assert.Equal(2, run.ExitCode);
+        Assert.Equal(2, run.ExitStatus.ExitCode);
         Assert.Contains(
-            "'nonsense' is not an xmip command", complaint, StringComparison.Ordinal);
+            "'nonsense' is not an xmip command", run.StandardError, StringComparison.Ordinal);
         string text = Records(directory);
         Assert.Contains("program = \"xmip\"", text, StringComparison.Ordinal);
         Assert.Contains("action = \"refused\"", text, StringComparison.Ordinal);
