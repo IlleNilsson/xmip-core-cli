@@ -132,8 +132,9 @@ may act, and refuses it in words otherwise (ADR-0009, amendment 2026-10-03).
 **A person's certificate.** `certificate` makes and signs the certificate a
 person's surface — the phone first — presents to a node's operate listener
 (ADR-0034, amendment 2026-10-15): client authentication alone, its subject
-the person, `CN=<person>`, the caller the listener proves and grants its
-`[operate]` role. `xmip certificate --operator alice@example.org --out
+the person, `CN=<person>`, the caller the listener proves and grants the
+role its `[operate]` lists `CN=<person>` with, none where none does.
+`xmip certificate --operator alice@example.org --out
 phone` makes a fresh key and a request naming the person as
 `phone/operator.key` and `phone/operator.csr`; `xmip certificate
 phone/operator.csr --sign node.xmip --out phone/operator.pem` signs it by the
