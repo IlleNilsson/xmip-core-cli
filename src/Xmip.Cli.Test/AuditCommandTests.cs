@@ -84,7 +84,7 @@ public sealed class AuditCommandTests
 
         string directory = Written();
         File.AppendAllText(
-            Path.Combine(directory, "audit.xmip"),
+            Path.Combine(directory, "audit.toml"),
             "[[record]]\naudit_id = \"h1\"\nat = \"2026-09-30T10:00:00.000000000Z\"\n"
             + "program = \"probe\"\nhost = \"H1\"\nprocess = \"7\"\n"
             + $"location = \"{Cluster.NodeScope(0)}\"\nhidden = \"true\"\naction = \"start\"\n"
@@ -147,7 +147,7 @@ public sealed class AuditCommandTests
         Assert.Equal(0, exit);
         string[] lines = output.ToString().Split(Environment.NewLine);
         Assert.StartsWith("2 of 2 records in ", lines[0], StringComparison.Ordinal);
-        Assert.EndsWith("audit.xmip", lines[0], StringComparison.Ordinal);
+        Assert.EndsWith("audit.toml", lines[0], StringComparison.Ordinal);
         Assert.Contains(
             lines, line => line.TrimStart().StartsWith("host", StringComparison.Ordinal));
         int heading =
@@ -255,7 +255,7 @@ public sealed class AuditCommandTests
             text.ToString(), StringComparison.Ordinal);
         Assert.Contains("\"whole\":true", json.ToString(), StringComparison.Ordinal);
 
-        string file = Path.Combine(directory, "audit.xmip");
+        string file = Path.Combine(directory, "audit.toml");
         File.WriteAllText(file, File.ReadAllText(file).Replace(
             "\"stopped\"", "\"started\"", StringComparison.Ordinal));
         using StringWriter changed = new();
@@ -276,7 +276,7 @@ public sealed class AuditCommandTests
         Assert.True(parsed is not null, problem);
 
         string directory = Written();
-        File.AppendAllText(Path.Combine(directory, "audit.xmip"), "[[record]]\naudit_id = \"0");
+        File.AppendAllText(Path.Combine(directory, "audit.toml"), "[[record]]\naudit_id = \"0");
         using StringWriter open = new();
         using StringWriter openJson = new();
 

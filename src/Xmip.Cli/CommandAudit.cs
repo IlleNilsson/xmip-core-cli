@@ -22,7 +22,7 @@ public static class CommandAudit
     public const string Refusal = "refused";
 
     /// <summary>
-    /// The program's audit: into the directory <c>cli.xmip</c> names as
+    /// The program's audit: into the directory <c>cli.toml</c> names as
     /// <c>AuditDirectory</c>, resolved from beside the executable, else where
     /// the capability decides — <c>XMIP_AUDIT_DIRECTORY</c>, else the
     /// operating system's log. The runtime library it records through is the
