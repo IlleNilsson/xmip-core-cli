@@ -209,6 +209,6 @@ public sealed class DeadMessageCommandTests : IDisposable
         Assert.Equal(0, exit);
         Assert.StartsWith(
             $"OK. replay of Message m-2 left for {First}", said, StringComparison.Ordinal);
-        Assert.Single(Directory.GetFiles(Path.Combine(Orders, First), "*-replay.xmip"));
+        Assert.Single(Directory.GetFiles(Path.Combine(Orders, First), "*-replay.toml"));
     }
 }

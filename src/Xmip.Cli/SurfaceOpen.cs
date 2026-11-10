@@ -4,7 +4,7 @@ namespace Xmip.Cli;
 
 /// <summary>
 /// Which surface a command reads, and which runtime <c>validate</c> asks:
-/// the line over <c>cli.xmip</c> beside the executable, by the one
+/// the line over <c>cli.toml</c> beside the executable, by the one
 /// precedence every surface shares — <see cref="SurfaceChoice.Stated"/> and
 /// <see cref="RuntimeLibrary.Stated"/> in <c>Xmip.Surface</c> (ADR-0052
 /// clause 1 and its amendments of 2026-09-18 and 2026-09-20). What is the
@@ -22,7 +22,7 @@ public static class SurfaceOpen
 {
     /// <summary>The executable's own configuration, beside it: TOML, like
     /// every document on disk in the estate, with an <c>[Xmip]</c> table.</summary>
-    public const string ConfigurationFile = "cli.xmip";
+    public const string ConfigurationFile = "cli.toml";
 
     /// <summary>The surface, or null with <paramref name="reason"/> saying why.
     /// The caller disposes what it gets.</summary>

@@ -63,7 +63,7 @@ xmip help                 this text
                           subject, over --local as the user you run as
 ```
 
-Which surface a command reads is stated in `cli.xmip` beside the
+Which surface a command reads is stated in `cli.toml` beside the
 executable, with the same `[Xmip]` keys as the GUI hosts and the PowerShell
 module — `Surface = "local" | "snapshot" | "remote"`, `Local`, `Address`,
 `RuntimeLibrary`, `Snapshot` — and never guessed (ADR-0052 clause 3). As shipped, in a
@@ -208,7 +208,7 @@ line that could not be obeyed as `refused`, and anything unhandled as
 `unhandled` before the process ends as it would have. The records go through
 the runtime library the line states — `--runtime` reaches the audit as it
 reaches `validate` (`ProgramAudit.Library`). Records go to
-`<AuditDirectory>/audit.xmip`, `AuditDirectory` in `cli.xmip`'s `[Xmip]`
+`<AuditDirectory>/audit.toml`, `AuditDirectory` in `cli.toml`'s `[Xmip]`
 table resolved from beside the executable; unset, the capability decides —
 `XMIP_AUDIT_DIRECTORY`, else the operating system's log, which also takes a
 record the directory cannot.

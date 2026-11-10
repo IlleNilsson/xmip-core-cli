@@ -105,7 +105,7 @@ public sealed class CommandAuditTests
 
     private static string Records(string directory)
     {
-        return File.ReadAllText(Path.Combine(directory, "audit.xmip"));
+        return File.ReadAllText(Path.Combine(directory, "audit.toml"));
     }
 
     private static Invocation Line(params string[] words)

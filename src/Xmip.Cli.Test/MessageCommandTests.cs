@@ -210,7 +210,7 @@ public sealed class MessageCommandTests : IDisposable
             $"OK. retry of the Message of the Journey j-1 left for {Sender}",
             said,
             StringComparison.Ordinal);
-        Assert.Single(Directory.GetFiles(Path.Combine(Orders, Sender), "*-retry.xmip"));
+        Assert.Single(Directory.GetFiles(Path.Combine(Orders, Sender), "*-retry.toml"));
 
         (exit, string json, _) = Run(
             surface, Line("message", "j-1", "--location", Sending, "--dismiss", "--json"));

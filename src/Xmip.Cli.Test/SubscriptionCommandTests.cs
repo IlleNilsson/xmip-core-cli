@@ -198,6 +198,6 @@ public sealed class SubscriptionCommandTests : IDisposable
         Assert.StartsWith(
             $"OK. resume of Subscription 'edi' left for {First}", said,
             StringComparison.Ordinal);
-        Assert.Single(Directory.GetFiles(Path.Combine(Orders, First), "*-resume.xmip"));
+        Assert.Single(Directory.GetFiles(Path.Combine(Orders, First), "*-resume.toml"));
     }
 }

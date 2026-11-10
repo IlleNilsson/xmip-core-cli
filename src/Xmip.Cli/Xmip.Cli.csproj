@@ -35,7 +35,7 @@
   <ItemGroup>
     <!-- The surface a command reads is stated here, beside the executable,
          never guessed (ADR-0052 clause 3). -->
-    <None Update="cli.xmip" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="cli.toml" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <!-- Runtime async (.NET 11): an async method is the runtime's own, not a

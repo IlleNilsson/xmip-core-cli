@@ -162,6 +162,6 @@ public sealed class EventSubscriptionCommandTests : IDisposable
         Assert.StartsWith(
             $"OK. resume of Event subscription 2 left for {Second}", said,
             StringComparison.Ordinal);
-        Assert.Single(Directory.GetFiles(Path.Combine(Orders, Second), "*-resume.xmip"));
+        Assert.Single(Directory.GetFiles(Path.Combine(Orders, Second), "*-resume.toml"));
     }
 }
