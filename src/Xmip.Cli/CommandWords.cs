@@ -29,6 +29,7 @@ public static class CommandWords
             ["dead-messages"] = (Command.DeadMessages, 0, 1),
             ["message"] = (Command.Message, 0, 1),
             ["secret"] = (Command.Secret, 0, 1),
+            ["report"] = (Command.Report, 0, 1),
             ["mcp"] = (Command.Mcp, 0, 0),
         };
 }

@@ -19,7 +19,9 @@ namespace Xmip.Cli;
 /// <c>--who</c>. Read only is the Observer's reach (ADR-0009, amendment
 /// 2026-09-06). <c>probe</c> is not a tool either: it loads the library it is
 /// given, and running a library's code is not a reading; nor is
-/// <c>certificate</c>, which makes a key or signs.
+/// <c>certificate</c>, which makes a key or signs. <c>report</c> is: a Quest
+/// reads what it probes and changes nothing (ADR-0072, amendment
+/// 2026-11-10).
 /// </remarks>
 public static class McpTools
 {
@@ -119,6 +121,17 @@ public static class McpTools
             null,
             false,
             MessageArguments.Shared,
+            []),
+        new(
+            "report",
+            "Every Report, each quick (it presents data that already exists) or taking "
+                + "longer (it presents what a Quest probes first); name shows one. With "
+                + "configuration, a node's configuration or a cluster.xmip with node, a "
+                + "Report that presents what a Quest probes is opened: its Quest probes the "
+                + "configuration and changes nothing.",
+            "name",
+            false,
+            [.. ReportArguments.Options, "--node"],
             []),
     ];
 

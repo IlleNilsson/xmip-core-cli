@@ -16,7 +16,8 @@ namespace Xmip.Cli;
 /// publishes at; <c>--inspect</c>, <c>--revoke</c>, <c>--export</c> and
 /// <c>--backup</c> act on it. One act a line, and none of these options on
 /// another command but <c>--out</c> on <c>database</c>
-/// (<see cref="DatabaseArguments"/>).
+/// (<see cref="DatabaseArguments"/>) and <c>--node</c> on <c>report</c>
+/// (<see cref="ReportArguments"/>).
 /// </summary>
 public static class CertificateArguments
 {
@@ -97,12 +98,16 @@ public static class CertificateArguments
     {
         if (command is not Command.Certificate)
         {
-            // --out is database's too: the folder its scripts are written to.
-            return query is null || (command is Command.Database
-                && query with { Out = null } == new CertificateQuery())
+            // --out is database's too: the folder its scripts are written to;
+            // and --node report's: the node a cluster's file is sliced for.
+            return query is null
+                || (command is Command.Database
+                    && query with { Out = null } == new CertificateQuery())
+                || (command is Command.Report
+                    && query with { Node = null } == new CertificateQuery())
                 ? null
-                : "The options of 'certificate' only apply to 'certificate', and --out to "
-                    + "'certificate' and 'database'.";
+                : "The options of 'certificate' only apply to 'certificate', --out to "
+                    + "'certificate' and 'database', and --node to 'certificate' and 'report'.";
         }
 
         CertificateQuery asked = query ?? new CertificateQuery();

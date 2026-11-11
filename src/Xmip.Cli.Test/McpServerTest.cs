@@ -83,6 +83,10 @@ public sealed class McpServerTest
         ];
         Assert.Contains("health", tools);
         Assert.Contains("dead-messages", tools);
+
+        // A Quest reads what it probes and changes nothing (ADR-0072,
+        // amendment 2026-11-10): every Report is a read.
+        Assert.Contains("report", tools);
         Assert.DoesNotContain("pause", tools);
         Assert.DoesNotContain("resume", tools);
         Assert.DoesNotContain("probe", tools);

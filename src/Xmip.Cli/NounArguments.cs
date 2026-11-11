@@ -101,6 +101,8 @@ public static class NounArguments
                         ? command is Command.DeadMessages ? null : "'dead-messages'"
                         : SecretArguments.Options.Contains(option)
                             ? command is Command.Secret ? null : "'secret'"
+                        : ReportArguments.Options.Contains(option)
+                            ? command is Command.Report ? null : "'report'"
                         : command is Command.EventSubscriptions or Command.Subscriptions
                             or Command.DeadMessages or Command.Message or Command.Secret
                             ? null

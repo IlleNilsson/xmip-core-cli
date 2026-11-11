@@ -70,6 +70,11 @@ public static class CommandRun
             Command.Certificate => CertificateCommand.Over(invocation, json, output, error),
             Command.Database => DatabaseCommand.Over(invocation, json, output, error),
 
+            // Every Report, and one that presents what a Quest probes opened,
+            // its Quest probing a configuration; each probe audited
+            // where this executable's records go, and read back from there.
+            Command.Report => ReportCommand.Over(invocation, audit, output, error),
+
             // The audit read back from where this executable's own records go.
             Command.Audit => AuditCommand.Run(
                 audit, invocation.Audit ?? new AuditQuery(), json, output, error),
