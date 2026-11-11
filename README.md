@@ -48,6 +48,8 @@ xmip dead-messages [pattern]
 xmip message [id]         list the Messages that failed, or retry or dismiss one
 xmip secret [name]        the secrets a node keeps, never a value; with --set,
                           set one through the node
+xmip report [name]        every Report, quick or taking longer; with
+                          --configuration, its Quest probes a configuration
 xmip mcp                  a Model Context Protocol server on stdin and stdout
 xmip help                 this text
 
@@ -227,9 +229,11 @@ answers any other method with JSON-RPC's *method not found*.
 
 **Its tools are the read commands**, named by their word on the line —
 `abi`, `status`, `health`, `measure`, `list`, `show`, `validate`, `audit`,
-`subscriptions`, `event-subscriptions`, `dead-messages` and `message` — each
-taking its options without the dashes as arguments (`McpTools`: `scope` or
-`pattern`, `location`, `severity`, `verify` and the rest). A call is the line
+`subscriptions`, `event-subscriptions`, `dead-messages`, `message` and
+`report` — each taking its options without the dashes as arguments
+(`McpTools`: `scope` or `pattern`, `location`, `severity`, `verify`, `name`,
+`configuration` and the rest). `report` is one because a Quest reads what it
+probes and changes nothing (ADR-0072, amendment 2026-11-10). A call is the line
 an operator would type, `--json` added, parsed by `Invocation` and answered
 by `CommandRun`, the dispatch the executable runs; its text is the command's
 JSON document, `isError` where the command exits non-zero, with what it said
@@ -453,6 +457,56 @@ taken off. Exit 0 when it was set, 1 when it was not, 2 for a line the
 command does not take — a name with no `--set`, a set with no `--kind`, or
 `--set` on another noun. `Set-XmipSecret` is the same act in PowerShell.
 
+## Reports
+
+A Report presents existing data; a Quest probes for data to present in a
+Report. `xmip report` lists every Report in one list, Xmip's own and every
+one a module adds, and each says which it is (ADR-0072, amendment
+2026-11-10): *Quick*, it presents data that already exists, or *Takes
+longer*, it presents what a Quest probes first.
+
+```text
+xmip report [name] --json
+xmip report <name> --configuration <path> [--node <node>]
+  [--parameter <choice>] [--row <name>] --json
+```
+
+The list says both kinds in the runtime's words, then a row per Report: its
+kind, its name, what to expect and what it covers, the long sentence last.
+What to expect is the runtime's: *last probe took 4 ms*, read back from the
+audit where this executable's records go, *not probed yet*, or *not yet
+available* for one listed and not built. `xmip report <name>` shows one: a
+quick one with the command that presents it — `xmip audit`, `xmip
+dead-messages`, `xmip subscriptions`, `xmip list`, mapped here from the
+reader's entrypoint the runtime names — and a Quest's with its parameter's
+choices, its levels and the line that probes it; the name is the runtime's
+to find, and one that is none is refused in its words, naming those there
+are. `--configuration` opens a Report that presents what a Quest probes:
+its Quest probes a node's configuration, or a cluster's `cluster.xmip`
+sliced for `--node`, told apart by what the file holds, and changes
+nothing. A quick Report, or one not yet available, is refused for what it
+is before the file is read. It prints the tally, each state in the
+runtime's words with its count, and a row per requirement under the
+runtime's word for a row, or with `--row` one requirement in full, what is
+behind it and the actions that close it; what a Quest does not answer is
+left out. Where the audit cannot be read, every Report is listed all the
+same, each Quest's entry says its last probe could not be read, and the
+runtime's sentence follows the list. `--node` is `certificate`'s option too, read here as the node
+a cluster's file is sliced for; `--configuration`, `--parameter` and
+`--row` are this command's alone. `--json` is the runtime's document
+whole: the list, one entry, or the probe.
+
+The list, each entry's kind, what a probe finds and every refusal are the
+runtime's (`xmip_operate.h` section 25, through `ReportCatalog` in
+`Xmip.Surface`, the same `Get-XmipReport` and the Reports view read). Each
+probe is audited by the runtime as `quest.probe` under program `xmip`,
+where this executable's records go. A probe reads, so an Observer may run
+it, and it is an MCP tool. A Report that is none, not yet available or
+quick, a parameter or row it does not take, and a runtime that is a remote
+build are REFUSED in words, exit 1, `{"refused": …}` under `--json`; a
+probe naming another option than its own, or nothing to probe, is a line
+that cannot be obeyed, exit 2.
+
 ## Reading the audit
 
 `xmip audit` reads that file back — every program's records in it, not
@@ -534,7 +588,9 @@ audit: `CommandAuditTests` records through the runtime's library, which
 refused line lands as a record; `AuditCommandTests` reads back, through the
 same library, records it wrote to a directory of its own. `McpServerTest`
 scripts one MCP session over in-memory streams against the test cluster's
-names.
+names. `ReportCommandTests` list, show and probe through the runtime's
+library, the probe over the test cluster's `cluster.xmip`, each entry found
+by what it holds, never by its name.
 
 ## Public contracts and compatibility
 

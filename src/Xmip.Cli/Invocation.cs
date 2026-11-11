@@ -10,8 +10,8 @@ namespace Xmip.Cli;
 /// </summary>
 /// <param name="Command">The command named first on the line.</param>
 /// <param name="Argument">The command's argument — a status code, a library
-/// path, a scope, a configuration path, a request — or empty for the ones
-/// without.</param>
+/// path, a scope, a configuration path, a request, a Report's name — or empty
+/// for the ones without.</param>
 /// <param name="Json">Emit one JSON document instead of text for a person.
 /// ADR-0014 clause 10.</param>
 /// <param name="Follow">Emit JSON Lines of health or figures as they change,
@@ -99,6 +99,9 @@ public sealed record Invocation(
     /// for every other command.</summary>
     public SecretAsk? Secret { get; init; }
 
+    /// <summary>What <c>report</c> asks; null for every other command.</summary>
+    public ReportAsk? Report { get; init; }
+
     /// <summary>
     /// Parse a command line. Options may sit anywhere; the first bare word is
     /// the command and the second its argument. Null with a problem in
@@ -123,6 +126,7 @@ public sealed record Invocation(
         string? act = null;
         CertificateQuery? certificate = null;
         SecretAsk? secretAsk = null;
+        ReportAsk? reportAsk = null;
         List<string> nounOptions = [];
 
         for (int i = 0; i < args.Count; i++)
@@ -146,7 +150,8 @@ public sealed record Invocation(
                 || DeadMessageArguments.Take(args, ref i, ref message, out unobeyed)
                 || NounArguments.Take(args, i, ref act, out unobeyed)
                 || CertificateArguments.Take(args, ref i, ref certificate, out unobeyed)
-                || SecretArguments.Take(args, ref i, ref secretAsk, out unobeyed))
+                || SecretArguments.Take(args, ref i, ref secretAsk, out unobeyed)
+                || ReportArguments.Take(args, ref i, ref reportAsk, out unobeyed))
             {
                 if (unobeyed is not null)
                 {
@@ -317,6 +322,9 @@ public sealed record Invocation(
         SecretAsk? secret = known.Command is Command.Secret && refused is null
             ? SecretArguments.Ask(act, argument, secretAsk, out refused)
             : null;
+        ReportAsk? report = known.Command is Command.Report && refused is null
+            ? ReportArguments.Ask(argument, reportAsk, certificate, out refused)
+            : null;
 
         if (refused is not null)
         {
@@ -384,6 +392,7 @@ public sealed record Invocation(
             Certificate = known.Command is Command.Certificate ? certificate : null,
             Database = database,
             Secret = secret,
+            Report = report,
         };
     }
 }

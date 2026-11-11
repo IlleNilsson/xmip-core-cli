@@ -72,6 +72,12 @@ public enum Command
     /// (ADR-0019, amendment 2026-10-29).</summary>
     Secret,
 
+    /// <summary>Every Report, each quick — it presents data that already
+    /// exists — or taking longer — it presents what a Quest probes first —
+    /// and one opened, its Quest probing a node's configuration (ADR-0072,
+    /// amendment 2026-11-10).</summary>
+    Report,
+
     /// <summary>A Model Context Protocol server over standard input and
     /// output: the read commands as its tools, the scope tree as its
     /// resources (ADR-0071).</summary>

@@ -1,10 +1,12 @@
 namespace Xmip.Cli;
 
 /// <summary>The text behind <c>xmip help</c>.</summary>
-public static class Usage
+public static partial class Usage
 {
     /// <summary>The usage text, one line per command and one per option.</summary>
-    public const string Text = """
+    public const string Text = Commands + "\n\n" + Reports;
+
+    private const string Commands = """
         xmip — the Xmip command line
 
           xmip abi                  the two boundaries this build speaks
@@ -43,6 +45,8 @@ public static class Usage
                                     dismiss one
           xmip secret [name]        the secrets a node keeps, never a value; with
                                     --set, set one through the node
+          xmip report [name]        every Report, quick or taking longer; with
+                                    --configuration, its Quest probes a configuration
           xmip mcp                  a Model Context Protocol server on stdin and
                                     stdout: the read commands as its tools, the
                                     scopes as its resources
@@ -96,9 +100,10 @@ public static class Usage
         stdin and stdout, one message a line, and nothing else on stdout. Its
         tools are the read commands — abi, status, health, measure, list,
         show, validate, audit, subscriptions, event-subscriptions,
-        dead-messages and message, each with its options as arguments — and
-        never an act. Its resources are the scopes, each an Xmip URI, read as
-        an operator drills: the scope's row, then the rows beneath it.
+        dead-messages, message and report, each with its options as
+        arguments — and never an act. Its resources are the scopes, each an
+        Xmip URI, read as an operator drills: the scope's row, then the rows
+        beneath it.
         --runtime, --remote, --local and --snapshot on its line choose the surface
         every answer reads, and each answer is audited as its command. On
         another machine it is the same line over SSH.

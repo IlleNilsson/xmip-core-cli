@@ -45,8 +45,8 @@ public sealed class CertificateCommandTests
             StringComparison.Ordinal);
         Assert.Contains("needs a path", Refused("certificate", "--out"), StringComparison.Ordinal);
         Assert.Equal(
-            "The options of 'certificate' only apply to 'certificate', and --out to "
-                + "'certificate' and 'database'.",
+            "The options of 'certificate' only apply to 'certificate', --out to "
+                + "'certificate' and 'database', and --node to 'certificate' and 'report'.",
             Refused("validate", "node.xmip", "--operator", Person));
 
         Invocation issuing = Parse(
