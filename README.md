@@ -277,8 +277,14 @@ xmip subscriptions --location <node scope> --name <subscription> --pause|--resum
 The pattern is `*` and `?` over each Subscription's node, or its node and
 name as `xmip:///<cluster>/node/<node>/subscription/<name>`; `--location`,
 `--sort` and `--order` mean what they mean for `audit`, and the columns are
-subscription, cluster, node, filter, destination, state, picked-up, held and
-since. Which Subscriptions a line selects and in what order is
+subscription, cluster, node, filter, destination, send-ports — the Send
+Ports its destination reaches, `send_ports` in a document (ADR-0013,
+amendment 2026-11-11) — state, picked-up, held and since. `xmip health`,
+`list` and `show` say on each record and row where its work came from and
+went, `from <from> → to <to>`, and a document's `from` and `to`, the
+runtime's words for the nearest thing the publication draws at or above it
+(`IOperatorSurface.FromTo`; ADR-0052, amendment 2026-11-11). Which
+Subscriptions a line selects and in what order is
 `SubscriptionQuery`'s in `Xmip.Surface`, the one the web's Subscriptions view
 and `Get-XmipSubscription` ask. An act names one Subscription, by
 `--location` at its node and `--name`, or it is REFUSED before any node is

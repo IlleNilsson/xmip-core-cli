@@ -138,7 +138,7 @@ public static class HealthCommand
         if (worst is not null)
         {
             writer.WriteStartObject("worst");
-            WriteRecord(writer, worst);
+            WriteRecord(writer, surface, worst);
             writer.WriteEndObject();
         }
 
@@ -147,19 +147,24 @@ public static class HealthCommand
         foreach (HealthRecord record in records)
         {
             writer.WriteStartObject();
-            WriteRecord(writer, record);
+            WriteRecord(writer, surface, record);
             writer.WriteEndObject();
         }
 
         writer.WriteEndArray();
     }
 
-    private static void WriteRecord(Utf8JsonWriter writer, HealthRecord record)
+    private static void WriteRecord(
+        Utf8JsonWriter writer, IOperatorSurface surface, HealthRecord record)
     {
+        FromTo path = surface.FromTo(record.Scope);
+
         writer.WriteString("scope", record.Scope);
         writer.WriteString("state", English.Mood(record.State));
         writer.WriteNumber("severity", record.Severity);
         writer.WriteString("evidence", record.Evidence);
+        writer.WriteString("from", path.From);
+        writer.WriteString("to", path.To);
         writer.WriteString("observed", record.Observed);
     }
 
@@ -203,6 +208,12 @@ public static class HealthCommand
             if (record.Evidence.Length > 0)
             {
                 output.WriteLine($"{"",14} {record.Evidence}");
+            }
+
+            // From and to on every observation (ADR-0052, amendment 2026-11-11).
+            if (surface.FromTo(record.Scope) is { Said: true } path)
+            {
+                output.WriteLine($"{"",14} {path.Line}");
             }
 
             output.WriteLine($"{"",14} observed {record.Observed:O}");

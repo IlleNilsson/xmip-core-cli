@@ -21,8 +21,8 @@ public static class SubscriptionCommand
 {
     // The columns a person reads, in the order SubscriptionQuery lists them.
     private static readonly string[] Headings =
-        ["subscription", "cluster", "node", "filter", "destination", "state", "picked-up",
-         "held", "since"];
+        ["subscription", "cluster", "node", "filter", "destination", "send-ports", "state",
+         "picked-up", "held", "since"];
 
     /// <summary>List what <paramref name="query"/> selects, or — where
     /// <paramref name="act"/> is given — take it on the one Subscription the
@@ -81,6 +81,14 @@ public static class SubscriptionCommand
                 writer.WriteString("application", entry.Application);
                 writer.WriteString("filter", entry.Filter);
                 writer.WriteString("destination", entry.Destination);
+                writer.WriteStartArray("send_ports");
+
+                foreach (string port in entry.Reaches)
+                {
+                    writer.WriteStringValue(port);
+                }
+
+                writer.WriteEndArray();
                 writer.WriteString("file", entry.File);
                 writer.WriteString("configuration", entry.Configuration);
                 writer.WriteString("state", entry.State);
@@ -145,6 +153,7 @@ public static class SubscriptionCommand
             SubscriptionQuery.NodeName(entry),
             entry.Filter,
             entry.Destination,
+            string.Join(", ", entry.Reaches),
             entry.State,
             English.Figure(entry.PickedUp),
             English.Figure(entry.Held),
