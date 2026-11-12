@@ -253,6 +253,12 @@ public static class ScopeCommand
 
         output.WriteLine($"{mood,-9}  {item.Scope}  {English.Figures(item.Figures)}");
 
+        // From and to, as the runtime says them (ADR-0052, amendment 2026-11-11).
+        if (item.FromTo is { Said: true } path)
+        {
+            output.WriteLine($"  {path.Line}");
+        }
+
         if (!why || string.IsNullOrEmpty(item.Evidence))
         {
             return;
@@ -281,6 +287,8 @@ public static class ScopeCommand
 
         writer.WriteString("evidence", item.Evidence);
         writer.WriteString("worst", item.Worst);
+        writer.WriteString("from", item.CameFrom);
+        writer.WriteString("to", item.WentTo);
         MeasureCommand.Write(writer, item.Figures);
     }
 
