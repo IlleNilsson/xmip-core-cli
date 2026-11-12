@@ -468,8 +468,8 @@ command does not take — a name with no `--set`, a set with no `--kind`, or
 A Report presents existing data; a Quest probes for data to present in a
 Report. `xmip report` lists every Report in one list, Xmip's own and every
 one a module adds, and each says which it is (ADR-0072, amendment
-2026-11-10): *Quick*, it presents data that already exists, or *Takes
-longer*, it presents what a Quest probes first.
+2026-11-10 and 2026-11-12): *Report*, it presents data that already exists,
+or *Probing report*, it presents what a Quest probes first.
 
 ```text
 xmip report [name] --json

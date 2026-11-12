@@ -6,11 +6,11 @@ public static partial class Usage
     private const string Reports = """
         report lists every Report, in one list (ADR-0072, amendment
         2026-11-10). A Report presents existing data; a Quest probes for data
-        to present in a Report. Each entry says which it is: Quick, it
+        to present in a Report. Each entry says which it is: Report, it
         presents data that already exists and is opened at the command that
         presents it — xmip audit, xmip dead-messages, xmip subscriptions,
-        xmip list — or Takes longer, it presents what a Quest probes first,
-        and says how long its last probe took. An entry not built yet is
+        xmip list — or Probing report, it presents what a Quest probes
+        first, and says how long its last probe took. An entry not built yet is
         listed and says not yet available. [name] shows one entry; a Report
         that presents what a Quest probes is opened with:
 
