@@ -69,9 +69,9 @@ Which surface a command reads is stated in `cli.toml` beside the
 executable, with the same `[Xmip]` keys as the GUI hosts and the PowerShell
 module — `Surface = "local" | "snapshot" | "remote"`, `Local`, `Address`,
 `RuntimeLibrary`, `Snapshot` — and never guessed (ADR-0052 clause 3). As shipped, in a
-developer's clone, it follows the Essentials roll started as cluster C1 — a
+developer's clone, it follows the Essentials roll started as cluster CL1 — a
 name the walkthrough picked, and nothing Xmip knows — the same file the
-PowerShell prompt follows, so `xmip show xmip:///C1` answers while a roll
+PowerShell prompt follows, so `xmip show xmip:///CL1` answers while a roll
 runs and says `SNAPSHOT — no file at ...` before one has. Roll under another
 name and `Snapshot` names that file instead. With no surface named, no node
 is named, and a command says so. The runtime library — what every command
@@ -151,8 +151,8 @@ too; they and the rules are the runtime's
 (`xmip_operate.h` section 19), reached through `OperatorCertificate` in
 `Xmip.Surface`, the same `New-XmipCertificate` uses. It is no MCP tool: it makes a key or signs.
 
-**A node's certificate.** `xmip certificate --node R1 --cluster C1
---authority <folder> --names R1.xmip.test,C1 --out <folder>` issues a node
+**A node's certificate.** `xmip certificate --node RX1 --cluster CL1
+--authority <folder> --names RX1.xmip.test,CL1 --out <folder>` issues a node
 put on a machine of its own a fresh key and a certificate for server and
 client authentication from the cluster's own authority kept in that folder,
 made there where none is, for its own name and every one of `--names`,
@@ -162,7 +162,7 @@ written as `node.pem`, `node.key` and `anchors.pem` — the files its
 `Xmip.Surface`, the same `New-XmipCertificate -Node` uses).
 
 **The cluster's authority** (ADR-0034, amendment 2026-10-22), the premises'
-own ACME service. `xmip certificate --authority <folder> --cluster C1
+own ACME service. `xmip certificate --authority <folder> --cluster CL1
 --publish http://ca.xmip.test:8080` sets it up — kept there, made where none
 is — and the plain-HTTP address its revocation list and certificate are
 fetched from, which every certificate it signs from then names.
@@ -175,10 +175,10 @@ for a Linux or Windows trust store, or its list, never over a file;
 key among it, into an empty folder.
 
 **A node's certificate across an air gap.** On the node, `xmip certificate
---node R1 --names R1.xmip.test --out <folder>` — no `--authority` — writes
+--node RX1 --names RX1.xmip.test --out <folder>` — no `--authority` — writes
 a fresh key, `node.next.key`, which stays, and the request `node.csr`, to
 carry. Where the authority is kept, `xmip certificate node.csr --authority
-<folder> --names R1,R1.xmip.test --out node.pem` verifies and signs it for
+<folder> --names RX1,RX1.xmip.test --out node.pem` verifies and signs it for
 ninety days. Back on the node, `xmip certificate node.pem --import
 <folder>` checks every signature, the key, the names and the anchor, and
 only then writes `node.pem`, `node.key` and `anchors.pem`; where the node
@@ -310,7 +310,7 @@ subscription on any node hears the matching Events of every node of the
 cluster (ADR-0065, amendment 2026-10-02), and the links that carry them
 between nodes are the cluster's, not Event subscriptions, and never listed.
 A member a node there does not hear is said read-only under the table, one
-line each — `R1: not hearing xmip:///C1/node/S1 since
+line each — `RX1: not hearing xmip:///CL1/node/TX1 since
 2026-10-02T12:00:00Z: connection refused` — and as `unheard` in `--json`,
 so no Event is missing silently.
 An Event subscription is not a Subscription: it hands Events to a Party, and picks no
