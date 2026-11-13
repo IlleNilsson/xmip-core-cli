@@ -14,8 +14,10 @@ public static partial class Usage
           xmip probe <library>      load a module and report what it says it is
           xmip health <scope>       health at and beneath a scope, from the runtime
           xmip measure [scope]      streams, messages, journeys, bytes, retrying, failed
-          xmip list [scope]         the direct children of a scope, the cluster by default
-          xmip show <scope>         one scope: its mood, its worst leaf and why, its figures
+          xmip list [scope]         the direct children of a scope, the cluster by default,
+                                    a node's row with what the node is for
+          xmip show <scope>         one scope: its mood, its worst leaf and why, its
+                                    figures, and for a node what it is for
           xmip pause <scope>        pause everything at and beneath a scope
           xmip resume <scope>       resume everything at and beneath a scope
           xmip validate <toml>      check a node configuration without starting it

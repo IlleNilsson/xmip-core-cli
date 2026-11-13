@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Xmip.Abi.Operate;
 using Xmip.Surface;
 
@@ -79,6 +80,44 @@ public sealed class ScopeCommandTests
             $"  worst {Cluster.NodeScope(0)}/receive/sftp/xml: refused: key",
             shown.ToString(),
             StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// A node's row says what the node is for, a role a line beneath it, from
+    /// what it published (the owner, 2026-11-12: <i>what are nodes purpose</i>),
+    /// and in <c>--json</c> as its <c>purpose</c>; a row that is not a node's
+    /// has none.
+    /// </summary>
+    [Fact]
+    public void ANodesRowSaysWhatTheNodeIsFor()
+    {
+        string node = Cluster.WithRole("receiving");
+        string scope = $"{Cluster.Scope}/node/{node}";
+        FakeSurface surface = new(
+        [
+            FakeSurface.Leaf(
+                $"{scope}/capability", HealthState.Fine, 0, "declares receiving; online; x"),
+            FakeSurface.Leaf($"{scope}/receive/orders", HealthState.Fine),
+        ]);
+        string purpose = English.Purpose("receiving");
+        StringWriter listed = new();
+        StringWriter shown = new();
+        StringWriter json = new();
+        StringWriter stage = new();
+
+        ScopeCommand.List(surface, $"{Cluster.Scope}/node", false, listed, TextWriter.Null);
+        ScopeCommand.Show(surface, scope, false, shown, TextWriter.Null);
+        ScopeCommand.Show(surface, scope, true, json, TextWriter.Null);
+        ScopeCommand.Show(surface, $"{scope}/receive", true, stage, TextWriter.Null);
+
+        string[] lines = listed.ToString().Split(Environment.NewLine);
+        int row = Array.FindIndex(lines, line => line.Contains(scope, StringComparison.Ordinal));
+        Assert.Equal($"  {purpose}", lines[row + 1]);
+        Assert.Contains($"  {purpose}", shown.ToString(), StringComparison.Ordinal);
+        using JsonDocument said = JsonDocument.Parse(json.ToString());
+        Assert.Equal(purpose, said.RootElement.GetProperty("purpose").GetString());
+        using JsonDocument beneath = JsonDocument.Parse(stage.ToString());
+        Assert.False(beneath.RootElement.TryGetProperty("purpose", out _));
     }
 
     [Fact]

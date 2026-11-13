@@ -22,8 +22,10 @@ xmip status <code>        what a status code means
 xmip probe <library>      load a module and report what it says it is
 xmip health <scope>       health at and beneath a scope, from the runtime
 xmip measure [scope]      streams, messages, journeys, bytes, retrying, failed
-xmip list [scope]         the direct children of a scope, the cluster by default
-xmip show <scope>         one scope: its mood, its worst leaf and why, its figures
+xmip list [scope]         the direct children of a scope, the cluster by default,
+                          a node's row with what the node is for
+xmip show <scope>         one scope: its mood, its worst leaf and why, its
+                          figures, and for a node what it is for
 xmip pause <scope>        pause everything at and beneath a scope
 xmip resume <scope>       resume everything at and beneath a scope
 xmip validate <toml>      check a node configuration without starting it
@@ -283,7 +285,13 @@ amendment 2026-11-11) — state, picked-up, held and since. `xmip health`,
 `list` and `show` say on each record and row where its work came from and
 went, `from <from> → to <to>`, and a document's `from` and `to`, the
 runtime's words for the nearest thing the publication draws at or above it
-(`IOperatorSurface.FromTo`; ADR-0052, amendment 2026-11-11). Which
+(`IOperatorSurface.FromTo`; ADR-0052, amendment 2026-11-11). On a node's own
+row, `xmip:///<cluster>/node/<name>`, `list` and `show` say beneath it what
+the node is for, each role it declares with its meaning, a line each —
+`receiving: takes Streams in and makes Messages` — and a document its
+`purpose`, the same words (`ScopeItem.Purpose`, the runtime's
+`node::NodeRole::purpose`); no other row has one (ADR-0056, amendment
+2026-11-13; the owner, 2026-11-12: *what are nodes purpose*). Which
 Subscriptions a line selects and in what order is
 `SubscriptionQuery`'s in `Xmip.Surface`, the one the web's Subscriptions view
 and `Get-XmipSubscription` ask. An act names one Subscription, by

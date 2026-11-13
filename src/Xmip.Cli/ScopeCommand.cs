@@ -243,15 +243,23 @@ public static class ScopeCommand
         });
     }
 
-    // One row: the mood, the scope, the figures; and, where asked, why — for a
-    // container the leaf that explains it and its evidence, which is the next
-    // scope to drill to, and for a leaf its own evidence (ADR-0052 clause 2).
-    // A list says why on the rows that are not fine; show always does.
+    // One row: the mood, the scope, the figures; on a node's row what the node
+    // is for, a role a line; and, where asked, why — for a container the leaf
+    // that explains it and its evidence, which is the next scope to drill to,
+    // and for a leaf its own evidence (ADR-0052 clause 2). A list says why on
+    // the rows that are not fine; show always does.
     private static void Write(TextWriter output, ScopeItem item, bool why)
     {
         string mood = English.Mood(item.Health);
 
         output.WriteLine($"{mood,-9}  {item.Scope}  {English.Figures(item.Figures)}");
+
+        // What the node is for, by the roles it declares (ADR-0056, amendment
+        // 2026-11-13).
+        foreach (string line in item.Purpose.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+        {
+            output.WriteLine($"  {line}");
+        }
 
         // From and to, as the runtime says them (ADR-0052, amendment 2026-11-11).
         if (item.FromTo is { Said: true } path)
@@ -289,6 +297,13 @@ public static class ScopeCommand
         writer.WriteString("worst", item.Worst);
         writer.WriteString("from", item.CameFrom);
         writer.WriteString("to", item.WentTo);
+
+        // A node's row says what the node is for; no other row has a purpose.
+        if (item.Purpose.Length > 0)
+        {
+            writer.WriteString("purpose", item.Purpose);
+        }
+
         MeasureCommand.Write(writer, item.Figures);
     }
 
