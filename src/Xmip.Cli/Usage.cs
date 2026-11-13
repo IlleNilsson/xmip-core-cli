@@ -70,10 +70,10 @@ public static partial class Usage
         literal, case-insensitive — what PowerShell's -like matches and what
         the GUI's filter box matches (ADR-0059 clauses 7 and 8).
 
-          xmip health "xmip:///C1/node/R*"      every node of cluster C1 named R…
-          xmip list "xmip:///C1/*/receive"      beneath every receive
+          xmip health "xmip:///CL1/node/RX*"     every node of cluster CL1 named RX…
+          xmip list "xmip:///CL1/*/receive"      beneath every receive
 
-        C1 and R1 are names a tester gave; they mean nothing to Xmip, and a
+        CL1 and RX1 are names a tester gave; they mean nothing to Xmip, and a
         node receives because it declared receive, never because of its name.
 
         health, measure, list and show answer for each scope a pattern names,
@@ -137,8 +137,8 @@ public static partial class Usage
                                     matched and say where it breaks, or OK, and
                                     say each record whose write was interrupted
 
-          xmip audit "xmip:///C1/*" --severity Error
-          xmip audit --location xmip:///C1 --from 2026-09-29
+          xmip audit "xmip:///CL1/*" --severity Error
+          xmip audit --location xmip:///CL1 --from 2026-09-29
 
         [pattern] is * and ? over the location each record's process declared;
         a record with none is at the root, which only * names. Beneath the
@@ -164,8 +164,8 @@ public static partial class Usage
                                     pause survives a restart of the node
           --resume                  pick up what it held, oldest first
 
-          xmip subscriptions --location xmip:///C1/node/P1
-          xmip subscriptions --location xmip:///C1/node/P1 --name edi --pause --who ilian
+          xmip subscriptions --location xmip:///CL1/node/PX1
+          xmip subscriptions --location xmip:///CL1/node/PX1 --name edi --pause --who ilian
 
         There is no --remove: a Subscription is added and removed in the TOML
         configuration of the Xmip Application that draws it, and the line is
@@ -179,7 +179,7 @@ public static partial class Usage
         Events of every node of the cluster, and the links that carry them
         between nodes are the cluster's, never listed here; a member a
         node here does not hear is said under the table, one line each:
-        "R1: not hearing <node> since <time>: <why>". [pattern] is * and ? over each
+        "RX1: not hearing <node> since <time>: <why>". [pattern] is * and ? over each
         one's node and the scope it reaches. It shares --location, --sort
         (subscriber, cluster, node, action, state, queued, delivered, missed,
         since) and --order with audit, and adds:
@@ -189,8 +189,8 @@ public static partial class Usage
           --resume                  deliver again, what queued first
           --remove                  unsubscribe it
 
-          xmip event-subscriptions --location xmip:///C1/node/R1
-          xmip event-subscriptions --location xmip:///C1/node/R1 --id 2 --pause --who ilian
+          xmip event-subscriptions --location xmip:///CL1/node/RX1
+          xmip event-subscriptions --location xmip:///CL1/node/RX1 --id 2 --pause --who ilian
 
         dead-messages lists what each node's Dead Message Queue keeps
         (ADR-0052, amendment 2026-10-01): every accepted Message that no
@@ -212,9 +212,9 @@ public static partial class Usage
                                     take it out of the queue; a Message that
                                     still matches nothing stays
 
-          xmip dead-messages --location xmip:///C1/node/R1
-          xmip dead-messages --location xmip:///C1/node/R1 --message <id>
-          xmip dead-messages --location xmip:///C1/node/R1 --message <id> --replay
+          xmip dead-messages --location xmip:///CL1/node/RX1
+          xmip dead-messages --location xmip:///CL1/node/RX1 --message <id>
+          xmip dead-messages --location xmip:///CL1/node/RX1 --message <id> --replay
 
         secret lists the secrets a node keeps — each by name, kind, and when
         and by whom it was set, never a value — and with --set sets one: the
@@ -249,8 +249,8 @@ public static partial class Usage
                                     'more' follows
           --limit <count>           the most of each Port; a hundred if unsaid
 
-          xmip message --location xmip:///C1/node/S1
-          xmip message --location xmip:///C1/node/S1/send/invoices --offset 40
+          xmip message --location xmip:///CL1/node/TX1
+          xmip message --location xmip:///CL1/node/TX1/send/invoices --offset 40
 
         With an <id>, --location names the node that sends its Port, or the
         Port's scope beneath it, and one act is required:
@@ -262,8 +262,8 @@ public static partial class Usage
                                     Message and Stream kept, and taken out of
                                     the Port's queue
 
-          xmip message <id> --location xmip:///C1/node/S1/send/invoices --retry
-          xmip message <id> --location xmip:///C1/node/S1 --dismiss --who ilian
+          xmip message <id> --location xmip:///CL1/node/TX1/send/invoices --retry
+          xmip message <id> --location xmip:///CL1/node/TX1 --dismiss --who ilian
 
         certificate makes and signs the certificates a cluster's own
         authority stands behind (ADR-0034, amendments 2026-10-15 and
@@ -347,12 +347,12 @@ public static partial class Usage
 
           xmip certificate --operator alice@example.org --out phone
           xmip certificate phone/operator.csr --sign node.xmip --out phone/operator.pem
-          xmip certificate --node R1 --cluster C1 --authority ca --names R1.xmip.test --out R1
-          xmip certificate --node R1 --names R1.xmip.test --out tls
-          xmip certificate tls/node.csr --authority ca --names R1,R1.xmip.test --out R1.pem
-          xmip certificate R1.pem --import tls
+          xmip certificate --node RX1 --cluster CL1 --authority ca --names RX1.xmip.test --out RX1
+          xmip certificate --node RX1 --names RX1.xmip.test --out tls
+          xmip certificate tls/node.csr --authority ca --names RX1,RX1.xmip.test --out RX1.pem
+          xmip certificate RX1.pem --import tls
           xmip certificate --inspect tls/node.pem
-          xmip certificate --authority ca --cluster C1 --publish http://ca.xmip.test:8080
+          xmip certificate --authority ca --cluster CL1 --publish http://ca.xmip.test:8080
           xmip certificate --revoke 5B8E9CC6D36BF3DB --authority ca --reason keyCompromise
           xmip certificate --export ca.cer --authority ca --format der
 
