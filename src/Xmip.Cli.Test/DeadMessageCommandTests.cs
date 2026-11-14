@@ -9,8 +9,8 @@ namespace Xmip.Cli.Test;
 /// query every surface asks; what a snapshot of the test cluster lists is
 /// rendered, drilled and sorted; one Message named is opened with its gate
 /// verdicts, promoted properties and declines; a Replay names one Message or
-/// is refused before any node is asked; one taken is left where the
-/// publication says; and no other noun's act is a Message's.
+/// is refused before any node is asked; a snapshot declines it, never acted
+/// on; and no other noun's act is a Message's.
 /// </summary>
 public sealed class DeadMessageCommandTests : IDisposable
 {
@@ -30,7 +30,6 @@ public sealed class DeadMessageCommandTests : IDisposable
         File.WriteAllText(
             Snapshot,
             $"node = \"{Cluster.Scope}\"\n"
-            + $"orders = '{Orders}'\n"
             + Entry(First, "m-1", 1, "declines = [[\"structured\", \"no MessageType\"]]\n")
             + Entry(
                 First, "m-2", 2,
@@ -42,8 +41,6 @@ public sealed class DeadMessageCommandTests : IDisposable
     }
 
     private string Snapshot => Path.Combine(_place, $"{Cluster.Name}-snapshot.xmip");
-
-    private string Orders => Path.Combine(_place, "orders");
 
     public void Dispose()
     {
@@ -199,16 +196,14 @@ public sealed class DeadMessageCommandTests : IDisposable
                 "--replay"));
         Assert.Equal(1, exit);
         Assert.Contains("no Message m-2", error, StringComparison.Ordinal);
-        Assert.False(Directory.Exists(Orders));
 
-        (exit, string said, _) = Run(
+        (exit, _, error) = Run(
             surface,
             Line(
                 "dead-messages", "--location", Cluster.NodeScope(0), "--message", "m-2",
                 "--replay", "--who", "ilian"));
-        Assert.Equal(0, exit);
+        Assert.Equal(1, exit);
         Assert.StartsWith(
-            $"OK. replay of Message m-2 left for {First}", said, StringComparison.Ordinal);
-        Assert.Single(Directory.GetFiles(Path.Combine(Orders, First), "*-replay.toml"));
+            $"REFUSED: {SnapshotOperator.NotActed}", error, StringComparison.Ordinal);
     }
 }

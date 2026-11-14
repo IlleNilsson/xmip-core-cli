@@ -15,7 +15,7 @@ namespace Xmip.Cli;
 /// takes it as a parameter. Which entries a line selects and in what order
 /// is <see cref="DeadMessageQuery"/>'s, the one every surface asks; how a
 /// Replay reaches the node is the surface's; only the rendering is here. A
-/// Replay is exit 0 when it was applied or left for the node, 1 when it was
+/// Replay is exit 0 when it was taken or asked, 1 when it was
 /// not.
 /// </summary>
 public static class DeadMessageCommand
@@ -102,6 +102,7 @@ public static class DeadMessageCommand
             writer.WriteString("message", done.Message);
             writer.WriteString("act", DeadMessageOperation.Word(done.Act));
             writer.WriteBoolean("applied", done.Applied);
+            writer.WriteString("outcome", done.Outcome.Word());
             writer.WriteString("result", done.Result);
         });
     }
@@ -230,10 +231,10 @@ public static class DeadMessageCommand
         }
         else
         {
-            (done.Applied ? output : error).WriteLine(
-                done.Applied ? $"OK. {done.Result}" : $"REFUSED: {done.Result}");
+            (done.Outcome == ActOutcome.Refused ? error : output).WriteLine(
+                ActOutcomes.Said(done.Outcome, done.Result));
         }
 
-        return done.Applied ? 0 : 1;
+        return done.Outcome == ActOutcome.Refused ? 1 : 0;
     }
 }

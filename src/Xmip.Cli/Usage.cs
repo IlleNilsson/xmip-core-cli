@@ -4,7 +4,7 @@ namespace Xmip.Cli;
 public static partial class Usage
 {
     /// <summary>The usage text, one line per command and one per option.</summary>
-    public const string Text = Commands + "\n\n" + Reports;
+    public const string Text = Commands + "\n\n" + Surfaces + "\n\n" + Reports;
 
     private const string Commands = """
         xmip — the Xmip command line
@@ -73,6 +73,9 @@ public static partial class Usage
         the GUI's filter box matches (ADR-0059 clauses 7 and 8).
 
           xmip health "xmip:///CL1/node/RX*"     every node of cluster CL1 named RX…
+          xmip health "xmip:///CL1/node/*/membership"
+                                                 each node's membership: Stressed
+                                                 where its save is not its peers'
           xmip list "xmip:///CL1/*/receive"      beneath every receive
 
         CL1 and RX1 are names a tester gave; they mean nothing to Xmip, and a
@@ -84,19 +87,6 @@ public static partial class Usage
         and what there is, and exits 1 — never 0, which would read as all
         clear. <toml>, <library> and <code> name a thing, not a selection, and
         take no wildcard.
-
-        One invocation reads one cluster. Two rolls are two clusters, each
-        publishing its own snapshot, and a rollup or a sum over both would be
-        at a scope in neither tree — so --snapshot names which one, and the
-        web monitor is where an operator moves between them.
-
-        The runtime is found by one rule, the same for every surface:
-        Xmip:RuntimeLibrary in the configuration, else XMIP_RUNTIME_LIBRARY,
-        else the library beside this executable. A node is operated over gRPC
-        to its operate listener, on this machine at its local endpoint and on
-        another at its operate address, through the runtime's client in that
-        library; validate and abi ask the library itself, with no node behind
-        them. Nothing here links Xmip's Rust.
 
         mcp is for an MCP client that starts it (ADR-0071): JSON-RPC 2.0 on
         stdin and stdout, one message a line, and nothing else on stdout. Its

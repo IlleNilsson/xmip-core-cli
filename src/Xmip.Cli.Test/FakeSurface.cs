@@ -36,8 +36,37 @@ public sealed class FakeSurface(IReadOnlyList<HealthRecord> records) : IOperator
     /// test says one, as a surface that cannot list them says.</summary>
     public FailedMessageList Failed { get; set; } = FailedMessageList.Unlisted;
 
+    /// <summary>What <see cref="Subscriptions"/> answers: none unless a test
+    /// says some.</summary>
+    public SubscriptionList Listed { get; set; } = SubscriptionList.Empty;
+
+    /// <summary>What an act on a Subscription came to, and what its node
+    /// said: refused unless a test says otherwise.</summary>
+    public (ActOutcome Outcome, string Said) Acted { get; set; } =
+        (ActOutcome.Refused, "a fake takes no act");
+
     /// <inheritdoc />
     public string Source => "FAKE — a test wrote these";
+
+    /// <inheritdoc />
+    public SubscriptionList Subscriptions()
+    {
+        return Listed;
+    }
+
+    /// <inheritdoc />
+    public SubscriptionOperation Act(
+        SubscriptionRecord subscription, SubscriptionAct act, string who, HeldCaller? caller)
+    {
+        ArgumentNullException.ThrowIfNull(subscription);
+        (ActOutcome outcome, string said) = Acted;
+
+        return new SubscriptionOperation(
+            subscription.Node, subscription.Name, act, outcome == ActOutcome.Taken, said)
+        {
+            Outcome = outcome,
+        };
+    }
 
     /// <inheritdoc />
     public FailedMessageList FailedMessages(string scope, ulong from = 0, uint most = 0)

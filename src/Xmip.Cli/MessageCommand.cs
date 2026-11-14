@@ -16,7 +16,7 @@ namespace Xmip.Cli;
 /// surface's; only the rendering is here. A list exits 0 when it is an
 /// answer, none failing among them, and 1 when it is not: the surface
 /// cannot list failed Messages, or asked and Xmip Storage did not answer.
-/// An act exits 0 when it was applied or left for the node, 1 when it was
+/// An act exits 0 when it was taken or asked, 1 when it was
 /// not, 2 for a line that names no node.
 /// </summary>
 public static class MessageCommand
@@ -55,11 +55,11 @@ public static class MessageCommand
         }
         else
         {
-            (done.Applied ? output : error).WriteLine(
-                done.Applied ? $"OK. {done.Result}" : $"REFUSED: {done.Result}");
+            (done.Outcome == ActOutcome.Refused ? error : output).WriteLine(
+                ActOutcomes.Said(done.Outcome, done.Result));
         }
 
-        return done.Applied ? 0 : 1;
+        return done.Outcome == ActOutcome.Refused ? 1 : 0;
     }
 
     /// <summary>
@@ -192,6 +192,7 @@ public static class MessageCommand
             writer.WriteString("journey", done.Journey);
             writer.WriteString("act", MessageOperation.Word(done.Act));
             writer.WriteBoolean("applied", done.Applied);
+            writer.WriteString("outcome", done.Outcome.Word());
             writer.WriteString("result", done.Result);
         });
     }

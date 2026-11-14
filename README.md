@@ -100,7 +100,16 @@ by the node as your certificate's subject where the role its `[operate]`
 grants may act. It is Xmip's mutual TLS always, presenting the certificate
 the document's `Certificate` and `PrivateKey` name and taking the node only
 where its certificate reaches `TrustAnchor` (else `XMIP_CERTIFICATE`,
-`XMIP_PRIVATE_KEY`, `XMIP_TRUST_ANCHOR`; ADR-0063). `validate` asks the
+`XMIP_PRIVATE_KEY`, `XMIP_TRUST_ANCHOR`; ADR-0063). At a node that gathers
+its cluster's view — a node declaring the monitoring role — `--remote` and
+`--local` answer for the whole cluster, every node's records and whether
+each was reached, and `source`, in `health`, `measure`, `list`, `show` and
+the other listings alike, says after where the node is reached what the
+view says of itself: the cluster, gathered by which node, and how many of
+its nodes it reached, the runtime's words (the design approved 2026-11-12,
+section 3.5; `GatheredClusterTests`). A node gathering none answers for
+itself; which of the two, its answer decides, never its name. `xmip status`
+says what a status code means and reads no surface. `validate` asks the
 runtime library itself, since no node stands behind it. Text
 goes to stdout for a person, column-aligned;
 `--json` emits one document; `--follow` subscribes to the shared operator
@@ -301,11 +310,13 @@ in the node's runtime store, counted, not picked up — and a pause survives a
 restart of the node; resumed, it picks up what it held, oldest first. There
 is no `--remove`: a Subscription is added and removed in the TOML
 configuration of the Xmip Application that draws it, and the line is REFUSED
-in those words (exit 2). Over a live node the act is applied in its process
-and audited there as `subscription.pause` or `subscription.resume`; over a
-snapshot it is left where the publication says, for the node to take within
-a round. `OK.` and exit 0 when it was applied or left, `REFUSED:` and exit 1
-when it was not.
+in those words (exit 2). Over a live node the act is asked at the node's
+door, written to Xmip Storage and taken by the node that routes by the
+Subscription, audited there as `subscription.pause` or `subscription.resume`
+(ADR-0014, amendment 2026-11-13); a snapshot is never acted on, and the act
+is declined in words. `OK.` and exit 0 when it was taken, `ASKED.` and exit 0
+when it was asked and its node has not taken it yet — it takes it as soon as
+it runs — `REFUSED:` and exit 1 when it was not.
 
 ## Event subscriptions
 
@@ -341,10 +352,9 @@ one Event subscription, by `--location` at its node and `--id`, or it is
 REFUSED before any node is asked (exit 2); paused, an Event subscription
 keeps queuing and hands nothing over, resumed it hands over what queued,
 removed it is gone. Over a live node the act is applied in its process and
-audited as `event.pause`, `event.resume` or `event.remove`; over a snapshot
-it is left where the publication says, for the node to take within a round.
-`OK.` and exit 0 when it was applied or left, `REFUSED:` and exit 1 when it
-was not.
+audited as `event.pause`, `event.resume` or `event.remove`; a snapshot is
+never acted on, and the act is declined in words. `OK.` and exit 0 when it
+was taken, `REFUSED:` and exit 1 when it was not.
 
 ## Dead Message Queue
 
@@ -381,10 +391,12 @@ takes it out of the queue, once; a Message that still matches nothing stays
 and the Replay is REFUSED in words. A Replay names one Message, by
 `--location` at its node and `--message`, or it is REFUSED before any node is
 asked (exit 2); `--pause`, `--resume` and `--remove` are no act on it (exit
-2). Over a live node the Replay is applied in its process and audited there
-as `dead-message.replay`; over a snapshot it is left where the publication
-says, for the node to take within a round. `OK.` and exit 0 when it was
-applied or left, `REFUSED:` and exit 1 when it was not.
+2). Over a live node the Replay is asked at the node's door, written to Xmip
+Storage and taken by the node whose queue keeps the Message, audited there
+as `dead-message.replay` (ADR-0014, amendment 2026-11-13); a snapshot is
+never acted on, and the Replay is declined in words. `OK.` and exit 0 when it
+was taken, `ASKED.` and exit 0 when its node has not taken it yet, `REFUSED:`
+and exit 1 when it was not.
 
 ## A Message that failed
 
@@ -438,12 +450,13 @@ act, an act with none named, or `--pause`, `--resume`, `--remove` or
 `--replay` cannot be obeyed (exit 2),
 and `--retry` and `--dismiss` apply to no other command; one with no
 `--location` on a node is REFUSED before any node is asked (exit 2). Over a
-live node the act is applied in its process and audited there as
-`message.retry` or `message.dismiss`; over a snapshot it is left where the
-publication says, for the node to take within a round. A Message that is no
-longer Failed, or a node that does not send its Port, is REFUSED in the
-node's words. `OK.` and exit 0 when it was applied or left, `REFUSED:` and
-exit 1 when it was not; `--json` carries `node`, `journey`, `act`, `applied`
+live node the act is asked at the node's door, written to Xmip Storage and
+taken by the node that sends the Port, audited there as `message.retry` or
+`message.dismiss` (ADR-0014, amendment 2026-11-13); a snapshot is never
+acted on, and the act is declined in words. A Message that is no longer
+Failed, or a node that does not send its Port, is REFUSED in the node's
+words. `OK.` and exit 0 when it was taken, `ASKED.` and exit 0 when its node
+has not taken it yet, `REFUSED:` and exit 1 when it was not; `--json` carries `node`, `journey`, `act`, `applied`
 and `result`.
 
 ## A secret

@@ -8,7 +8,7 @@ namespace Xmip.Cli.Test;
 /// command for the noun, the act an option on it. The line becomes the one
 /// query every surface asks; what a snapshot of the test cluster lists is
 /// rendered; an act names one Event subscription or is refused before any
-/// node is asked; and one taken is left where the publication says.
+/// node is asked; and a snapshot declines it, never acted on.
 /// </summary>
 public sealed class EventSubscriptionCommandTests : IDisposable
 {
@@ -28,7 +28,6 @@ public sealed class EventSubscriptionCommandTests : IDisposable
         File.WriteAllText(
             Snapshot,
             $"node = \"{Cluster.Scope}\"\n"
-            + $"orders = '{Orders}'\n"
             + $"[[event_subscriptions]]\nnode = \"{Cluster.NodeScope(0)}\"\nid = 1\n"
             + "subscriber = \"operations\"\nparty = \"0199a0a0-0000-7000-8000-000000000001\"\n"
             + "action = \"every Event\"\nstate = \"active\"\nqueued = 2\ncapacity = 64\n"
@@ -41,8 +40,6 @@ public sealed class EventSubscriptionCommandTests : IDisposable
     }
 
     private string Snapshot => Path.Combine(_place, $"{Cluster.Name}-snapshot.xmip");
-
-    private string Orders => Path.Combine(_place, "orders");
 
     public void Dispose()
     {
@@ -151,17 +148,14 @@ public sealed class EventSubscriptionCommandTests : IDisposable
                 "--pause"));
         Assert.Equal(1, exit);
         Assert.Contains("no Event subscription 9", error, StringComparison.Ordinal);
-        Assert.False(Directory.Exists(Orders));
 
-        (exit, string said, _) = Run(
+        (exit, _, error) = Run(
             surface,
             Line(
                 "event-subscriptions", "--location", Cluster.NodeScope(1), "--id", "2",
                 "--resume"));
-        Assert.Equal(0, exit);
+        Assert.Equal(1, exit);
         Assert.StartsWith(
-            $"OK. resume of Event subscription 2 left for {Second}", said,
-            StringComparison.Ordinal);
-        Assert.Single(Directory.GetFiles(Path.Combine(Orders, Second), "*-resume.toml"));
+            $"REFUSED: {SnapshotOperator.NotActed}", error, StringComparison.Ordinal);
     }
 }
