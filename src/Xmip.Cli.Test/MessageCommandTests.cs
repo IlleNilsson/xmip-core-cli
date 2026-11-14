@@ -9,8 +9,8 @@ namespace Xmip.Cli.Test;
 /// Messages that failed listed where no Journey is named, and Retry or
 /// Dismiss on one, the act an option and required, the Journey the argument
 /// and its node <c>--location</c> — the node, or the Send Port's scope. A
-/// line without a node is refused before any node is asked; an act taken
-/// through a snapshot is left where its publication says; and no other noun
+/// line without a node is refused before any node is asked; a snapshot
+/// declines an act, never acted on; and no other noun
 /// takes a failed Message's act, nor a failed Message another noun's.
 /// </summary>
 public sealed class MessageCommandTests : IDisposable
@@ -30,7 +30,7 @@ public sealed class MessageCommandTests : IDisposable
         Directory.CreateDirectory(_place);
         File.WriteAllText(
             Snapshot,
-            $"node = \"{Cluster.Scope}\"\norders = '{Orders}'\n\n"
+            $"node = \"{Cluster.Scope}\"\n\n"
                 + $"[[failed_messages]]\nnode = \"{Sending}\"\nsend_port = \"invoices\"\n"
                 + "count = 2\nblocked = true\n\n[[failed_messages.messages]]\njourney = \"j-1\"\n"
                 + "sequence = 3\nreason = \"invoices: the far end refused it\"\n\n"
@@ -39,8 +39,6 @@ public sealed class MessageCommandTests : IDisposable
     }
 
     private string Snapshot => Path.Combine(_place, $"{Cluster.Name}-snapshot.xmip");
-
-    private string Orders => Path.Combine(_place, "orders");
 
     public void Dispose()
     {
@@ -195,30 +193,27 @@ public sealed class MessageCommandTests : IDisposable
             surface, Line("message", "j-1", "--location", Cluster.Scope, "--dismiss"));
         Assert.Equal(2, exit);
         Assert.StartsWith("REFUSED", error, StringComparison.Ordinal);
-        Assert.False(Directory.Exists(Orders));
     }
 
     [Fact]
-    public void AnActIsLeftWhereThePublicationSaysAsTextAndAsADocument()
+    public void ASnapshotDeclinesAnActAsTextAndAsADocument()
     {
         SnapshotOperator surface = new(Snapshot);
 
-        (int exit, string said, _) = Run(
+        (int exit, _, string error) = Run(
             surface, Line("message", "j-1", "--location", Port, "--retry", "--who", "ilian"));
-        Assert.Equal(0, exit);
+        Assert.Equal(1, exit);
         Assert.StartsWith(
-            $"OK. retry of the Message of the Journey j-1 left for {Sender}",
-            said,
-            StringComparison.Ordinal);
-        Assert.Single(Directory.GetFiles(Path.Combine(Orders, Sender), "*-retry.toml"));
+            $"REFUSED: {SnapshotOperator.NotActed}", error, StringComparison.Ordinal);
 
         (exit, string json, _) = Run(
             surface, Line("message", "j-1", "--location", Sending, "--dismiss", "--json"));
-        Assert.Equal(0, exit);
+        Assert.Equal(1, exit);
         using JsonDocument document = JsonDocument.Parse(json);
         Assert.Equal(Sending, document.RootElement.GetProperty("node").GetString());
         Assert.Equal("j-1", document.RootElement.GetProperty("journey").GetString());
         Assert.Equal("dismiss", document.RootElement.GetProperty("act").GetString());
-        Assert.True(document.RootElement.GetProperty("applied").GetBoolean());
+        Assert.False(document.RootElement.GetProperty("applied").GetBoolean());
+        Assert.Equal("refused", document.RootElement.GetProperty("outcome").GetString());
     }
 }

@@ -14,7 +14,7 @@ namespace Xmip.Cli;
 /// what order is <see cref="EventSubscriptionQuery"/>'s, the one every
 /// surface asks; how an act reaches the node is the surface's; only the
 /// rendering is here. An act is
-/// exit 0 when it was applied or left for the node, 1 when it was not.
+/// exit 0 when it was taken or asked, 1 when it was not.
 /// </summary>
 public static class EventSubscriptionCommand
 {
@@ -129,6 +129,7 @@ public static class EventSubscriptionCommand
             writer.WriteNumber("id", done.Id);
             writer.WriteString("act", EventSubscriptionOperation.Word(done.Act));
             writer.WriteBoolean("applied", done.Applied);
+            writer.WriteString("outcome", done.Outcome.Word());
             writer.WriteString("result", done.Result);
         });
     }
@@ -220,10 +221,10 @@ public static class EventSubscriptionCommand
         }
         else
         {
-            (done.Applied ? output : error).WriteLine(
-                done.Applied ? $"OK. {done.Result}" : $"REFUSED: {done.Result}");
+            (done.Outcome == ActOutcome.Refused ? error : output).WriteLine(
+                ActOutcomes.Said(done.Outcome, done.Result));
         }
 
-        return done.Applied ? 0 : 1;
+        return done.Outcome == ActOutcome.Refused ? 1 : 0;
     }
 }

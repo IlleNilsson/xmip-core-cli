@@ -14,7 +14,7 @@ namespace Xmip.Cli;
 /// one cmdlet takes it as a parameter. Which Subscriptions a line selects and
 /// in what order is <see cref="SubscriptionQuery"/>'s, the one every surface
 /// asks; how an act reaches the node is the surface's; only the rendering is
-/// here. An act is exit 0 when it was applied or left for the node, 1 when
+/// here. An act is exit 0 when it was taken or asked, 1 when
 /// it was not.
 /// </summary>
 public static class SubscriptionCommand
@@ -115,6 +115,7 @@ public static class SubscriptionCommand
             writer.WriteString("name", done.Name);
             writer.WriteString("act", SubscriptionOperation.Word(done.Act));
             writer.WriteBoolean("applied", done.Applied);
+            writer.WriteString("outcome", done.Outcome.Word());
             writer.WriteString("result", done.Result);
         });
     }
@@ -199,10 +200,10 @@ public static class SubscriptionCommand
         }
         else
         {
-            (done.Applied ? output : error).WriteLine(
-                done.Applied ? $"OK. {done.Result}" : $"REFUSED: {done.Result}");
+            (done.Outcome == ActOutcome.Refused ? error : output).WriteLine(
+                ActOutcomes.Said(done.Outcome, done.Result));
         }
 
-        return done.Applied ? 0 : 1;
+        return done.Outcome == ActOutcome.Refused ? 1 : 0;
     }
 }

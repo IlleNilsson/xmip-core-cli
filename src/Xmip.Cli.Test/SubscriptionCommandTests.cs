@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Xmip.Abi.Operate;
 using Xmip.Surface;
 
 namespace Xmip.Cli.Test;
@@ -8,8 +9,8 @@ namespace Xmip.Cli.Test;
 /// command for the noun, the act an option on it. The line becomes the one
 /// query every surface asks; what a snapshot of the test cluster lists is
 /// rendered, drilled and sorted; an act names one Subscription or is refused
-/// before any node is asked; one taken is left where the publication says;
-/// and remove is refused in words, because a Subscription is configuration.
+/// before any node is asked; a snapshot declines it, never acted on; and
+/// remove is refused in words, because a Subscription is configuration.
 /// </summary>
 public sealed class SubscriptionCommandTests : IDisposable
 {
@@ -29,15 +30,12 @@ public sealed class SubscriptionCommandTests : IDisposable
         File.WriteAllText(
             Snapshot,
             $"node = \"{Cluster.Scope}\"\n"
-            + $"orders = '{Orders}'\n"
             + Entry(First, "structured", "active", 12, 0)
             + Entry(First, "edi", "paused", 3, 9)
             + Entry(Second, "flat", "active", 40, 0));
     }
 
     private string Snapshot => Path.Combine(_place, $"{Cluster.Name}-snapshot.xmip");
-
-    private string Orders => Path.Combine(_place, "orders");
 
     public void Dispose()
     {
@@ -118,7 +116,6 @@ public sealed class SubscriptionCommandTests : IDisposable
 
         Assert.StartsWith("REFUSED", problem, StringComparison.Ordinal);
         Assert.Contains(SubscriptionOperation.Configured, problem, StringComparison.Ordinal);
-        Assert.False(Directory.Exists(Orders));
     }
 
     [Fact]
@@ -187,17 +184,45 @@ public sealed class SubscriptionCommandTests : IDisposable
                 "--pause"));
         Assert.Equal(1, exit);
         Assert.Contains("no Subscription 'edi'", error, StringComparison.Ordinal);
-        Assert.False(Directory.Exists(Orders));
 
-        (exit, string said, _) = Run(
+        (exit, _, error) = Run(
             surface,
             Line(
                 "subscriptions", "--location", Cluster.NodeScope(0), "--name", "edi",
                 "--resume", "--who", "ilian"));
-        Assert.Equal(0, exit);
+        Assert.Equal(1, exit);
         Assert.StartsWith(
-            $"OK. resume of Subscription 'edi' left for {First}", said,
-            StringComparison.Ordinal);
-        Assert.Single(Directory.GetFiles(Path.Combine(Orders, First), "*-resume.toml"));
+            $"REFUSED: {SnapshotOperator.NotActed}", error, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void AnActItsNodeDidNotTakeYetIsSaidAskedAndIsNoFailure()
+    {
+        // ADR-0014, amendment 2026-11-13: the door wrote it to Xmip Storage
+        // and its node takes it as soon as it runs.
+        string node = Cluster.NodeScope(0);
+        string sentence = $"asked of {First}; not taken yet; {First} takes it as soon as it runs";
+        SubscriptionRecord orders = new(
+            node, "edi", "RoundTrip", "true", "the Send Port 'Out'", "", "", "active", false,
+            "", 0, 0, DateTimeOffset.UnixEpoch);
+        FakeSurface surface = new([])
+        {
+            Listed = new SubscriptionList([orders]),
+            Acted = (ActOutcome.Asked, sentence),
+        };
+
+        (int exit, string said, string error) = Run(
+            surface, Line("subscriptions", "--location", node, "--name", "edi", "--pause"));
+        Assert.Equal(0, exit);
+        Assert.Equal(string.Empty, error);
+        Assert.StartsWith($"ASKED. {sentence}", said, StringComparison.Ordinal);
+
+        (exit, said, _) = Run(
+            surface,
+            Line("subscriptions", "--location", node, "--name", "edi", "--pause", "--json"));
+        Assert.Equal(0, exit);
+        using JsonDocument document = JsonDocument.Parse(said);
+        Assert.Equal("asked", document.RootElement.GetProperty("outcome").GetString());
+        Assert.False(document.RootElement.GetProperty("applied").GetBoolean());
     }
 }
