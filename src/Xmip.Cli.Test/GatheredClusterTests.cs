@@ -97,7 +97,7 @@ public sealed class GatheredClusterTests
         using HeldCaller me = RuntimeLibrary.Rules.SecurityRoles.Process(out string refused)
             ?? throw new InvalidOperationException(refused);
         ServedNode served = RuntimeLibrary.Rules.Remotes.ServeLocal(
-            $"xmip-gathered-cli-test-{Guid.NewGuid():n}", [me.Name], [], [], "gathered-cli-test",
+            TestEndpoint.Named("gathered-cli"), [me.Name], [], [], "gathered-cli-test",
             out string reason) ?? throw new InvalidOperationException(reason);
 
         served.Post(Publication("own", Record($"{Cluster.NodeScope(0)}/receive/orders", "fine")));

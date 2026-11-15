@@ -59,7 +59,9 @@ xmip help                 this text
 --follow                  with health or measure: JSON Lines as they change
 --runtime <path>          the runtime library, instead of finding it
 --remote <host:port>      a node on another machine, at its operate address
---local <endpoint>        a node on this machine, at its local endpoint
+--local <endpoint>        a node on this machine, at its local endpoint;
+                          on Linux and macOS in /run/xmip or /var/run/xmip,
+                          or the folder XMIP_RUNTIME_DIRECTORY names
 --snapshot <path>         a published snapshot to read, instead of the document's
 --who <name>              with pause, or the act of subscriptions, event-subscriptions,
                           dead-messages or message: who acts, instead of the current user;
@@ -92,7 +94,12 @@ local` names that endpoint, over gRPC on a named pipe on Windows and a Unix
 domain socket elsewhere (ADR-0014, amendment 2026-10-13): no certificate,
 the operating system proving to the node which user you run as, and the
 node taking every act as that user where the role its `[operate]` grants
-may act. `--remote node1:7401` reads the
+may act. On Linux and macOS the socket is in its node's folder, named as the
+endpoint is, `/run/xmip/xmip-node1/xmip-node1.sock` or
+`/var/run/xmip/xmip-node1/xmip-node1.sock`, or in the folder
+`XMIP_RUNTIME_DIRECTORY` names for a node no service manager started, which
+the shell you type in must name as the node's did
+(ADR-0014, amendment 2026-11-15). `--remote node1:7401` reads the
 node at that operate address over gRPC (ADR-0014, amendment 2026-10-12): the
 runtime's remote surface reads its publication and is told when it
 advances, so `--follow` on another machine never polls, and an act is taken

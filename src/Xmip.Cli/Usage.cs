@@ -58,7 +58,9 @@ public static partial class Usage
           --follow                  with health or measure: JSON Lines as they change
           --runtime <path>          the runtime library, instead of finding it
           --remote <host:port>      a node on another machine, at its operate address
-          --local <endpoint>        a node on this machine, at its local endpoint
+          --local <endpoint>        a node on this machine, at its local endpoint;
+                                    on Linux and macOS in /run/xmip or /var/run/xmip,
+                                    or the folder XMIP_RUNTIME_DIRECTORY names
           --snapshot <path>         a published snapshot to read, instead of the document's
           --who <name>              with pause, or the act of subscriptions,
                                     event-subscriptions, dead-messages or
