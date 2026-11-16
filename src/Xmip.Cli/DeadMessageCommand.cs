@@ -1,6 +1,6 @@
 using System.Globalization;
 using System.Text.Json;
-using Xmip.Abi.Operate;
+using Xmip.Operate;
 using Xmip.Surface;
 
 namespace Xmip.Cli;

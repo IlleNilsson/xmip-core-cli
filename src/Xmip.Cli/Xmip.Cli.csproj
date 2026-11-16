@@ -23,13 +23,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- The C ABI, bound once, and the model every .NET surface shares. Both
-         live in xmip-core-abi — the binding by ADR-0014's amendment of
-         2026-09-09, the surface library by ADR-0052 clause 1 — and every
-         surface references them by path inside the composed estate, four
-         levels up from this project. Siblings, not vendored. -->
+    <!-- The C ABI, bound once, and the model every .NET surface shares: the
+         binding in xmip-core-abi (ADR-0014, amendment of 2026-09-09), the
+         surface library and the Operate model under it in xmip-core-operate
+         (ADR-0052, amendment 2026-11-16). Every surface references them by
+         path inside the composed estate. Siblings, not vendored. -->
     <ProjectReference Include="..\..\..\..\..\foundation\abi\dotnet\Xmip.Abi\Xmip.Abi.csproj" />
-    <ProjectReference Include="..\..\..\..\..\foundation\abi\dotnet\Xmip.Surface\Xmip.Surface.csproj" />
+    <ProjectReference Include="..\..\..\operate\dotnet\Xmip.Surface\Xmip.Surface.csproj" />
   </ItemGroup>
 
   <ItemGroup>

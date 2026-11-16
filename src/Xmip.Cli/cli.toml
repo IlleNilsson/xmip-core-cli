@@ -30,7 +30,7 @@ Purpose = "test"
 
 # The runtime's native library, exporting xmip_operate_v1: what a command
 # calls the runtime through, the gRPC client among it.
-# RuntimeLibrary = "../../../../../platform/runtime/target/debug/xmip_core_runtime.dll"
+# RuntimeLibrary = "../../../operate/target/debug/xmip_core_operate.dll"
 
 # The file to read when Surface = "snapshot". A path with no file behind it
 # is said so — SNAPSHOT — no file at ... — not silently replaced. A relative

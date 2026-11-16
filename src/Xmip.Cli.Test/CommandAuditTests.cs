@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Xmip.Abi.Operate;
+using Xmip.Operate;
 using Xmip.Surface;
 
 namespace Xmip.Cli.Test;

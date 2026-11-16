@@ -7,9 +7,10 @@ ADR-0014 names, and the executable ADR-0052 clause 5 describes: text for a
 person, `--json` for a program, `--follow` as JSON Lines, the runtime found by
 one rule rather than typed.
 
-It is argument parsing and rendering over two libraries in xmip-core-abi:
+It is argument parsing and rendering over two libraries:
 `Xmip.Abi`, the one .NET declaration of `xmip_module.h` and `xmip_operate.h`,
-and `Xmip.Surface`, the model every .NET operator surface shares (ADR-0052).
+in xmip-core-abi, and `Xmip.Surface`, the model every .NET operator surface
+shares (ADR-0052), over its Operate model in xmip-core-operate.
 On Windows it builds with runtime async, its ahead-of-time build included:
 an `async` method is the runtime's own rather than a compiler-written state
 machine.
@@ -88,7 +89,7 @@ over the document, in one order — `--remote`, then `--local`, then
 precedence `Get-XmipHealth -Remote -Local -Snapshot` follows in PowerShell.
 `--snapshot` reads one cluster's publication — what each source answers, and
 whether an act applies at once or is submitted as an order, is the table
-*What each source answers* in `module/foundation/abi/README.md` — and
+*What each source answers* in `module/core/operation/operate/README.md` — and
 `--local xmip-node1` follows the node on this machine whose `[operate]
 local` names that endpoint, over gRPC on a named pipe on Windows and a Unix
 domain socket elsewhere (ADR-0014, amendment 2026-10-13): no certificate,
@@ -615,10 +616,11 @@ console, or an MCP call's own (`McpServer`, `McpTools`, `McpResources`).
 parsing, what the line states about the surface, and the text and JSON
 renderings. The rules the renderings rest on — which surface and runtime win
 when several are named, what a wildcard selects, what a status means, whether
-a module conforms — are tested once, beside them in `xmip-core-abi`, and
-what crosses the C ABI is the binding's to verify. The one exception is the
-audit: `CommandAuditTests` records through the runtime's library, which
-`Xmip.Abi` copies beside the tests, and runs the executable once to prove a
+a module conforms — are tested once, beside them in `xmip-core-operate` and
+`xmip-core-abi`, and what crosses the C ABI is the binding's to verify. The
+one exception is the audit: `CommandAuditTests` records through the
+runtime's library, which `Xmip.Operate` copies beside the tests, and runs
+the executable once to prove a
 refused line lands as a record; `AuditCommandTests` reads back, through the
 same library, records it wrote to a directory of its own. `McpServerTest`
 scripts one MCP session over in-memory streams against the test cluster's
@@ -638,10 +640,11 @@ disagreement, not silently accepted.
 
 ## Dependencies
 
-Two projects in `xmip-core-abi`, referenced by path inside the composed
-estate (ADR-0014, amendment of 2026-09-09): `Xmip.Abi`, the binding, and
+Two projects, referenced by path inside the composed estate: `Xmip.Abi`, the
+binding, in `xmip-core-abi` (ADR-0014, amendment of 2026-09-09), and
 `Xmip.Surface`, the model every .NET surface shares — the operator surface,
-the scope tree, runtime discovery and the English (ADR-0052 clause 1). This
+the scope tree, runtime discovery and the English — in `xmip-core-operate`,
+over its Operate model (ADR-0052 clause 1 and amendment 2026-11-16). This
 repository builds inside the estate, which is where `xgit` builds it.
 
 **No Xmip Rust crate is referenced, and none may be.** ADR-0012 clause 2 makes
@@ -657,14 +660,15 @@ compiles without a single Xmip source file is the test.
   `Xmip.Surface` directly; it does not shell out to this.
 - Not where the scope tree, the discovery rule, the surface precedence, the
   wildcard selection or the English live, nor what a status code means or
-  whether a module conforms. A fix to any of those goes to `Xmip.Surface` or
-  `Xmip.Abi` and reaches every surface at once.
+  whether a module conforms. A fix to any of those goes to `Xmip.Surface`,
+  `Xmip.Operate` or `Xmip.Abi` and reaches every surface at once.
 
 ## Verification
 
 `dotnet build` and `dotnet test` on `src/Xmip.Cli.Test`; the workflow in
-`.github/workflows/verify.yml` does the same with `xmip-core-abi` checked out
-beside this repository. `xmip probe` against a conforming module is the first
+`.github/workflows/verify.yml` does the same with `xmip-core-abi` and
+`xmip-core-operate` checked out where the estate mounts them. `xmip probe`
+against a conforming module is the first
 of the seven conformance rules in section 11 of `doc/specification.md` in
 xmip-core-abi.
 
