@@ -14,8 +14,8 @@
 # publishes, or "remote", a node on another machine followed over gRPC at its
 # operate Address. Stated here and never guessed. With no surface named, a
 # command names no node and says so; validate asks the library the one
-# discovery rule finds — RuntimeLibrary below, else XMIP_RUNTIME_LIBRARY, else
-# the library beside the executable — since it has no node behind it.
+# discovery rule finds — --runtime, else XMIP_RUNTIME_LIBRARY, else the
+# library beside the executable — since it has no node behind it.
 #
 # As shipped, in a developer's clone: the Essentials roll the estate's own
 # walkthrough starts, which names its cluster CL1 only because a roll must be
@@ -28,9 +28,9 @@ Surface = "snapshot"
 # deployment leaves it out or says runtime.
 Purpose = "test"
 
-# The runtime's native library, exporting xmip_operate_v1: what a command
-# calls the runtime through, the gRPC client among it.
-# RuntimeLibrary = "../../../operate/target/debug/xmip_core_operate.dll"
+# The runtime's native library, exporting xmip_operate_v1, is what a command
+# calls the runtime through, the gRPC client among it, and what reads this
+# file, so it is not named here.
 
 # The file to read when Surface = "snapshot". A path with no file behind it
 # is said so — SNAPSHOT — no file at ... — not silently replaced. A relative

@@ -73,7 +73,7 @@ xmip help                 this text
 Which surface a command reads is stated in `cli.toml` beside the
 executable, with the same `[Xmip]` keys as the GUI hosts and the PowerShell
 module — `Surface = "local" | "snapshot" | "remote"`, `Local`, `Address`,
-`RuntimeLibrary`, `Snapshot` — and never guessed (ADR-0052 clause 3). As shipped, in a
+`Snapshot` — and never guessed (ADR-0052 clause 3). As shipped, in a
 developer's clone, it follows the Essentials roll started as cluster CL1 — a
 name the walkthrough picked, and nothing Xmip knows — the same file the
 PowerShell prompt follows, so `xmip show xmip:///CL1` answers while a roll
@@ -81,9 +81,10 @@ runs and says `SNAPSHOT — no file at ...` before one has. Roll under another
 name and `Snapshot` names that file instead. With no surface named, no node
 is named, and a command says so. The runtime library — what every command
 calls the runtime through, its gRPC client among it — is found by the one
-rule every surface uses: `Xmip:RuntimeLibrary` in the document, else the
-`XMIP_RUNTIME_LIBRARY` environment variable, else the library beside the
-executable; `--runtime` names another and chooses no surface. The line wins
+rule every surface uses: `--runtime`, else the `XMIP_RUNTIME_LIBRARY`
+environment variable, else the library beside the executable; it chooses no
+surface, and the document names none, since the runtime reads the document
+(ADR-0052, amendment 2026-11-17). The line wins
 over the document, in one order — `--remote`, then `--local`, then
 `--snapshot` — which is `SurfaceChoice.Stated` in `Xmip.Surface`, the same
 precedence `Get-XmipHealth -Remote -Local -Snapshot` follows in PowerShell.
@@ -131,8 +132,9 @@ about is wrong.
 PowerShell module emits as objects; `validate` renders its
 `ConfigurationVerdict`, `status` the `StatusMeaning` and `abi` the
 `AbiBoundaries` of `Xmip.Abi`, and `probe` says whether a module loaded and
-conforms by `ModuleProbe.Result.Unloadable` and `Complaint` — each the object
-the matching cmdlet emits. A mood is the word `English.Mood` gives it, lower
+conforms by `ModuleProbed.Unloadable` and `Refusal`, the runtime loader's
+own answer (`xmip_module_probe_v1`) — each the object the matching cmdlet
+emits. A mood is the word `English.Mood` gives it, lower
 case, in text and JSON alike, and a row with no health recorded is `nothing
 recorded`; a figure is `English.Figure`'s, and one the runtime has not
 published is a dash, never a zero; `Nothing at`, `Nothing beneath` and

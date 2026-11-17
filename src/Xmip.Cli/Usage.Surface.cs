@@ -18,8 +18,8 @@ public static partial class Usage
         Which of the two, the node's answer decides, never its name.
 
         The runtime is found by one rule, the same for every surface:
-        Xmip:RuntimeLibrary in the configuration, else XMIP_RUNTIME_LIBRARY,
-        else the library beside this executable. A node is operated over gRPC
+        --runtime, else XMIP_RUNTIME_LIBRARY, else the library beside this
+        executable. A node is operated over gRPC
         to its operate listener, on this machine at its local endpoint and on
         another at its operate address, through the runtime's client in that
         library; validate and abi ask the library itself, with no node behind

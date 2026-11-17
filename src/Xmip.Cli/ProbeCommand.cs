@@ -1,4 +1,5 @@
 using Xmip.Abi.Module;
+using Xmip.Operate;
 using Xmip.Surface;
 
 namespace Xmip.Cli;
@@ -6,10 +7,11 @@ namespace Xmip.Cli;
 /// <summary>
 /// <c>xmip probe &lt;library&gt;</c>: load a module through the C ABI and
 /// report what it says it is. The first of the seven conformance rules in
-/// section 11 of the ABI's specification, driven from outside the module. A
-/// module's log lines go to stderr as they arrive. Whether it conforms is
-/// <see cref="ModuleProbe.Result.Complaint"/>'s judgment, and whether it loaded
-/// at all <see cref="ModuleProbe.Result.Unloadable"/>'s, the ones
+/// section 11 of the ABI's specification, driven from outside the module by
+/// the runtime's one loader (<c>xmip_operate.h</c> section 26). A module's
+/// log lines go to stderr. Whether it conforms is
+/// <see cref="ModuleProbed.Refusal"/>'s judgment, and whether it loaded at
+/// all <see cref="ModuleProbed.Unloadable"/>'s, the ones
 /// <c>Get-XmipModuleDescriptor</c> reports too.
 /// </summary>
 public static class ProbeCommand
@@ -23,8 +25,12 @@ public static class ProbeCommand
             return 2;
         }
 
-        ModuleProbe.Result result = ModuleProbe.Probe(
-            Path.GetFullPath(library), line => error.WriteLine($"  {line}"));
+        ModuleProbed result = RuntimeLibrary.Rules.Modules.Probe(Path.GetFullPath(library));
+
+        foreach (string line in result.Log)
+        {
+            error.WriteLine($"  {line}");
+        }
 
         // Whether it loaded at all is the probe's answer too, the one the
         // cmdlet refuses on.
@@ -49,7 +55,7 @@ public static class ProbeCommand
             return 1;
         }
 
-        string complaint = result.Complaint;
+        string complaint = result.Refusal;
 
         if (json)
         {

@@ -35,11 +35,14 @@ public static class CommandAudit
     {
         string beside = AppContext.BaseDirectory;
 
+        // Stated before the document is read: the runtime reads it.
+        string runtime = SurfaceOpen.Runtime(invocation);
+
         return new ProgramAudit(
             Program,
             ProgramAudit.Stated(
                 TomlDocument.Read(Path.Combine(beside, SurfaceOpen.ConfigurationFile)), beside),
-            SurfaceOpen.Runtime(invocation));
+            runtime);
     }
 
     /// <summary>The action a command is recorded as: its word on the line.</summary>
