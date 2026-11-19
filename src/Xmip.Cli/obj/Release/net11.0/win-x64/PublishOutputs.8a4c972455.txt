@@ -1,9 +1,0 @@
-D:\Repos\Xmip\.ai-interaction\aot-probe\xmip_core_runtime.dll
-D:\Repos\Xmip\.ai-interaction\aot-probe\cli.xmip
-D:\Repos\Xmip\.ai-interaction\aot-probe\Xmip.Abi.pdb
-D:\Repos\Xmip\.ai-interaction\aot-probe\Xmip.Abi.xml
-D:\Repos\Xmip\.ai-interaction\aot-probe\Xmip.Surface.pdb
-D:\Repos\Xmip\.ai-interaction\aot-probe\Xmip.Surface.xml
-D:\Repos\Xmip\.ai-interaction\aot-probe\xmip.xml
-D:\Repos\Xmip\.ai-interaction\aot-probe\xmip.exe
-D:\Repos\Xmip\.ai-interaction\aot-probe\xmip.pdb
