@@ -14,13 +14,10 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use operate::surface::OperatorSurface;
+use operate::surface::choice::table::COMMAND_LINE;
 use operate::surface::choice::{self, Chosen, Document};
 
 use crate::invocation::Invocation;
-
-/// The executable's own configuration, beside it: TOML, with an `[Xmip]`
-/// table.
-pub const CONFIGURATION_FILE: &str = "cli.toml";
 
 /// A surface a line opened, released when dropped.
 pub type Surface = Box<dyn OperatorSurface + Send + Sync>;
@@ -33,15 +30,31 @@ pub type Opener<'a> = &'a dyn Fn(&Invocation) -> Result<Surface, String>;
 #[must_use]
 pub fn beside() -> PathBuf {
     std::env::current_exe()
-        .ok()
-        .and_then(|exe| exe.parent().map(Path::to_path_buf))
+        .map(|executable| folder(&executable))
+        .unwrap_or_default()
+}
+
+/// The folder of the program `executable` names, its links followed on
+/// Unix: `/usr/bin/xmip`, the link a package puts on the path, finds the
+/// document beside `/opt/xmip/bin/xmip`. Not on Windows, where a package
+/// puts `bin` itself on the path and the canonical form is verbatim,
+/// `\\?\C:\...`, in which a document's `/` is no separator.
+#[must_use]
+pub fn folder(executable: &Path) -> PathBuf {
+    #[cfg(unix)]
+    let executable =
+        &std::fs::canonicalize(executable).unwrap_or_else(|_| executable.to_path_buf());
+
+    executable
+        .parent()
+        .map(Path::to_path_buf)
         .unwrap_or_default()
 }
 
 /// The executable's document.
 #[must_use]
 pub fn document() -> Document {
-    Document::read(&beside().join(CONFIGURATION_FILE))
+    Document::read(&beside().join(COMMAND_LINE))
 }
 
 /// The surface `invocation` reads, where it answers; else why not.
@@ -53,12 +66,7 @@ pub fn document() -> Document {
 pub fn open(invocation: &Invocation) -> Result<Surface, String> {
     let clock: Arc<dyn xcore::Clock> = Arc::new(xcore::SystemClock);
 
-    choice::answering(
-        &invocation.line(),
-        &beside().join(CONFIGURATION_FILE),
-        &clock,
-    )
-    .map(boxed)
+    choice::answering(&invocation.line(), &beside().join(COMMAND_LINE), &clock).map(boxed)
 }
 
 /// A chosen surface, boxed.

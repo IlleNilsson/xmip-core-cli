@@ -21,7 +21,9 @@
 # As shipped, in a developer's clone: the Essentials roll the estate's own
 # walkthrough starts, which names its cluster CL1 only because a roll must be
 # given some name — the same file the PowerShell prompt follows. Roll under
-# another name and name that file below. A deployment writes its own.
+# another name and name that file below. A package never carries this file:
+# xmip-service --install writes its own beside the programs, where there is
+# none, stating the node it installed, Surface = "local" at its Local.
 Surface = "snapshot"
 
 # What this process is for, said in its declaration (ADR-0053): "test" or

@@ -81,7 +81,14 @@ name and `Snapshot` names that file instead. With no surface named, no node
 is named, and a command says so. The document is read by configure's one
 reader (ADR-0031, amendment 2026-11-17), and the build copies `cli.toml` from
 this repository beside the executable it makes, `target/<profile>`, where it
-is newer than the one there. The runtime is linked, not found: no library is
+is newer than the one there. An installed `xmip` finds the one
+`xmip-service --install` wrote beside the programs where there was none —
+`Surface = "local"` at the installed node's local endpoint, and no
+`AuditDirectory` — in the words this executable reads it by
+(`operate::surface::choice::table`), and kept, as the node's configuration
+is, when Xmip is removed; a link on the path, `/usr/bin/xmip`, finds the
+document beside the program it names, `/opt/xmip/bin` (`surface_open::folder`,
+which follows links on Unix). The runtime is linked, not found: no library is
 loaded and no option names one. The line wins
 over the document, in one order — `--remote`, then `--local`, then
 `--snapshot` — which is `operate::surface::choice::stated`, the same
