@@ -1,0 +1,9 @@
+D:\Repos\Xmip\.ai-interaction\cli-aot\xmip_core_runtime.dll
+D:\Repos\Xmip\.ai-interaction\cli-aot\cli.xmip
+D:\Repos\Xmip\.ai-interaction\cli-aot\Xmip.Abi.pdb
+D:\Repos\Xmip\.ai-interaction\cli-aot\Xmip.Abi.xml
+D:\Repos\Xmip\.ai-interaction\cli-aot\Xmip.Surface.pdb
+D:\Repos\Xmip\.ai-interaction\cli-aot\Xmip.Surface.xml
+D:\Repos\Xmip\.ai-interaction\cli-aot\xmip.xml
+D:\Repos\Xmip\.ai-interaction\cli-aot\xmip.exe
+D:\Repos\Xmip\.ai-interaction\cli-aot\xmip.pdb

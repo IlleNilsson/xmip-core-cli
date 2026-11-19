@@ -1,0 +1,471 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Xmip.Cli.Test</name>
+    </assembly>
+    <members>
+        <member name="T:Xmip.Cli.Test.AbiCommandTests">
+            <summary>
+            <c>xmip abi</c> reports both boundaries from the binding's constants, so
+            what it prints and what the binding speaks cannot differ.
+            </summary>
+        </member>
+        <member name="T:Xmip.Cli.Test.AuditCommandTests">
+            <summary>
+            <c>xmip audit</c> (ADR-0062, amendment 2026-09-29): the line becomes
+            the query in the capability's words, and what the capability read back
+            from a directory the test wrote through <see cref="T:Xmip.Surface.ProgramAudit"/> is
+            rendered — or its refusal said, in its words.
+            </summary>
+        </member>
+        <member name="T:Xmip.Cli.Test.CertificateCommandTests">
+            <summary>
+            <c>xmip certificate</c> (ADR-0034, amendment 2026-10-15): the line
+            read — one act, its options on no other command — and the act answered
+            through the runtime this estate built: a key and a request made into a
+            folder, the request signed by an authority a node configuration names,
+            the chain on stdout or in a file, and a refusal in the runtime's words.
+            </summary>
+        </member>
+        <member name="T:Xmip.Cli.Test.CommandAuditTests">
+            <summary>
+            What <c>xmip</c> records of itself (ADR-0062), through the audit
+            capability in the runtime's library: a command, its end, a failure, a
+            line that could not be obeyed — and that the executable itself does so.
+            </summary>
+        </member>
+        <member name="T:Xmip.Cli.Test.DatabaseCommandTests">
+            <summary>
+            <c>xmip database</c> (open problem 41; ADR-0015, amendment
+            2026-10-20): the line read — a server, <c>--from</c> required, versions as
+            whole numbers, <c>--out</c> shared with <c>certificate</c> and the act's
+            other options on no other command — and the act answered through the
+            runtime this estate built. Until the first release the schema is version
+            1, so the runtime refuses every upgrade in its words; what an upgrade
+            writes is <c>xmip-core-persist</c>'s and tested there.
+            </summary>
+        </member>
+        <member name="T:Xmip.Cli.Test.DeadMessageCommandTests">
+            <summary>
+            <c>xmip dead-messages</c> (ADR-0052, amendment 2026-10-01): one
+            command for the noun, the act an option on it. The line becomes the one
+            query every surface asks; what a snapshot of the test cluster lists is
+            rendered, drilled and sorted; one Message named is opened with its gate
+            verdicts, promoted properties and declines; a Replay names one Message or
+            is refused before any node is asked; a snapshot declines it, never acted
+            on; and no other noun's act is a Message's.
+            </summary>
+        </member>
+        <member name="T:Xmip.Cli.Test.EventSubscriptionCommandTests">
+            <summary>
+            <c>xmip event-subscriptions</c> (ADR-0065, amendment 2026-09-29): one
+            command for the noun, the act an option on it. The line becomes the one
+            query every surface asks; what a snapshot of the test cluster lists is
+            rendered; an act names one Event subscription or is refused before any
+            node is asked; and a snapshot declines it, never acted on.
+            </summary>
+        </member>
+        <member name="T:Xmip.Cli.Test.FakeSurface">
+            <summary>
+            An <see cref="T:Xmip.Surface.IOperatorSurface"/> that answers from a list the test wrote,
+            filtered and ordered the way every real surface answers, and counts how
+            often it was asked. Not a sample surface: it invents nothing a test did
+            not put there.
+            </summary>
+        </member>
+        <member name="M:Xmip.Cli.Test.FakeSurface.#ctor(System.Collections.Generic.IReadOnlyList{Xmip.Operate.HealthRecord})">
+            <summary>
+            An <see cref="T:Xmip.Surface.IOperatorSurface"/> that answers from a list the test wrote,
+            filtered and ordered the way every real surface answers, and counts how
+            often it was asked. Not a sample surface: it invents nothing a test did
+            not put there.
+            </summary>
+        </member>
+        <member name="F:Xmip.Cli.Test.FakeSurface.Seen">
+            <summary>A fixed instant, so a rendering is the same text every run.</summary>
+        </member>
+        <member name="P:Xmip.Cli.Test.FakeSurface.Records">
+            <summary>The records the next <see cref="M:Xmip.Cli.Test.FakeSurface.Health(System.String)"/> answers from.</summary>
+        </member>
+        <member name="P:Xmip.Cli.Test.FakeSurface.Measurements">
+            <summary>Measurements returned by kind; absent means unpublished.</summary>
+        </member>
+        <member name="P:Xmip.Cli.Test.FakeSurface.Reads">
+            <summary>How many times <see cref="M:Xmip.Cli.Test.FakeSurface.Health(System.String)"/> was asked.</summary>
+        </member>
+        <member name="P:Xmip.Cli.Test.FakeSurface.OnRead">
+            <summary>Called after each read, for a test to change the records or
+            stop a follow.</summary>
+        </member>
+        <member name="P:Xmip.Cli.Test.FakeSurface.Started">
+            <summary>What the run behind this surface was started with. None
+            unless a test says one, as a surface with no run says nothing.</summary>
+        </member>
+        <member name="P:Xmip.Cli.Test.FakeSurface.Failed">
+            <summary>What <see cref="M:Xmip.Cli.Test.FakeSurface.FailedMessages(System.String,System.UInt64,System.UInt32)"/> answers: no answer unless a
+            test says one, as a surface that cannot list them says.</summary>
+        </member>
+        <member name="P:Xmip.Cli.Test.FakeSurface.Listed">
+            <summary>What <see cref="M:Xmip.Cli.Test.FakeSurface.Subscriptions"/> answers: none unless a test
+            says some.</summary>
+        </member>
+        <member name="P:Xmip.Cli.Test.FakeSurface.Acted">
+            <summary>What an act on a Subscription came to, and what its node
+            said: refused unless a test says otherwise.</summary>
+        </member>
+        <member name="P:Xmip.Cli.Test.FakeSurface.Source">
+            <inheritdoc />
+        </member>
+        <member name="M:Xmip.Cli.Test.FakeSurface.Subscriptions">
+            <inheritdoc />
+        </member>
+        <member name="M:Xmip.Cli.Test.FakeSurface.Act(Xmip.Operate.SubscriptionRecord,Xmip.Surface.SubscriptionAct,System.String,Xmip.Operate.HeldCaller)">
+            <inheritdoc />
+        </member>
+        <member name="M:Xmip.Cli.Test.FakeSurface.FailedMessages(System.String,System.UInt64,System.UInt32)">
+            <inheritdoc />
+        </member>
+        <member name="M:Xmip.Cli.Test.FakeSurface.Health(System.String)">
+            <inheritdoc />
+        </member>
+        <member name="M:Xmip.Cli.Test.FakeSurface.WatchAsync(System.Threading.CancellationToken)">
+            <inheritdoc />
+        </member>
+        <member name="M:Xmip.Cli.Test.FakeSurface.Run">
+            <inheritdoc />
+        </member>
+        <member name="M:Xmip.Cli.Test.FakeSurface.Measure(System.String,Xmip.Abi.Operate.Counted)">
+            <inheritdoc />
+        </member>
+        <member name="M:Xmip.Cli.Test.FakeSurface.PauseScope(System.String,System.String,Xmip.Operate.HeldCaller)">
+            <inheritdoc />
+        </member>
+        <member name="M:Xmip.Cli.Test.FakeSurface.ResumeScope(System.String,Xmip.Operate.HeldCaller)">
+            <inheritdoc />
+        </member>
+        <member name="M:Xmip.Cli.Test.FakeSurface.Control(System.String,Xmip.Surface.ScopeAction,System.String,Xmip.Operate.HeldCaller)">
+            <inheritdoc />
+        </member>
+        <member name="M:Xmip.Cli.Test.FakeSurface.Leaf(System.String,Xmip.Abi.Operate.HealthState,System.Byte,System.String)">
+            <summary>One leaf at <paramref name="scope"/>.</summary>
+        </member>
+        <member name="T:Xmip.Cli.Test.FromToCommandTests">
+            <summary>
+            From and to on every observation the command line says (the owner,
+            2026-11-10; ADR-0052, amendment 2026-11-11): <c>xmip health</c> and
+            <c>xmip list</c> say where the work at each scope came from and went, in
+            the runtime's words, in text and in a document; <c>xmip subscriptions</c>
+            the Send Ports each Subscription reaches.
+            </summary>
+        </member>
+        <member name="T:Xmip.Cli.Test.GatheredClusterTests">
+            <summary>
+            <c>--local</c> at a node that gathers its cluster's view — a node
+            declaring the monitoring role — answers for the whole cluster, and
+            <c>health</c> says so after where the node is reached, in the node's own
+            words; at a node that gathers none it answers for that node (the design
+            approved 2026-11-12, section 3.5). Which of the two is the node's answer,
+            never its name: both are served under random names.
+            </summary>
+        </member>
+        <member name="T:Xmip.Cli.Test.HealthCommandTests">
+            <summary>
+            <c>xmip health</c> over a fake surface: worst first, Holding says why
+            beside the word, one document with <c>--json</c>, and JSON Lines only
+            when something changed with <c>--follow</c>.
+            </summary>
+        </member>
+        <member name="M:Xmip.Cli.Test.HealthCommandTests.HealthSaysWhatTheRunWasStartedWithWhereASurfaceSaysOne">
+            <summary>
+            The run reaches the command line too (ADR-0014, amendment 2026-09-19):
+            the same line the GUI puts at the top of every view, naming each node
+            with what it declared it can do (ADR-0056). A surface with no run says
+            nothing of one, in text and in JSON alike.
+            </summary>
+        </member>
+        <member name="T:Xmip.Cli.Test.InvocationTests">
+            <summary>
+            <see cref="M:Xmip.Cli.Invocation.Parse(System.Collections.Generic.IReadOnlyList{System.String},System.String@)"/>: the first bare word is the command, the
+            second its argument, and the options sit anywhere. A line that cannot be
+            obeyed answers null with the reason, never a guess.
+            </summary>
+        </member>
+        <member name="T:Xmip.Cli.Test.McpServerTest">
+            <summary>
+            <c>xmip mcp</c> (ADR-0071), one scripted session over in-memory
+            streams against the test cluster's names: initialize, the lists, a read of
+            an Xmip URI as an operator drills, a tool that is a read command, an act
+            refused, and what is not a method or not JSON answered with JSON-RPC's
+            error. The output carries protocol messages and nothing else.
+            </summary>
+        </member>
+        <member name="T:Xmip.Cli.Test.MessageCommandTests">
+            <summary>
+            <c>xmip message</c> (runtime-model.md section 13; ADR-0013): the
+            Messages that failed listed where no Journey is named, and Retry or
+            Dismiss on one, the act an option and required, the Journey the argument
+            and its node <c>--location</c> — the node, or the Send Port's scope. A
+            line without a node is refused before any node is asked; a snapshot
+            declines an act, never acted on; and no other noun
+            takes a failed Message's act, nor a failed Message another noun's.
+            </summary>
+        </member>
+        <member name="T:Xmip.Cli.Test.ProbeCommandTests">
+            <summary>
+            <c>xmip probe</c> refuses a path that names nothing before touching the
+            loader, and says which path. Probing a real module is the binding's test;
+            this project loads no native library.
+            </summary>
+        </member>
+        <member name="T:Xmip.Cli.Test.ReportCommandTests">
+            <summary>
+            <c>xmip report</c> (ADR-0072, amendment 2026-11-10): the line read — the
+            Report's name, <c>--configuration</c>, <c>--parameter</c> and
+            <c>--row</c> its own, <c>--node</c> shared with <c>certificate</c> — and
+            every Report listed, one shown and one probed through the runtime this
+            estate built. Which Reports there are and what a probe finds are
+            <c>xmip-core-report</c>'s and tested there; an entry is found here by what
+            it holds, never by its name.
+            </summary>
+        </member>
+        <member name="M:Xmip.Cli.Test.ScopeCommandTests.ARowThatIsNotFineNamesTheLeafToDrillTo">
+            <summary>
+            A row that is not fine says which leaf explains it, so the next scope to
+            type is on the screen. Until 2026-09-26 <c>list</c> said "holding" and
+            nothing else, and <c>show</c> said the evidence and never whose it was.
+            </summary>
+        </member>
+        <member name="M:Xmip.Cli.Test.ScopeCommandTests.ANodesRowSaysWhatTheNodeIsFor">
+            <summary>
+            A node's row says what the node is for, a role a line beneath it, from
+            what it published (the owner, 2026-11-12: <i>what are nodes purpose</i>),
+            and in <c>--json</c> as its <c>purpose</c>; a row that is not a node's
+            has none.
+            </summary>
+        </member>
+        <member name="T:Xmip.Cli.Test.SecretCommandTests">
+            <summary>
+            <c>xmip secret</c> (ADR-0019, amendment 2026-10-29): listing with no
+            name, <c>--set</c> on the secret the argument names with its
+            <c>--kind</c> and the value from <c>--file</c> or standard input — never
+            the command line — and no other noun takes <c>--set</c>, nor a secret
+            another noun's act. A surface that reaches no node refuses both, in
+            words.
+            </summary>
+        </member>
+        <member name="T:Xmip.Cli.Test.StatusCommandTests">
+            <summary>
+            <c>xmip status</c> says what the binding says, once as text and once as a
+            document, and exits 1 for a code the header does not define.
+            </summary>
+        </member>
+        <member name="T:Xmip.Cli.Test.SubscriptionCommandTests">
+            <summary>
+            <c>xmip subscriptions</c> (ADR-0013, amendment 2026-09-30): one
+            command for the noun, the act an option on it. The line becomes the one
+            query every surface asks; what a snapshot of the test cluster lists is
+            rendered, drilled and sorted; an act names one Subscription or is refused
+            before any node is asked; a snapshot declines it, never acted on; and
+            remove is refused in words, because a Subscription is configuration.
+            </summary>
+        </member>
+        <member name="T:Xmip.Cli.Test.SurfaceOpenTests">
+            <summary>
+            What the line states about the surface to read. The precedence over it —
+            <c>--remote</c>, then <c>--snapshot</c>, then <c>--runtime</c>, then the
+            document, then the runtime rule — is <see cref="M:Xmip.Surface.SurfaceChoice.Stated(Xmip.Surface.SurfaceLine,Microsoft.Extensions.Configuration.IConfiguration,System.String,System.String)"/>'s,
+            shared with the PowerShell module and held in <c>Xmip.Surface.Test</c>
+            since 2026-09-24. What is the executable's own is how its options become
+            that statement, and where its document lies.
+            </summary>
+        </member>
+        <member name="T:Xmip.Cli.Test.UsageTest">
+            <summary>
+            The text behind <c>xmip help</c> (<see cref="T:Xmip.Cli.Usage"/>) reads as one
+            table: every command's description, and every line that goes on with
+            it, starts at the column the first command's does.
+            </summary>
+        </member>
+        <member name="M:Xmip.Cli.Test.UsageTest.CommandLine">
+            <remarks>
+            Pattern:<br/>
+            <code>^\s*(?&lt;command&gt;xmip(?: \S+)*)(?&lt;gap&gt;\s{2,}(?=\S))?</code><br/>
+            Explanation:<br/>
+            <code>
+            ○ Match if at the beginning of the string.<br/>
+            ○ Match a whitespace character atomically any number of times.<br/>
+            ○ "command" capture group.<br/>
+                ○ Match the string "xmip".<br/>
+                ○ Loop greedily any number of times.<br/>
+                    ○ Match ' '.<br/>
+                    ○ Match any character other than a whitespace character greedily at least once.<br/>
+            ○ Optional (greedy).<br/>
+                ○ "gap" capture group.<br/>
+                    ○ Match a whitespace character atomically at least twice.<br/>
+                    ○ Zero-width positive lookahead.<br/>
+                        ○ Match any character other than a whitespace character.<br/>
+            </code>
+            </remarks>
+        </member>
+        <member name="T:Xmip.Cli.Test.ValidateCommandTests">
+            <summary>
+            <c>xmip validate</c> over a verdict the test wrote: the shared sentence for
+            a person, the record for a program, and exit 1 for a document the runtime
+            refused — decided from the record, never from the sentence.
+            </summary>
+        </member>
+        <member name="T:Xmip.Cli.Test.WildcardCommandTest">
+            <summary>
+            What each command does with a wildcard. What an argument selects is
+            <see cref="T:Xmip.Surface.ScopeSelection"/>'s, shared with the cmdlets and held in
+            <c>Xmip.Surface.Test</c> (ADR-0059 clause 7; ADR-0052 clause 1); what a
+            command says over several scopes, and the refusal as a document, is the
+            executable's own and held here.
+            </summary>
+        </member>
+        <member name="M:Xmip.Cli.Test.WildcardCommandTest.TheRefusalIsADocumentWhenAProgramIsAsking">
+            <summary>With <c>--json</c> the refusal is a document too, because a
+            program that is promised structure must not be handed prose.</summary>
+        </member>
+        <member name="M:Xmip.Cli.Test.WildcardCommandTest.PauseOverAPatternActsOnEachAndSaysSoWhenOneWasNotApplied">
+            <summary>
+            A pattern adds no reach: one act already reaches everything beneath the
+            scope it names (ADR-0027). What it adds is several subtrees at once, and
+            the exit says whether every one of them was applied.
+            </summary>
+        </member>
+        <member name="M:Xmip.Cli.Test.WildcardCommandTest.TheUsageSaysThatAScopeMayBeAWildcard">
+            <summary>The help says the rule, because a convention nobody is told
+            about is a convention nobody uses.</summary>
+        </member>
+        <member name="T:Xmip.Surface.Test.TestCluster">
+            <summary>
+            The test cluster, the one place a .NET test takes a cluster's or a node's
+            name from (the owner, 2026-10-03: names in code and tests are parameters
+            and configuration, never literals; ADR-0056, amendment 2026-10-03). It
+            reads what the Rust tests read through <c>configure::fixture</c>: the
+            file <see cref="F:Xmip.Surface.Test.TestCluster.Variable"/> names, else the estate's
+            <see cref="F:Xmip.Surface.Test.TestCluster.EstateFile"/>. One file, compiled into every .NET test project
+            that names a cluster or a node (each links it), so there is one reader.
+            </summary>
+        </member>
+        <member name="F:Xmip.Surface.Test.TestCluster.Variable">
+            <summary>The variable naming the test cluster's file.</summary>
+        </member>
+        <member name="F:Xmip.Surface.Test.TestCluster.EstateFile">
+            <summary>Where the estate keeps its test cluster's file, from the
+            estate's root.</summary>
+        </member>
+        <member name="F:Xmip.Surface.Test.TestCluster.OtherFile">
+            <summary>Where the estate keeps its second test cluster's file, the
+            cluster a test of two takes beside the test cluster, as
+            <c>configure::fixture::other_cluster</c> reads it.</summary>
+        </member>
+        <member name="P:Xmip.Surface.Test.TestCluster.Path">
+            <summary>Where it was read from.</summary>
+        </member>
+        <member name="P:Xmip.Surface.Test.TestCluster.Name">
+            <summary>Its <c>[service] cluster_name</c>.</summary>
+        </member>
+        <member name="P:Xmip.Surface.Test.TestCluster.Nodes">
+            <summary>Its nodes' names, in ordinal order.</summary>
+        </member>
+        <member name="P:Xmip.Surface.Test.TestCluster.Roles">
+            <summary>What each node declares, its <c>roles</c>, in the order of
+            <see cref="P:Xmip.Surface.Test.TestCluster.Nodes"/>.</summary>
+        </member>
+        <member name="P:Xmip.Surface.Test.TestCluster.Scope">
+            <summary>The cluster's scope.</summary>
+        </member>
+        <member name="M:Xmip.Surface.Test.TestCluster.NodeScope(System.Int32)">
+            <summary>The scope of the node at <paramref name="place"/>.</summary>
+        </member>
+        <member name="M:Xmip.Surface.Test.TestCluster.WithRole(System.String)">
+            <summary>The first node, in <see cref="P:Xmip.Surface.Test.TestCluster.Nodes"/>' order, that declares
+            <paramref name="role"/>: a test finds a node by what it declares.</summary>
+            <exception cref="T:System.InvalidOperationException">No node declares it.</exception>
+        </member>
+        <member name="M:Xmip.Surface.Test.TestCluster.Read">
+            <summary>The test cluster: the file <see cref="F:Xmip.Surface.Test.TestCluster.Variable"/> names, else
+            the estate's.</summary>
+            <exception cref="T:System.InvalidOperationException">Neither is there, or it
+            names no cluster or no node: a test cannot run without it.</exception>
+        </member>
+        <member name="M:Xmip.Surface.Test.TestCluster.ReadOther">
+            <summary>The second test cluster, the estate's <see cref="F:Xmip.Surface.Test.TestCluster.OtherFile"/>.</summary>
+            <exception cref="T:System.InvalidOperationException">As <see cref="M:Xmip.Surface.Test.TestCluster.Read"/>, and
+            where it names the cluster <see cref="M:Xmip.Surface.Test.TestCluster.Read"/> does.</exception>
+        </member>
+        <member name="T:Xmip.Surface.Test.TestEndpoint">
+            <summary>
+            A local endpoint's name no other test or run uses: the one place a .NET
+            test takes one from. One file, compiled into every .NET test project that
+            names an endpoint (each links it), so there is one rule.
+            </summary>
+            <remarks>
+            On Linux and macOS the runtime places the endpoint called a name at
+            <c>&lt;folder&gt;&lt;name&gt;/&lt;name&gt;.sock</c>, the name twice, and
+            refuses a socket's path longer than a Unix domain socket holds: 107 bytes
+            on Linux, 103 on macOS (ADR-0014, amendment 2026-11-15). A test's own name
+            and a GUID's 32 digits did not fit under <c>$XDG_RUNTIME_DIR/xmip</c>.
+            Unique to a run by this process's identifier and a count, as the runtime's
+            own tests name theirs (<c>tests/plane/endpoint.rs</c>); a socket a run
+            that ended left behind is replaced by the runtime as it binds.
+            </remarks>
+        </member>
+        <member name="M:Xmip.Surface.Test.TestEndpoint.Named(System.String)">
+            <summary>The name of an endpoint for <paramref name="what"/>, unique to
+            this run: <c>xmip-&lt;what&gt;-&lt;process&gt;-&lt;n&gt;</c>.</summary>
+        </member>
+        <member name="T:System.Text.RegularExpressions.Generated.CommandLine_0">
+            <summary>Custom <see cref="T:System.Text.RegularExpressions.Regex"/>-derived type for the CommandLine method.</summary>
+        </member>
+        <member name="F:System.Text.RegularExpressions.Generated.CommandLine_0.Instance">
+            <summary>Cached, thread-safe singleton instance.</summary>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.CommandLine_0.#ctor">
+            <summary>Initializes the instance.</summary>
+        </member>
+        <member name="T:System.Text.RegularExpressions.Generated.CommandLine_0.RunnerFactory">
+            <summary>Provides a factory for creating <see cref="T:System.Text.RegularExpressions.RegexRunner"/> instances to be used by methods on <see cref="T:System.Text.RegularExpressions.Regex"/>.</summary>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.CommandLine_0.RunnerFactory.CreateInstance">
+            <summary>Creates an instance of a <see cref="T:System.Text.RegularExpressions.RegexRunner"/> used by methods on <see cref="T:System.Text.RegularExpressions.Regex"/>.</summary>
+        </member>
+        <member name="T:System.Text.RegularExpressions.Generated.CommandLine_0.RunnerFactory.Runner">
+            <summary>Provides the runner that contains the custom logic implementing the specified regular expression.</summary>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.CommandLine_0.RunnerFactory.Runner.Scan(System.ReadOnlySpan{System.Char})">
+            <summary>Scan the <paramref name="inputSpan"/> starting from base.runtextstart for the next match.</summary>
+            <param name="inputSpan">The text being scanned by the regular expression.</param>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.CommandLine_0.RunnerFactory.Runner.TryFindNextPossibleStartingPosition(System.ReadOnlySpan{System.Char})">
+            <summary>Search <paramref name="inputSpan"/> starting from base.runtextpos for the next location a match could possibly start.</summary>
+            <param name="inputSpan">The text being scanned by the regular expression.</param>
+            <returns>true if a possible match was found; false if no more matches are possible.</returns>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.CommandLine_0.RunnerFactory.Runner.TryMatchAtCurrentPosition(System.ReadOnlySpan{System.Char})">
+            <summary>Determine whether <paramref name="inputSpan"/> at base.runtextpos is a match for the regular expression.</summary>
+            <param name="inputSpan">The text being scanned by the regular expression.</param>
+            <returns>true if the regular expression matches at the current position; otherwise, false.</returns>
+        </member>
+        <member name="T:System.Text.RegularExpressions.Generated.Utilities">
+            <summary>Helper methods used by generated <see cref="T:System.Text.RegularExpressions.Regex"/>-derived implementations.</summary>
+        </member>
+        <member name="F:System.Text.RegularExpressions.Generated.Utilities.s_defaultTimeout">
+            <summary>Default timeout value set in <see cref="T:System.AppContext"/>, or <see cref="F:System.Text.RegularExpressions.Regex.InfiniteMatchTimeout"/> if none was set.</summary>
+        </member>
+        <member name="F:System.Text.RegularExpressions.Generated.Utilities.s_hasTimeout">
+            <summary>Whether <see cref="F:System.Text.RegularExpressions.Generated.Utilities.s_defaultTimeout"/> is non-infinite.</summary>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.Utilities.StackPop(System.Int32[],System.Int32@,System.Int32@,System.Int32@)">
+            <summary>Pops 2 values from the backtracking stack.</summary>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.Utilities.StackPush(System.Int32[]@,System.Int32@,System.Int32,System.Int32)">
+            <summary>Pushes 2 values onto the backtracking stack.</summary>
+        </member>
+        <member name="M:System.Text.RegularExpressions.Generated.Utilities.StackPush(System.Int32[]@,System.Int32@,System.Int32,System.Int32,System.Int32)">
+            <summary>Pushes 3 values onto the backtracking stack.</summary>
+        </member>
+    </members>
+</doc>

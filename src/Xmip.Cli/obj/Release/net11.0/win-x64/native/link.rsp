@@ -1,0 +1,49 @@
+﻿"obj\Release\net11.0\win-x64\native\xmip.obj"
+/OUT:"bin\Release\net11.0\win-x64\native\xmip.exe"
+/DEF:"obj\Release\net11.0\win-x64\native\xmip.def"
+/LIBPATH:"C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Tools\MSVC\14.51.36231\lib\x64"
+/LIBPATH:"C:\Program Files (x86)\Windows Kits\10\lib\10.0.26100.0\ucrt\x64"
+/LIBPATH:"C:\Program Files (x86)\Windows Kits\10\\lib\10.0.26100.0\\um\x64"
+/SOURCELINK:"obj\Release\net11.0\win-x64\native\xmip.sourcelink"
+"D:\DevCache\nuget\microsoft.netcore.app.runtime.nativeaot.win-x64\11.0.0-rc.3.26522.148/runtimes/win-x64/\native\bootstrapper.obj"
+"D:\DevCache\nuget\microsoft.netcore.app.runtime.nativeaot.win-x64\11.0.0-rc.3.26522.148/runtimes/win-x64/\native\Runtime.WorkstationGC.lib"
+"D:\DevCache\nuget\microsoft.netcore.app.runtime.nativeaot.win-x64\11.0.0-rc.3.26522.148/runtimes/win-x64/\native\eventpipe-disabled.lib"
+"D:\DevCache\nuget\microsoft.netcore.app.runtime.nativeaot.win-x64\11.0.0-rc.3.26522.148/runtimes/win-x64/\native\Runtime.VxsortDisabled.lib"
+"D:\DevCache\nuget\microsoft.netcore.app.runtime.nativeaot.win-x64\11.0.0-rc.3.26522.148/runtimes/win-x64/\native\standalonegc-disabled.lib"
+"D:\DevCache\nuget\microsoft.netcore.app.runtime.nativeaot.win-x64\11.0.0-rc.3.26522.148/runtimes/win-x64/\native\aotminipal.lib"
+"D:\DevCache\nuget\microsoft.netcore.app.runtime.nativeaot.win-x64\11.0.0-rc.3.26522.148/runtimes/win-x64/\native\zlibstatic.lib"
+"D:\DevCache\nuget\microsoft.netcore.app.runtime.nativeaot.win-x64\11.0.0-rc.3.26522.148/runtimes/win-x64/\native\brotlicommon.lib"
+"D:\DevCache\nuget\microsoft.netcore.app.runtime.nativeaot.win-x64\11.0.0-rc.3.26522.148/runtimes/win-x64/\native\brotlienc.lib"
+"D:\DevCache\nuget\microsoft.netcore.app.runtime.nativeaot.win-x64\11.0.0-rc.3.26522.148/runtimes/win-x64/\native\brotlidec.lib"
+"D:\DevCache\nuget\microsoft.netcore.app.runtime.nativeaot.win-x64\11.0.0-rc.3.26522.148/runtimes/win-x64/\native\zstd_static.lib"
+"D:\DevCache\nuget\microsoft.netcore.app.runtime.nativeaot.win-x64\11.0.0-rc.3.26522.148/runtimes/win-x64/\native\System.Globalization.Native.Aot.lib"
+"D:\DevCache\nuget\microsoft.netcore.app.runtime.nativeaot.win-x64\11.0.0-rc.3.26522.148/runtimes/win-x64/\native\System.IO.Compression.Native.Aot.lib"
+"advapi32.lib"
+"bcrypt.lib"
+"crypt32.lib"
+"iphlpapi.lib"
+"kernel32.lib"
+"mswsock.lib"
+"ncrypt.lib"
+"normaliz.lib"
+"ntdll.lib"
+"ole32.lib"
+"oleaut32.lib"
+"secur32.lib"
+"Synchronization.lib"
+"user32.lib"
+"version.lib"
+"ws2_32.lib"
+/NOLOGO /MANIFEST:NO
+/MERGE:.managedcode=.text /MERGE:hydrated=.bss
+/DEBUG
+/INCREMENTAL:NO
+/SUBSYSTEM:CONSOLE
+/ENTRY:wmainCRTStartup /NOEXP /NOIMPLIB /STACK:1572864
+/NATVIS:"D:\DevCache\nuget\microsoft.dotnet.ilcompiler\11.0.0-rc.3.26522.148\build\NativeAOT.natvis"
+/IGNORE:4104
+/CETCOMPAT
+/NODEFAULTLIB:libucrt.lib
+/DEFAULTLIB:ucrt.lib
+/OPT:REF
+/OPT:ICF

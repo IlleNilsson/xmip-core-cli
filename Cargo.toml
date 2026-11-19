@@ -1,0 +1,91 @@
+# Its own workspace root, so this repository builds on its own.
+[workspace]
+
+[package]
+name = "xmip-core-cli"
+version = "0.1.0"
+edition = "2024"
+license = "AGPL-3.0-or-later"
+repository = "https://github.com/IlleNilsson/xmip-core-cli"
+description = "The xmip command line over a running Xmip, in Rust and needing no .NET: text for a person, --json for a program, --follow as JSON Lines, every command audited, and xmip mcp, a Model Context Protocol server on stdin and stdout, over xmip-core-operate's surface and the runtime's crates."
+publish = false
+# Copies cli.toml beside the executable and links the Xmip mark into it as
+# its Windows icon.
+build = "build.rs"
+
+[lib]
+path = "src/lib.rs"
+
+# The command a person types: the owner, 2026-10-22, "Xmip CLI should be
+# named just xmip" (ADR-0014, amendment 2026-10-22).
+[[bin]]
+name = "xmip"
+path = "src/main.rs"
+
+[dependencies]
+# Rust to Rust, through traits (ADR-0014, amendment 2026-10-12): the
+# surface every command reads (`operate::surface`) — a published snapshot,
+# or a node's operate listener here or on another machine — and the
+# runtime's rules it is composed of.
+operate = { package = "xmip-core-operate", git = "https://github.com/IlleNilsson/xmip-core-operate", branch = "main" }
+runtime = { package = "xmip-core-runtime", git = "https://github.com/IlleNilsson/xmip-core-runtime", branch = "main" }
+observe = { package = "xmip-core-observe", git = "https://github.com/IlleNilsson/xmip-core-observe", branch = "main" }
+node = { package = "xmip-core-node", git = "https://github.com/IlleNilsson/xmip-core-node", branch = "main" }
+# The two boundaries this build speaks and what a status code means
+# (`xmip abi`, `xmip status`).
+abi = { package = "xmip-core-abi", git = "https://github.com/IlleNilsson/xmip-core-abi", branch = "main" }
+# The Clock, an audit record's phase and severity.
+xcore = { package = "xmip-core", git = "https://github.com/IlleNilsson/xmip-core", branch = "main" }
+# Every invocation audited through the one audit capability (ADR-0062),
+# handed the file sink and the operating system's log of its platform for
+# when the records cannot persist. Each log's crate is empty off its own
+# platform, so both are linked and each builds where it works.
+xaudit = { package = "xmip-core-audit", git = "https://github.com/IlleNilsson/xmip-core-audit", branch = "main" }
+audit-file = { package = "xmip-core-audit-file", git = "https://github.com/IlleNilsson/xmip-core-audit-file", branch = "main" }
+audit-syslog = { package = "xmip-core-audit-syslog", git = "https://github.com/IlleNilsson/xmip-core-audit-syslog", branch = "main" }
+audit-windows-event-log = { package = "xmip-core-audit-windows-event-log", git = "https://github.com/IlleNilsson/xmip-core-audit-windows-event-log", branch = "main" }
+# JSON-RPC 2.0 and its framing one message a line, which `xmip mcp` speaks
+# (`net::rpc`).
+net = { package = "xmip-core-library-net", git = "https://github.com/IlleNilsson/xmip-core-library-net", branch = "main", features = ["rpc"] }
+# A document for a program, written by hand with the escaping the command
+# line always wrote (`json`); a request read and an MCP message's id.
+serde_json = "1"
+# A moment as a date and a time of day (`codec::civil`), for the times a
+# document and a line say.
+codec = { package = "xmip-core-library-codec", git = "https://github.com/IlleNilsson/xmip-core-library-codec", branch = "main" }
+# A person's key and request made, and a node's key and certificate issued
+# by the cluster's authority (`xmip certificate`; ADR-0034, amendment
+# 2026-10-15).
+provision = { package = "xmip-core-provision", git = "https://github.com/IlleNilsson/xmip-core-provision", branch = "main" }
+
+[dev-dependencies]
+# A certificate's leaf read back, which a certificate test holds to its
+# subject.
+tls = { package = "xmip-core-library-tls", git = "https://github.com/IlleNilsson/xmip-core-library-tls", branch = "main" }
+# The test cluster's names, from its `cluster.xmip` (`configure::fixture`;
+# ADR-0056, amendment 2026-10-03): no test writes a cluster or node name.
+configure = { package = "xmip-core-configure", git = "https://github.com/IlleNilsson/xmip-core-configure", branch = "main", features = ["test-support"] }
+
+# Ctrl+C ends a follow cleanly, and who the command runs as.
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_System_Console"] }
+
+[target.'cfg(unix)'.dependencies]
+nix = { version = "0.31", default-features = false, features = ["signal", "user"] }
+
+[lints.rust]
+# deny, not forbid: Ctrl+C is the operating system's to hand over, and
+# `src/system/` is the one folder that asks it, each file lowering this at
+# its top with its reason.
+unsafe_code = "deny"
+
+[lints.clippy]
+too_many_lines = "warn"
+pedantic = { level = "warn", priority = -1 }
+missing_errors_doc = "warn"
+missing_panics_doc = "warn"
+unwrap_used = "warn"
+expect_used = "allow"
+
+[profile.dev.package."*"]
+opt-level = 3

@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "dgSpecHash": "li31RNlEzsw=",
+  "success": true,
+  "projectFilePath": "D:\\Repos\\Xmip\\module\\core\\operation\\cli\\src\\Xmip.Cli\\Xmip.Cli.csproj",
+  "expectedPackageFiles": [
+    "D:\\DevCache\\nuget\\microsoft.dotnet.ilcompiler\\11.0.0\\microsoft.dotnet.ilcompiler.11.0.0.nupkg.sha512",
+    "D:\\DevCache\\nuget\\microsoft.extensions.configuration\\11.0.0\\microsoft.extensions.configuration.11.0.0.nupkg.sha512",
+    "D:\\DevCache\\nuget\\microsoft.extensions.configuration.fileextensions\\11.0.0\\microsoft.extensions.configuration.fileextensions.11.0.0.nupkg.sha512",
+    "D:\\DevCache\\nuget\\microsoft.extensions.fileproviders.physical\\11.0.0\\microsoft.extensions.fileproviders.physical.11.0.0.nupkg.sha512",
+    "D:\\DevCache\\nuget\\microsoft.extensions.filesystemglobbing\\11.0.0\\microsoft.extensions.filesystemglobbing.11.0.0.nupkg.sha512",
+    "D:\\DevCache\\nuget\\microsoft.net.illink.tasks\\11.0.0\\microsoft.net.illink.tasks.11.0.0.nupkg.sha512",
+    "D:\\DevCache\\nuget\\runtime.win-x64.microsoft.dotnet.ilcompiler\\11.0.0\\runtime.win-x64.microsoft.dotnet.ilcompiler.11.0.0.nupkg.sha512",
+    "D:\\DevCache\\nuget\\microsoft.netcore.app.runtime.win-x64\\11.0.0\\microsoft.netcore.app.runtime.win-x64.11.0.0.nupkg.sha512",
+    "D:\\DevCache\\nuget\\microsoft.windowsdesktop.app.runtime.win-x64\\11.0.0\\microsoft.windowsdesktop.app.runtime.win-x64.11.0.0.nupkg.sha512",
+    "D:\\DevCache\\nuget\\microsoft.aspnetcore.app.runtime.win-x64\\11.0.0\\microsoft.aspnetcore.app.runtime.win-x64.11.0.0.nupkg.sha512",
+    "D:\\DevCache\\nuget\\microsoft.netcore.app.runtime.nativeaot.win-x64\\11.0.0\\microsoft.netcore.app.runtime.nativeaot.win-x64.11.0.0.nupkg.sha512",
+    "D:\\DevCache\\nuget\\runtime.win-x64.microsoft.dotnet.ilcompiler\\11.0.0\\runtime.win-x64.microsoft.dotnet.ilcompiler.11.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}

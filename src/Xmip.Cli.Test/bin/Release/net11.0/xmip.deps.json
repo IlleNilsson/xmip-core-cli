@@ -1,0 +1,198 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v11.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v11.0": {
+      "xmip/1.0.0": {
+        "dependencies": {
+          "Xmip.Abi": "1.0.0",
+          "Xmip.Surface": "1.0.0"
+        },
+        "runtime": {
+          "xmip.dll": {}
+        }
+      },
+      "Microsoft.Extensions.Configuration/11.0.0-rc.3.26522.148": {
+        "runtime": {
+          "lib/net11.0/Microsoft.Extensions.Configuration.dll": {
+            "assemblyVersion": "11.0.0.0",
+            "fileVersion": "11.0.26.52348",
+            "localPath": "Microsoft.Extensions.Configuration.dll"
+          }
+        }
+      },
+      "Microsoft.Extensions.Configuration.FileExtensions/10.0.6": {
+        "dependencies": {
+          "Microsoft.Extensions.Configuration": "11.0.0-rc.3.26522.148",
+          "Microsoft.Extensions.FileProviders.Physical": "10.0.6"
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.Configuration.FileExtensions.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.626.17701",
+            "localPath": "Microsoft.Extensions.Configuration.FileExtensions.dll"
+          }
+        }
+      },
+      "Microsoft.Extensions.FileProviders.Physical/10.0.6": {
+        "dependencies": {
+          "Microsoft.Extensions.FileSystemGlobbing": "10.0.6"
+        },
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.FileProviders.Physical.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.626.17701",
+            "localPath": "Microsoft.Extensions.FileProviders.Physical.dll"
+          }
+        }
+      },
+      "Microsoft.Extensions.FileSystemGlobbing/10.0.6": {
+        "runtime": {
+          "lib/net10.0/Microsoft.Extensions.FileSystemGlobbing.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.626.17701",
+            "localPath": "Microsoft.Extensions.FileSystemGlobbing.dll"
+          }
+        }
+      },
+      "System.Diagnostics.EventLog/11.0.0-rc.3.26522.148": {
+        "runtime": {
+          "lib/net11.0/System.Diagnostics.EventLog.dll": {
+            "assemblyVersion": "11.0.0.0",
+            "fileVersion": "11.0.26.52348",
+            "localPath": "System.Diagnostics.EventLog.dll"
+          }
+        },
+        "runtimeTargets": {
+          "runtimes/win/lib/net11.0/System.Diagnostics.EventLog.Messages.dll": {
+            "rid": "win",
+            "assetType": "runtime",
+            "assemblyVersion": "11.0.0.0",
+            "fileVersion": "0.0.0.0",
+            "localPath": "runtimes/win/lib/net11.0/System.Diagnostics.EventLog.Messages.dll"
+          },
+          "runtimes/win/lib/net11.0/System.Diagnostics.EventLog.dll": {
+            "rid": "win",
+            "assetType": "runtime",
+            "assemblyVersion": "11.0.0.0",
+            "fileVersion": "11.0.26.52348",
+            "localPath": "runtimes/win/lib/net11.0/System.Diagnostics.EventLog.dll"
+          }
+        }
+      },
+      "Tomlyn/2.10.1": {
+        "runtime": {
+          "lib/net10.0/Tomlyn.dll": {
+            "assemblyVersion": "2.0.0.0",
+            "fileVersion": "2.10.1.0",
+            "localPath": "Tomlyn.dll"
+          }
+        }
+      },
+      "Tomlyn.Extensions.Configuration/2.0.1": {
+        "dependencies": {
+          "Microsoft.Extensions.Configuration.FileExtensions": "10.0.6",
+          "Tomlyn": "2.10.1"
+        },
+        "runtime": {
+          "lib/net10.0/Tomlyn.Extensions.Configuration.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0",
+            "localPath": "Tomlyn.Extensions.Configuration.dll"
+          }
+        }
+      },
+      "Xmip.Abi/1.0.0": {
+        "runtime": {
+          "Xmip.Abi.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      },
+      "Xmip.Surface/1.0.0": {
+        "dependencies": {
+          "Microsoft.Extensions.Configuration": "11.0.0-rc.3.26522.148",
+          "System.Diagnostics.EventLog": "11.0.0-rc.3.26522.148",
+          "Tomlyn.Extensions.Configuration": "2.0.1",
+          "Xmip.Abi": "1.0.0"
+        },
+        "runtime": {
+          "Xmip.Surface.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "xmip/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Microsoft.Extensions.Configuration/11.0.0-rc.3.26522.148": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-eKYZzPkX3fQy+NBmU6Jn6i4K43cF7VR0EvEbe2xd+92LSjuW9KeLOG4IK8c1z6eZ0QhAp7t1m94EYrbFtCn6pQ==",
+      "path": "microsoft.extensions.configuration/11.0.0-rc.3.26522.148",
+      "hashPath": "microsoft.extensions.configuration.11.0.0-rc.3.26522.148.nupkg.sha512"
+    },
+    "Microsoft.Extensions.Configuration.FileExtensions/10.0.6": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-hils30RkqBbtQVupvgUr7sgxJUYPc6YMEDge1QAXGTOhbRlqk2I0OH+BWMSsQjYnbGX2Ytl6EkrLgu9im6vE0w==",
+      "path": "microsoft.extensions.configuration.fileextensions/10.0.6",
+      "hashPath": "microsoft.extensions.configuration.fileextensions.10.0.6.nupkg.sha512"
+    },
+    "Microsoft.Extensions.FileProviders.Physical/10.0.6": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-t6T7umdzTKkSBOUMe5RYk826cTCsDU0hne9lPN5RGOSb3Kq0Xw8OEErM4zJ4dgZWV3G0ObK1Hf1IVU88uIKe6A==",
+      "path": "microsoft.extensions.fileproviders.physical/10.0.6",
+      "hashPath": "microsoft.extensions.fileproviders.physical.10.0.6.nupkg.sha512"
+    },
+    "Microsoft.Extensions.FileSystemGlobbing/10.0.6": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-EG9GuYJlj1o1G8maSpKceZdj88OehKFRWaWp8BWUQWlvIJDWD8N0sIYDoRMGL/yX85H8KbVYPR9+dH/UjPEiKw==",
+      "path": "microsoft.extensions.filesystemglobbing/10.0.6",
+      "hashPath": "microsoft.extensions.filesystemglobbing.10.0.6.nupkg.sha512"
+    },
+    "System.Diagnostics.EventLog/11.0.0-rc.3.26522.148": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-JpbybhfTUy17djMYG1YWBLyQI0Sbl6Ob5mMF9tVXcJGqhZ9aSm6ZvLdbRR3ziiktgiUUTuJbATx6bWGqS9Plew==",
+      "path": "system.diagnostics.eventlog/11.0.0-rc.3.26522.148",
+      "hashPath": "system.diagnostics.eventlog.11.0.0-rc.3.26522.148.nupkg.sha512"
+    },
+    "Tomlyn/2.10.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-ykjOY3IpYmC4SpPcAZRTl/w2jTmhPMDydHq8xcV7tTBAQ22nKBsOkPqauIrZlMjHm03cmKfV23UOPscKp+J4Og==",
+      "path": "tomlyn/2.10.1",
+      "hashPath": "tomlyn.2.10.1.nupkg.sha512"
+    },
+    "Tomlyn.Extensions.Configuration/2.0.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-yfYfQnXpVWSNCQzR/YfwDrs5rg0po1FagBbK5Ke3/QHGPyvJOA0YfbePxVG6nBPEFjCJuQYi9M3kZYxkOXh0Ig==",
+      "path": "tomlyn.extensions.configuration/2.0.1",
+      "hashPath": "tomlyn.extensions.configuration.2.0.1.nupkg.sha512"
+    },
+    "Xmip.Abi/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Xmip.Surface/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

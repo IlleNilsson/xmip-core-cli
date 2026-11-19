@@ -1,21 +1,21 @@
 # xmip-core-cli
 
-The .NET 11 `xmip` executable — the command line over a running Xmip,
-named as every System Process Xmip owns is named (ADR-0053). A
+The `xmip` executable — the command line over a running Xmip, in Rust and
+needing no .NET (the owner, 2026-10-12: *the CLI has to be usable without
+.NET. If you are on an MCU or any kind of edge device, .NET might not be the
+way to go*), named as every System Process Xmip owns is named (ADR-0053). A
 surface module (ADR-0011, ADR-0012 clause 11) among the operator surfaces
 ADR-0014 names, and the executable ADR-0052 clause 5 describes: text for a
-person, `--json` for a program, `--follow` as JSON Lines, the runtime found by
-one rule rather than typed.
+person, `--json` for a program, `--follow` as JSON Lines.
 
-It is argument parsing and rendering over two libraries:
-`Xmip.Abi`, the one .NET declaration of `xmip_module.h` and `xmip_operate.h`,
-in xmip-core-abi, and `Xmip.Surface`, the model every .NET operator surface
-shares (ADR-0052), over its Operate model in xmip-core-operate.
-On Windows it builds with runtime async, its ahead-of-time build included:
-an `async` method is the runtime's own rather than a compiler-written state
-machine.
-The PowerShell module and the two GUI hosts read the same surface, so what
-`xmip` says and what a screen says cannot disagree.
+It is argument parsing and rendering over `operate::surface` in
+xmip-core-operate, the surface every operator surface reads (ADR-0052), and
+the runtime's crates beneath it, linked and called Rust to Rust through
+traits — across a language boundary everything goes through the C ABI, and
+Rust to Rust through traits (ADR-0014, amendments 2026-10-12 and
+2026-11-17). The PowerShell module and the two GUI hosts reach the same
+rules through the C ABI, so what `xmip` says and what a screen says cannot
+disagree.
 
 ```text
 xmip abi                  the two boundaries this build speaks
@@ -58,7 +58,6 @@ xmip help                 this text
 
 --json                    one JSON document instead of text
 --follow                  with health or measure: JSON Lines as they change
---runtime <path>          the runtime library, instead of finding it
 --remote <host:port>      a node on another machine, at its operate address
 --local <endpoint>        a node on this machine, at its local endpoint;
                           on Linux and macOS in /run/xmip or /var/run/xmip,
@@ -79,14 +78,13 @@ name the walkthrough picked, and nothing Xmip knows — the same file the
 PowerShell prompt follows, so `xmip show xmip:///CL1` answers while a roll
 runs and says `SNAPSHOT — no file at ...` before one has. Roll under another
 name and `Snapshot` names that file instead. With no surface named, no node
-is named, and a command says so. The runtime library — what every command
-calls the runtime through, its gRPC client among it — is found by the one
-rule every surface uses: `--runtime`, else the `XMIP_RUNTIME_LIBRARY`
-environment variable, else the library beside the executable; it chooses no
-surface, and the document names none, since the runtime reads the document
-(ADR-0052, amendment 2026-11-17). The line wins
+is named, and a command says so. The document is read by configure's one
+reader (ADR-0031, amendment 2026-11-17), and the build copies `cli.toml` from
+this repository beside the executable it makes, `target/<profile>`, where it
+is newer than the one there. The runtime is linked, not found: no library is
+loaded and no option names one. The line wins
 over the document, in one order — `--remote`, then `--local`, then
-`--snapshot` — which is `SurfaceChoice.Stated` in `Xmip.Surface`, the same
+`--snapshot` — which is `operate::surface::choice::stated`, the same
 precedence `Get-XmipHealth -Remote -Local -Snapshot` follows in PowerShell.
 `--snapshot` reads one cluster's publication — what each source answers, and
 whether an act applies at once or is submitted as an order, is the table
@@ -119,35 +117,37 @@ its nodes it reached, the runtime's words (the design approved 2026-11-12,
 section 3.5; `GatheredClusterTests`). A node gathering none answers for
 itself; which of the two, its answer decides, never its name. `xmip status`
 says what a status code means and reads no surface. `validate` asks the
-runtime library itself, since no node stands behind it. Text
-goes to stdout for a person, column-aligned;
+runtime itself, since no node stands behind it. Text
+goes to stdout for a person, column-aligned, each line ended by a line feed;
 `--json` emits one document; `--follow` subscribes to the shared operator
 change stream and emits one JSON Lines record each time the snapshot it reads
-changes, until interrupted (ADR-0014 clause 10). Complaints go to stderr with a
+changes, until Ctrl+C ends it cleanly (ADR-0014 clause 10). A document
+escapes what the command line always escaped — a quote, `<`, `>`, `&`, `'`,
+`+`, `` ` ``, every control character and everything beyond ASCII — so what a
+pipe reads stays what it read. Complaints go to stderr with a
 non-zero exit: 2 when the line could not be obeyed, 1 when the thing asked
 about is wrong.
 
 `measure`, `list`, `show`, `pause` and `resume` render the `Figures`,
-`ScopeItem` and `ScopeOperation` shapes of `Xmip.Surface`, the same ones the
+`ScopeItem` and `ScopeOperation` of `operate::surface`, the shapes the
 PowerShell module emits as objects; `validate` renders its
-`ConfigurationVerdict`, `status` the `StatusMeaning` and `abi` the
-`AbiBoundaries` of `Xmip.Abi`, and `probe` says whether a module loaded and
-conforms by `ModuleProbed.Unloadable` and `Refusal`, the runtime loader's
-own answer (`xmip_module_probe_v1`) — each the object the matching cmdlet
-emits. A mood is the word `English.Mood` gives it, lower
+`ConfigurationVerdict`, `status` abi's `StatusMeaning` and `abi` its
+`Boundaries`, and `probe` says whether a module loaded and
+conforms by the runtime loader's own answer, the one `xmip_module_probe_v1`
+hands the cmdlet. A mood is the word `english::mood` gives it, lower
 case, in text and JSON alike, and a row with no health recorded is `nothing
-recorded`; a figure is `English.Figure`'s, and one the runtime has not
+recorded`; a figure is `english::figure`'s, and one the runtime has not
 published is a dash, never a zero; `Nothing at`, `Nothing beneath` and
-`Nothing measured at` are `English`'s sentences too. A wildcard scope selects
+`Nothing measured at` are `english`'s sentences too. A wildcard scope selects
 through `ScopeSelection`, the one the cmdlets use, and which rows `show`
 gives — the scopes that exist, worst first under a wildcard — is
-`ScopeItem.Selected`, the one `Get-XmipScope` calls. Whatever a wildcard
+`ScopeItem::selected`, the one `Get-XmipScope` calls. Whatever a wildcard
 answered is one JSON document of one shape for every command: `pattern`,
 `source`, `matched`, and `scopes`, an object per scope. Pause and resume are
 the two acts the operator boundary carries (ADR-0027 clause 5); there is no
 start, stop or restart, because the thing that watches must not be able to
 stop the thing it watches. Who paused is `--who`, else the user the command
-runs as — `ScopeOperation.Who`, the rule `Suspend-XmipScope -Who` and the GUI
+runs as — `acted::who`, the rule `Suspend-XmipScope -Who` and the GUI
 follow. Over `--remote` no name crosses the wire: the web host takes an act as
 the subject of the client certificate this side presented, only where its role
 may act, and refuses it in words otherwise (ADR-0009, amendment 2026-10-03).
@@ -169,8 +169,9 @@ overwritten, and both exit 1 when refused. The key and the request are written
 by the runtime as private files — readable by the user it runs as alone, the
 key never in the CLI's memory — and the chain whole and synced by the runtime
 too; they and the rules are the runtime's
-(`xmip_operate.h` section 19), reached through `OperatorCertificate` in
-`Xmip.Surface`, the same `New-XmipCertificate` uses. It is no MCP tool: it makes a key or signs.
+(`xmip_operate.h` section 19), called in `runtime::operator_certificate`
+and `operate::certificate`, the same `New-XmipCertificate` reaches through
+the C ABI. It is no MCP tool: it makes a key or signs.
 
 **A node's certificate.** `xmip certificate --node RX1 --cluster CL1
 --authority <folder> --names RX1.xmip.test,CL1 --out <folder>` issues a node
@@ -179,8 +180,8 @@ client authentication from the cluster's own authority kept in that folder,
 made there where none is, for its own name and every one of `--names`,
 written as `node.pem`, `node.key` and `anchors.pem` — the files its
 `[operate]` names — in place of what was there (ADR-0015, amendment
-2026-10-21; `xmip_operate.h` section 22, through `NodeCertificate` in
-`Xmip.Surface`, the same `New-XmipCertificate -Node` uses).
+2026-10-21; `xmip_operate.h` section 22, the rule `New-XmipCertificate
+-Node` reaches through the C ABI).
 
 **The cluster's authority** (ADR-0034, amendment 2026-10-22), the premises'
 own ACME service. `xmip certificate --authority <folder> --cluster CL1
@@ -205,12 +206,12 @@ ninety days. Back on the node, `xmip certificate node.pem --import
 only then writes `node.pem`, `node.key` and `anchors.pem`; where the node
 held no anchor it says the authority's SHA-256 to compare by another way.
 `--inspect <file>` says whether a certificate's renewal is due. Each act is
-the runtime's (`xmip_operate.h` section 23, through `AuthorityCertificate`
-in `Xmip.Surface`, the same `New-XmipCertificate` and `Get-XmipCertificate`
-use), audited as every command is, and no MCP tool.
+the runtime's (`xmip_operate.h` section 23, `operate::authority`, the same
+`New-XmipCertificate` and `Get-XmipCertificate` reach through the C ABI),
+audited as every command is, and no MCP tool.
 
 **The drill.** `list` with no scope lists what is beneath the cluster the
-surface publishes at (`IOperatorSurface.Root`), never the one row of the
+surface publishes at (`OperatorSurface::root`), never the one row of the
 cluster itself, and every row carries its figures; a node and a stage have
 figures of their own. A row that is not fine says on the line beneath it
 which leaf explains it and why — `worst <scope>: <evidence>`, the next scope
@@ -221,16 +222,16 @@ owner, 2026-09-26: *drill-down does not work*). JSON carries it as `worst`.
 ## What it audits
 
 Every invocation is audited as program `xmip` through the audit
-capability, reached through the runtime's library (ADR-0062; `CommandAudit`
-over `ProgramAudit` in `Xmip.Surface`): the command as it begins (action the
-command's word, phase `Begin`, the arguments and options as properties — a
+capability, linked (ADR-0062; `command_audit` over `xaudit`'s
+`ProgramAudit`, handed the file sink and the operating system's log of its
+platform): the command as it begins (action the command's name, lower case
+— `eventsubscriptions` and `deadmessages` for the two hyphened words, as it
+always was — phase `Begin`, the arguments and options as properties — a
 web host's user and password are left out by the capability, as they are
 from every program's record), its end (`Finished`, with `exit`), a
 non-zero exit as a `Failure` with its exit code and what it said on stderr, a
 line that could not be obeyed as `refused`, and anything unhandled as
-`unhandled` before the process ends as it would have. The records go through
-the runtime library the line states — `--runtime` reaches the audit as it
-reaches `validate` (`ProgramAudit.Library`). Records go to
+`unhandled` before the process ends as it would have. Records go to
 `<AuditDirectory>/audit.toml`, `AuditDirectory` in `cli.toml`'s `[Xmip]`
 table resolved from beside the executable; unset, the capability decides —
 `XMIP_AUDIT_DIRECTORY`, else the operating system's log, which also takes a
@@ -240,7 +241,8 @@ record the directory cannot.
 
 `xmip mcp` is a Model Context Protocol server (ADR-0071): an MCP client
 starts it and speaks JSON-RPC 2.0 on its standard input and output, one
-message a line, protocol revision `2025-11-25` (and `2025-06-18` and
+message a line — the messages and the framing `net::rpc`'s, the one the VS
+Code language server speaks — protocol revision `2025-11-25` (and `2025-06-18` and
 `2025-03-26` when a client asks for one of them). Stdout carries protocol
 messages and nothing else; what the server says of itself goes to stderr. It
 answers `initialize`, `ping`, `tools/list`, `tools/call`, `resources/list`,
@@ -252,11 +254,11 @@ answers any other method with JSON-RPC's *method not found*.
 `abi`, `status`, `health`, `measure`, `list`, `show`, `validate`, `audit`,
 `subscriptions`, `event-subscriptions`, `dead-messages`, `message` and
 `report` — each taking its options without the dashes as arguments
-(`McpTools`: `scope` or `pattern`, `location`, `severity`, `verify`, `name`,
+(`mcp::tools`: `scope` or `pattern`, `location`, `severity`, `verify`, `name`,
 `configuration` and the rest). `report` is one because a Quest reads what it
 probes and changes nothing (ADR-0072, amendment 2026-11-10). A call is the line
-an operator would type, `--json` added, parsed by `Invocation` and answered
-by `CommandRun`, the dispatch the executable runs; its text is the command's
+an operator would type, `--json` added, parsed by `Invocation::parse` and
+answered by `run::answer`, the dispatch the executable runs; its text is the command's
 JSON document, `isError` where the command exits non-zero, with what it said
 on stderr beneath. No act is a tool: `pause`, `resume`, the nouns' acts and
 `--who` are not arguments, a line that would act is REFUSED, and `probe` is
@@ -272,9 +274,9 @@ does, two JSON documents under the URI. A URI with a wildcard is not a
 resource; the tools take wildcards. A scope with nothing at it is MCP's
 *resource not found*, in `show`'s words.
 
-`--runtime`, `--remote` and `--snapshot` on the `mcp` line choose the
+`--remote`, `--local` and `--snapshot` on the `mcp` line choose the
 surface every answer reads, as they do for any command. Every answer is
-audited as its command (`CommandAudit`), the session as `mcp`. On another
+audited as its command (`command_audit`), the session as `mcp`. On another
 machine it is the same line over SSH, as every command is (ADR-0014 clause
 6): a client configured to start `ssh <host> xmip mcp` reaches that
 machine's Xmip with SSH's authentication, and Xmip adds no listener.
@@ -304,7 +306,7 @@ amendment 2026-11-11) — state, picked-up, held and since. `xmip health`,
 `list` and `show` say on each record and row where its work came from and
 went, `from <from> → to <to>`, and a document's `from` and `to`, the
 runtime's words for the nearest thing the publication draws at or above it
-(`IOperatorSurface.FromTo`; ADR-0052, amendment 2026-11-11). On a node's own
+(`OperatorSurface::ends`; ADR-0052, amendment 2026-11-11). On a node's own
 row, `xmip:///<cluster>/node/<name>`, `list` and `show` say beneath it what
 the node is for, each role it declares with its meaning, a line each —
 `receiving: takes Streams in and makes Messages` — and a document its
@@ -312,7 +314,7 @@ the node is for, each role it declares with its meaning, a line each —
 `node::NodeRole::purpose`); no other row has one (ADR-0056, amendment
 2026-11-13; the owner, 2026-11-12: *what are nodes purpose*). Which
 Subscriptions a line selects and in what order is
-`SubscriptionQuery`'s in `Xmip.Surface`, the one the web's Subscriptions view
+`operate::surface::subscription_query`'s, the one the web's Subscriptions view
 and `Get-XmipSubscription` ask. An act names one Subscription, by
 `--location` at its node and `--name`, or it is REFUSED before any node is
 asked (exit 2). Paused, the Messages a Subscription matches are held — kept
@@ -356,7 +358,7 @@ The pattern is `*` and `?` over each Event subscription's node and the scope
 it reaches; `--location`, `--sort` and `--order` mean what they mean for
 `audit`, and the columns are subscriber, cluster, node, action, state, queued,
 delivered, missed and since. Which Event subscriptions a line selects and in
-what order is `EventSubscriptionQuery`'s in `Xmip.Surface`, the one the web's
+what order is `operate::surface::event_subscription_query`'s, the one the web's
 Event subscriptions view and `Get-XmipEventSubscription` ask. An act names
 one Event subscription, by `--location` at its node and `--id`, or it is
 REFUSED before any node is asked (exit 2); paused, an Event subscription
@@ -390,7 +392,7 @@ The pattern is `*` and `?` over each entry's node, or its node and Message as
 `--sort` and `--order` mean what they mean for `audit`, and the columns are
 received (the default, oldest first), message, cluster, node,
 receive-location and declines. Which entries a line selects and in what
-order is `DeadMessageQuery`'s in `Xmip.Surface`, the one the web's Dead
+order is `operate::surface::dead_message_query`'s, the one the web's Dead
 Message Queue view and `Get-XmipDeadMessage` ask. `--message` alone opens
 the one Message: its gate verdicts, its promoted properties and every
 Subscription's decline, in the order written; `--json` carries them as
@@ -534,8 +536,8 @@ a cluster's file is sliced for; `--configuration`, `--parameter` and
 whole: the list, one entry, or the probe.
 
 The list, each entry's kind, what a probe finds and every refusal are the
-runtime's (`xmip_operate.h` section 25, through `ReportCatalog` in
-`Xmip.Surface`, the same `Get-XmipReport` and the Reports view read). Each
+runtime's (`xmip_operate.h` section 25, `runtime::report`, the same
+`Get-XmipReport` and the Reports view read through the C ABI). Each
 probe is audited by the runtime as `quest.probe` under program `xmip`,
 where this executable's records go. A probe reads, so an Observer may run
 it, and it is an MCP tool. A Report that is none, not yet available or
@@ -548,7 +550,7 @@ that cannot be obeyed, exit 2.
 
 `xmip audit` reads that file back — every program's records in it, not
 only this one's — through the audit capability's one reader
-(`ProgramAudit.Read` in `Xmip.Surface`, over `xmip_audit_read_v1`; ADR-0062,
+(`operate::audit_read`, the one `xmip_audit_read_v1` answers by; ADR-0062,
 amendment 2026-09-29), the reader the web's Audit view and `Get-XmipAudit`
 call. Its argument and options are the query's words, and what each means is
 the capability's:
@@ -596,39 +598,49 @@ does not take is its REFUSED sentence on stderr, exit 2; with no audit
 directory stated the records went to the operating system's log, which is
 said, exit 1.
 
-## Why this is .NET and not Rust
+## Why this is Rust and not .NET
 
-ADR-0014, amended 2026-08-26: every user-interfacing module is .NET 11, and
-`xmip-core-abi` is the exception. The CLI, the PowerShell module, the MAUI
-desktop GUI and the Blazor web GUI are four surfaces over one boundary, and
-writing one of them in a different language means maintaining the binding
-twice. This repository held a Rust template stub until 2026-08-26; it never
-implemented anything.
+The owner, 2026-10-12: *the CLI has to be usable without .NET. If you are
+on an MCU or any kind of edge device, .NET might not be the way to go*;
+and *everything will go through the ABI unless it is Rust2Rust, then it is
+traits*. So the command line links xmip-core-operate and the runtime's
+crates and calls their Rust, and no native library is loaded and no C ABI
+crossed (ADR-0014, amendments 2026-10-12 and 2026-11-17). The PowerShell
+module and the two GUI hosts stay .NET for their tooling, and reach the
+same rules through the C ABI. Until 2026-11-17 this repository was the
+.NET 11 executable, `src/Xmip.Cli`; it was ported in place, every command,
+argument, output, exit and audit record kept, and deleted.
 
 ## Shape
 
-`src/Xmip.Cli` is the executable. `Invocation` parses the line into a command,
-its one argument and the three options; one class per command renders over a
-`TextWriter`, so every rendering is tested without a console. `CommandRun`
-answers a parsed line over the writers it is handed — the executable's
-console, or an MCP call's own (`McpServer`, `McpTools`, `McpResources`).
-`Program.cs` wires the console and the audit, and nothing else.
+The package `xmip-core-cli`, its own workspace, with one binary, `xmip`.
+`src/invocation.rs` and `src/invocation/` parse the line into a command, its
+one argument and its options, knowing nothing of the runtime or the
+console; one module per command in `src/command.rs` and `src/command/`
+renders over the writers it is handed, so every rendering is tested without
+a console; `src/run.rs` answers a parsed line over those writers — the
+executable's console, or an MCP call's own (`src/mcp/`). `src/main.rs` wires
+the console, the process's declaration and the audit (`src/command_audit.rs`),
+and nothing else. `src/json.rs` writes a document, `src/time.rs` a moment and
+`src/text_table.rs` a column, each as the command line always wrote them;
+`src/system/` is the one folder that asks the operating system anything —
+Ctrl+C, and who the command runs as — and the one that may hold unsafe code.
+`build.rs` copies `cli.toml` beside the executable and links the Xmip mark
+into it as its Windows icon, `src/xmip-x.res`, which `Sync-XmipEstate
+-Brand` copies here.
 
-`src/Xmip.Cli.Test` is xunit, over a fake `IOperatorSurface`: argument
-parsing, what the line states about the surface, and the text and JSON
-renderings. The rules the renderings rest on — which surface and runtime win
-when several are named, what a wildcard selects, what a status means, whether
-a module conforms — are tested once, beside them in `xmip-core-operate` and
-`xmip-core-abi`, and what crosses the C ABI is the binding's to verify. The
-one exception is the audit: `CommandAuditTests` records through the
-runtime's library, which `Xmip.Operate` copies beside the tests, and runs
-the executable once to prove a
-refused line lands as a record; `AuditCommandTests` reads back, through the
-same library, records it wrote to a directory of its own. `McpServerTest`
-scripts one MCP session over in-memory streams against the test cluster's
-names. `ReportCommandTests` list, show and probe through the runtime's
-library, the probe over the test cluster's `cluster.xmip`, each entry found
-by what it holds, never by its name.
+`tests/` holds one file per command and one each for parsing, the usage,
+the surface a line opens, the audit and the MCP server, over
+`tests/support/fake.rs`, a surface a test writes, and `tests/support/noun.rs`,
+real snapshots written to a
+temporary folder. The rules the renderings rest on — which surface wins
+when several are named, what a wildcard selects, what a status means,
+whether a module conforms — are tested once, beside them in
+`xmip-core-operate`, `xmip-core-abi` and the runtime. `command_audit` runs
+the built executable once to prove a refused line lands as a record;
+`audit_command` reads back records it wrote to a folder of its own;
+`mcp_server` scripts one MCP session against the test cluster's names; the
+gathered-cluster tests serve a real local operate listener.
 
 ## Public contracts and compatibility
 
@@ -636,43 +648,44 @@ None as a library. A command line is an operator surface; nothing depends on
 it as a library. The JSON it emits is what a pipe reads (ADR-0014 clause 10),
 and the commands and their output are pre-alpha and unstable.
 
-Bound to `XMIP_ABI_VERSION` and `XMIP_OPERATE_VERSION` through the binding. A
+Bound to `XMIP_ABI_VERSION` and `XMIP_OPERATE_VERSION` through `abi`. A
 module that reports a different handshake version is reported as a
 disagreement, not silently accepted.
 
 ## Dependencies
 
-Two projects, referenced by path inside the composed estate: `Xmip.Abi`, the
-binding, in `xmip-core-abi` (ADR-0014, amendment of 2026-09-09), and
-`Xmip.Surface`, the model every .NET surface shares — the operator surface,
-the scope tree, runtime discovery and the English — in `xmip-core-operate`,
-over its Operate model (ADR-0052 clause 1 and amendment 2026-11-16). This
-repository builds inside the estate, which is where `xgit` builds it.
-
-**No Xmip Rust crate is referenced, and none may be.** ADR-0012 clause 2 makes
-the header normative and the bindings a convenience; that this project
-compiles without a single Xmip source file is the test.
+The Xmip crates it calls, Rust to Rust: `xmip-core-operate`, the surface
+every command reads and the operating rules; `xmip-core-runtime`, the node's
+rules — its plane, its loader, its report and its declarations;
+`xmip-core-observe` and `xmip-core-node`, the publication's records and the
+scope's words; `xmip-core-abi`, the boundaries and what a status means;
+`xmip-core-audit` with its file sink and the operating system's logs;
+`xmip-core-library-net`, JSON-RPC 2.0 (`net::rpc`); `xmip-core-library-codec`,
+the civil calendar; `xmip-core-provision`, a person's request; and
+`xmip-core`, the Clock and an audit record's words. Beyond them: `serde_json`,
+and on Windows `windows-sys` and elsewhere `nix` for Ctrl+C and the user.
+The dependencies track `branch = "main"` (ADR-0005); in the estate every one
+is patched to its working tree.
 
 ## Not this repository's
 
 - Not a runtime. It drives a runtime, and holds no execution state.
 - Not a place for domain logic. A rule that belongs in a Work Process does
   not belong in a subcommand.
-- Not the PowerShell surface. `xmip-core-powershell` reads the same
-  `Xmip.Surface` directly; it does not shell out to this.
-- Not where the scope tree, the discovery rule, the surface precedence, the
-  wildcard selection or the English live, nor what a status code means or
-  whether a module conforms. A fix to any of those goes to `Xmip.Surface`,
-  `Xmip.Operate` or `Xmip.Abi` and reaches every surface at once.
+- Not the PowerShell surface. `xmip-core-powershell` reaches the same rules
+  through the C ABI; it does not shell out to this.
+- Not where the scope tree, the surface precedence, the wildcard selection or
+  the English live, nor what a status code means or whether a module
+  conforms. A fix to any of those goes to `operate::surface`, the runtime or
+  `abi`, and reaches every surface at once.
 
 ## Verification
 
-`dotnet build` and `dotnet test` on `src/Xmip.Cli.Test`; the workflow in
-`.github/workflows/verify.yml` does the same with `xmip-core-abi` and
-`xmip-core-operate` checked out where the estate mounts them. `xmip probe`
-against a conforming module is the first
-of the seven conformance rules in section 11 of `doc/specification.md` in
-xmip-core-abi.
+`cargo test` and `cargo clippy --all-targets -- -D warnings` in this
+repository; in the estate `xgit` builds and tests it against every crate's
+working tree. `xmip probe` against a conforming module, abi's `conforming`
+example, is the first of the seven conformance rules in section 11 of
+`doc/specification.md` in xmip-core-abi.
 
 Status: pre-alpha. Until 2026-09-14 an `ARCHITECTURE.md` beside this file
 said the same things a second time; ADR-0020 clause 1 is one document per
