@@ -33,11 +33,12 @@ Purpose = "test"
 
 # The file to read when Surface = "snapshot". A path with no file behind it
 # is said so — SNAPSHOT — no file at ... — not silently replaced. A relative
-# path is from this file's directory, target/debug under this repository as
-# built: six levels up is the estate root, where a roll publishes under
-# .local-work/essentials. The file is named for the cluster the roll was
-# started as, so this line follows one roll and no other.
-Snapshot = "../../../../../../.local-work/essentials/CL1-snapshot.xmip"
+# path is from this file's directory: as cargo builds by default, target/debug
+# at the estate's root (one workspace; CARGO_TARGET_DIR elsewhere moves it,
+# and this example with it), two levels up from it is the estate root, where a roll
+# publishes under .local-work/essentials. The file is named for the cluster
+# the roll was started as, so this line follows one roll and no other.
+Snapshot = "../../.local-work/essentials/CL1-snapshot.xmip"
 
 # The node on this machine to follow when Surface = "local": its local
 # endpoint, as its [operate] local names it. The node takes every act as the
@@ -57,4 +58,4 @@ Snapshot = "../../../../../../.local-work/essentials/CL1-snapshot.xmip"
 # Where this executable's audit records go (ADR-0062): each command, its end
 # and every failure, as <AuditDirectory>/audit.toml. Unset, the audit
 # capability decides — XMIP_AUDIT_DIRECTORY, else the operating system's log.
-# AuditDirectory = "../../../../../../.local-work/audit"
+# AuditDirectory = "../../.local-work/audit"

@@ -622,7 +622,9 @@ argument, output, exit and audit record kept, and deleted.
 
 ## Shape
 
-The package `xmip-core-cli`, its own workspace, with one binary, `xmip`.
+The package `xmip-core-cli`, a member of the estate's one workspace and its
+own root when checked out alone (ADR-0016, amendment 2026-11-20), with one
+binary, `xmip`.
 `src/invocation.rs` and `src/invocation/` parse the line into a command, its
 one argument and its options, knowing nothing of the runtime or the
 console; one module per command in `src/command.rs` and `src/command/`
