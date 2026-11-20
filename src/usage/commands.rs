@@ -68,7 +68,9 @@ the GUI's filter box matches (ADR-0059 clauses 7 and 8).
   xmip health "xmip:///CL1/node/RX*"     every node of cluster CL1 named RX…
   xmip health "xmip:///CL1/node/*/membership"
                                          each node's membership: Stressed
-                                         where its save is not its peers'
+                                         where its save is not its peers',
+                                         Done where a later start of the
+                                         node is its member
   xmip list "xmip:///CL1/*/receive"      beneath every receive
 
 CL1 and RX1 are names a tester gave; they mean nothing to Xmip, and a
