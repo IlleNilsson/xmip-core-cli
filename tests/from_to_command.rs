@@ -11,15 +11,18 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use configure::fixture::test_cluster;
+use file::temporary::Folder;
 use operate::surface::snapshot::SnapshotSurface;
 use serde_json::Value;
 use xmip_core_cli::command::{health, scope};
 
-/// A snapshot a test wrote, removed when it is dropped.
+/// A snapshot a test wrote, in a folder of its own removed when it is
+/// dropped.
 struct Written {
     path: PathBuf,
     processor: String,
     node: String,
+    _folder: Folder,
 }
 
 impl Written {
@@ -27,8 +30,8 @@ impl Written {
         let cluster = test_cluster();
         let processor = cluster.node(0).name.clone();
         let node = format!("{}/node/{processor}", cluster.scope());
-        let path =
-            std::env::temp_dir().join(format!("xmip-from-to-{name}-{}.xmip", std::process::id()));
+        let folder = Folder::new(&format!("cli-from-to-{name}"));
+        let path = folder.join("snapshot.xmip");
         let text = format!(
             "node = \"{scope}\"\n\
              [[records]]\nscope = \"{node}/receive/In\"\nstate = \"fine\"\n\
@@ -48,6 +51,7 @@ impl Written {
             path,
             processor,
             node,
+            _folder: folder,
         }
     }
 
@@ -57,12 +61,6 @@ impl Written {
 
     fn said(&self) -> String {
         format!("from In [{}] → to Out", self.processor)
-    }
-}
-
-impl Drop for Written {
-    fn drop(&mut self) {
-        let _ = std::fs::remove_file(&self.path);
     }
 }
 

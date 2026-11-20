@@ -80,8 +80,8 @@ fn a_line_that_cannot_be_obeyed_is_refused_in_words() {
 
 #[test]
 fn the_runtime_refuses_an_upgrade_that_is_none_and_nothing_is_written() {
-    let place = std::env::temp_dir().join(format!("xmip-database-{}", std::process::id()));
-    let place = place.display().to_string();
+    let folder = file::temporary::Folder::new("cli-database");
+    let place = folder.join("upgrade").display().to_string();
     let asked = parse(&[
         "database",
         "postgresql",

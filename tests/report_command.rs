@@ -5,8 +5,7 @@
 //! probe finds are `xmip-core-report`'s and tested there; an entry is found
 //! here by what it holds, never by its name.
 
-use std::path::PathBuf;
-
+use file::temporary::Folder;
 use serde_json::Value;
 use xmip_core_cli::command::Command;
 use xmip_core_cli::command::report::{Audited, answer};
@@ -26,14 +25,11 @@ fn refused(words: &[&str]) -> String {
 }
 
 // An audit directory of the test's own, gone when it is dropped.
-struct Directory(PathBuf);
+struct Directory(Folder);
 
 impl Directory {
     fn new(name: &str) -> Self {
-        let place =
-            std::env::temp_dir().join(format!("xmip-cli-report-{name}-{}", std::process::id()));
-        std::fs::create_dir_all(&place).expect("made");
-        Self(place)
+        Self(Folder::new(&format!("cli-report-{name}")))
     }
 
     // `asked` answered, audited here: its exit, what it said and what it
@@ -41,7 +37,7 @@ impl Directory {
     fn run(&self, asked: &ReportAsk, json: bool) -> (i32, String, String) {
         let audited = Audited {
             program: "xmip",
-            directory: Some(self.0.clone()),
+            directory: Some(self.0.to_path_buf()),
         };
         let (mut output, mut error) = (Vec::new(), Vec::new());
         let exit = answer(asked, &audited, json, &mut output, &mut error);
@@ -57,12 +53,6 @@ impl Directory {
         let (exit, said, error) = self.run(&ReportAsk::default(), true);
         assert_eq!(exit, 0, "{error}");
         serde_json::from_str(&said).expect("one document")
-    }
-}
-
-impl Drop for Directory {
-    fn drop(&mut self) {
-        let _ = std::fs::remove_dir_all(&self.0);
     }
 }
 

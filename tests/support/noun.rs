@@ -6,8 +6,9 @@
 
 use std::path::PathBuf;
 use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::atomic::AtomicBool;
 
+use file::temporary::Folder;
 use operate::surface::OperatorSurface;
 use operate::surface::snapshot::SnapshotSurface;
 use xmip_core_cli::command::noun;
@@ -17,20 +18,14 @@ use xmip_core_cli::system::user;
 
 /// A publication in a folder of its own, gone with it.
 pub struct Published {
-    folder: PathBuf,
+    folder: Folder,
     pub file: PathBuf,
 }
 
 impl Published {
     /// `text` written as `<cluster>-snapshot.xmip` in a new folder.
     pub fn new(kind: &str, cluster: &str, text: &str) -> Self {
-        static MADE: AtomicUsize = AtomicUsize::new(0);
-        let folder = std::env::temp_dir().join(format!(
-            "xmip-{kind}-{}-{}",
-            std::process::id(),
-            MADE.fetch_add(1, Ordering::Relaxed)
-        ));
-        std::fs::create_dir_all(&folder).expect("a folder");
+        let folder = Folder::new(&format!("cli-{kind}"));
         let file = folder.join(format!("{cluster}-snapshot.xmip"));
         std::fs::write(&file, text).expect("written");
 
@@ -47,12 +42,6 @@ impl Published {
         let file = self.folder.join(name);
         std::fs::write(&file, text).expect("written");
         file
-    }
-}
-
-impl Drop for Published {
-    fn drop(&mut self) {
-        let _ = std::fs::remove_dir_all(&self.folder);
     }
 }
 

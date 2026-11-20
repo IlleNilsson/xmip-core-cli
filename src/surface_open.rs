@@ -29,9 +29,7 @@ pub type Opener<'a> = &'a dyn Fn(&Invocation) -> Result<Surface, String>;
 /// The folder the executable is in.
 #[must_use]
 pub fn beside() -> PathBuf {
-    std::env::current_exe()
-        .map(|executable| folder(&executable))
-        .unwrap_or_default()
+    std::env::current_exe().map_or_default(|executable| folder(&executable))
 }
 
 /// The folder of the program `executable` names, its links followed on
@@ -45,10 +43,7 @@ pub fn folder(executable: &Path) -> PathBuf {
     let executable =
         &std::fs::canonicalize(executable).unwrap_or_else(|_| executable.to_path_buf());
 
-    executable
-        .parent()
-        .map(Path::to_path_buf)
-        .unwrap_or_default()
+    executable.parent().map_or_default(Path::to_path_buf)
 }
 
 /// The executable's document.

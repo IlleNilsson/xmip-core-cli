@@ -5,10 +5,8 @@ use xmip_core_cli::command::probe::run;
 
 #[test]
 fn a_missing_library_is_a_usage_error_on_stderr() {
-    let missing = std::env::temp_dir()
-        .join(format!("no-such-module-{}.dll", std::process::id()))
-        .display()
-        .to_string();
+    let folder = file::temporary::Folder::new("cli-probe");
+    let missing = folder.join("no-such-module.dll").display().to_string();
     let (mut output, mut error) = (Vec::new(), Vec::new());
 
     let exit = run(&missing, false, &mut output, &mut error);

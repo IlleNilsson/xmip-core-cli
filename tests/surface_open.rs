@@ -67,7 +67,7 @@ fn a_link_to_the_program_finds_the_document_beside_the_program() {
     use operate::surface::choice::{Asked, Choice, Document, decided};
     use xmip_core_cli::surface_open;
 
-    let place = std::env::temp_dir().join(format!("xmip-cli-link-{}", std::process::id()));
+    let place = file::temporary::Folder::new("cli-link");
     let (bin, path) = (place.join("opt/bin"), place.join("usr/bin"));
     std::fs::create_dir_all(&bin).expect("bin");
     std::fs::create_dir_all(&path).expect("path");
@@ -85,5 +85,4 @@ fn a_link_to_the_program_finds_the_document_beside_the_program() {
         decided(&Asked::Stated(SurfaceLine::default()), &document, false),
         Ok(Choice::Local(Some(endpoint)))
     );
-    let _ = std::fs::remove_dir_all(&place);
 }

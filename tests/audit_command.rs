@@ -5,11 +5,11 @@
 
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
-use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::path::Path;
 
 use audit_file::FileSink;
 use configure::fixture::test_cluster;
+use file::temporary::Folder;
 use operate::surface::english;
 use xaudit::emit::AuditOutcome;
 use xaudit::program_audit::ProgramAudit;
@@ -23,17 +23,10 @@ fn parsed(words: &[&str]) -> Result<Invocation, String> {
     Invocation::parse(&words.iter().map(ToString::to_string).collect::<Vec<_>>())
 }
 
-/// What makes each test's directory its own.
-static NEXT: AtomicUsize = AtomicUsize::new(0);
-
 // Two records, written as any program writes them: a start, and a stop
 // that warns.
-fn written() -> PathBuf {
-    let directory = std::env::temp_dir().join(format!(
-        "xmip-audit-read-{}-{}",
-        std::process::id(),
-        NEXT.fetch_add(1, Ordering::Relaxed)
-    ));
+fn written() -> Folder {
+    let directory = Folder::new("cli-audit-read");
     let audit = audit(&directory);
 
     assert!(matches!(
@@ -107,7 +100,6 @@ fn a_hidden_run_s_records_are_left_out_until_included_and_then_marked_test() {
         included.contains(&format!("{} · test", cluster.nodes[0].name)),
         "{included}"
     );
-    let _ = std::fs::remove_dir_all(&directory);
 }
 
 #[test]
@@ -136,7 +128,6 @@ fn a_query_the_capability_does_not_take_is_its_refusal_and_exit_two() {
     assert!(error.starts_with("REFUSED"), "{error}");
     assert!(!error.contains("(Parameter"));
     assert_eq!(output, "");
-    let _ = std::fs::remove_dir_all(&directory);
 }
 
 #[test]
@@ -163,7 +154,6 @@ fn the_text_is_the_header_the_groups_and_a_row_a_record_newest_first() {
     assert!(lines[heading + 1].contains("stopped"), "{output}");
     assert!(lines[heading + 2].contains("start"), "{output}");
     assert!(error.is_empty(), "{error}");
-    let _ = std::fs::remove_dir_all(&directory);
 }
 
 #[test]
@@ -200,7 +190,6 @@ fn json_is_the_read_whole_and_one_record_prints_every_field() {
     assert!(said.contains(&format!("audit_id    {id}")), "{said}");
     assert!(said.contains("message     stopped"), "{said}");
     assert!(said.contains("  tested  yes"), "{said}");
-    let _ = std::fs::remove_dir_all(&directory);
 }
 
 #[test]
@@ -214,7 +203,6 @@ fn a_record_that_is_not_there_is_said_and_exits_one() {
 
     assert_eq!(exit, 1);
     assert!(error.starts_with("No record no-such-record in "), "{error}");
-    let _ = std::fs::remove_dir_all(&directory);
 }
 
 #[test]
@@ -279,7 +267,6 @@ fn verify_walks_each_writer_s_chain_and_says_it_in_words_after_the_records() {
     assert_eq!(exit, 1);
     assert!(text.contains("FAILED: "), "{text}");
     assert!(text.contains("number 2: it was changed"), "{text}");
-    let _ = std::fs::remove_dir_all(&directory);
 }
 
 #[test]
@@ -321,5 +308,4 @@ fn verify_says_an_interrupted_write_and_fails_only_once_it_is_sealed() {
         "{sealed}"
     );
     assert!(sealed.contains("FAILED: "), "{sealed}");
-    let _ = std::fs::remove_dir_all(&directory);
 }

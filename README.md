@@ -169,7 +169,9 @@ phone` makes a fresh key and a request naming the person as
 `phone/operator.key` and `phone/operator.csr`; `xmip certificate
 phone/operator.csr --sign node.xmip --out phone/operator.pem` signs it by the
 authority that node configuration's `[provision.operator]` names, for its
-`lifetime`, the chain to stdout where `--out` names no file. Running `--sign`
+`lifetime`, the chain to stdout where `--out` names no file. The file is the
+node's signed slice, read as its trust admits it, so one edited by hand is
+refused (ADR-0031, amendment 2026-11-19). Running `--sign`
 is the approval, out of band. A request asking more than client
 authentication for a person is refused in the runtime's words, nothing is
 overwritten, and both exit 1 when refused. The key and the request are written

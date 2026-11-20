@@ -55,14 +55,11 @@ pub fn text<'v>(answer: &'v Value, name: &str) -> &'v str {
 
 /// A list of texts of an answer; empty where it is none.
 pub fn texts(answer: &Value, name: &str) -> Vec<String> {
-    answer[name]
-        .as_array()
-        .map(|all| {
-            all.iter()
-                .map(|one| one.as_str().unwrap_or_default().to_string())
-                .collect()
-        })
-        .unwrap_or_default()
+    answer[name].as_array().map_or_default(|all| {
+        all.iter()
+            .map(|one| one.as_str().unwrap_or_default().to_string())
+            .collect()
+    })
 }
 
 /// A moment of an answer, Unix seconds.

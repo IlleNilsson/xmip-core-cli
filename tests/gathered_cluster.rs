@@ -10,6 +10,7 @@ use std::sync::atomic::{AtomicU32, Ordering};
 
 use audit_file::FileSink;
 use configure::fixture::test_cluster;
+use file::temporary::Folder;
 use runtime::plane::local::{Admitting, running_as};
 use runtime::plane::{Board, Grants, Listener, Published};
 use serde_json::Value;
@@ -27,11 +28,12 @@ fn words() -> String {
 
 /// A local listener this account observes, posting one node's own
 /// publication and, where it gathers, the cluster's view: one member
-/// reached, the other not.
+/// reached, the other not, its audit in a folder of its own.
 struct Served {
     listener: Listener,
     _own: Arc<Board>,
     _cluster: Option<Arc<Board>>,
+    _audit: Folder,
 }
 
 fn serve(gathers: bool) -> Served {
@@ -41,9 +43,8 @@ fn serve(gathers: bool) -> Served {
         std::process::id(),
         NEXT.fetch_add(1, Ordering::SeqCst)
     );
-    let directory = std::env::temp_dir().join(&endpoint);
-    std::fs::create_dir_all(&directory).expect("an audit directory");
-    let audit = ProgramAudit::new("gathered-cli-test", Some(FileSink::new(&directory)));
+    let directory = Folder::new("cli-gathered");
+    let audit = ProgramAudit::new("gathered-cli-test", Some(FileSink::new(&*directory)));
     let me = running_as().expect("this process's account");
     let none: &[String] = &[];
     let grants = Grants::listed([std::slice::from_ref(&me), none, none]);
@@ -84,6 +85,7 @@ fn serve(gathers: bool) -> Served {
         listener,
         _own: own,
         _cluster: gathered,
+        _audit: directory,
     }
 }
 

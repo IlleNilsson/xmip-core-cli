@@ -36,7 +36,7 @@ pub fn run(invocation: &Invocation, output: &mut dyn Write, error: &mut dyn Writ
 
 /// The one act `asked` names, on the file `request` the line names.
 fn act(asked: &CertificateAsk, request: &str, answer: &mut Answer<'_>) -> i32 {
-    let authority = asked.authority.as_deref().map(full).unwrap_or_default();
+    let authority = asked.authority.as_deref().map_or_default(full);
     let names: Vec<String> = asked
         .names
         .as_deref()

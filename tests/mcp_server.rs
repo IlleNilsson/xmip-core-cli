@@ -5,10 +5,9 @@
 #[path = "support/fake.rs"]
 mod fake;
 
-use std::path::PathBuf;
-
 use audit_file::FileSink;
 use configure::fixture::test_cluster;
+use file::temporary::Folder;
 use net::rpc::code;
 use observe::Health;
 use serde_json::Value;
@@ -28,11 +27,8 @@ fn call(tool: &str, arguments: &str) -> String {
     format!(r#"{{"name":"{tool}","arguments":{{{arguments}}}}}"#)
 }
 
-fn scratch(name: &str) -> PathBuf {
-    let directory = std::env::temp_dir().join(format!("xmip-mcp-{name}-{}", std::process::id()));
-    let _ = std::fs::remove_dir_all(&directory);
-    std::fs::create_dir_all(&directory).expect("made");
-    directory
+fn scratch(name: &str) -> Folder {
+    Folder::new(&format!("cli-mcp-{name}"))
 }
 
 fn error_code(answer: &Value) -> i64 {
@@ -83,7 +79,7 @@ fn a_session_reads_the_scope_tree_and_answers_by_the_commands() {
         leaf(&billing, Health::Fine, 0, ""),
     ];
     let directory = scratch("session");
-    let audit = ProgramAudit::new(PROGRAM, FileSink::stated(Some(&directory)));
+    let audit = ProgramAudit::new(PROGRAM, FileSink::stated(Some(&*directory)));
     let session = Invocation::parse(&["mcp".to_string()]).expect("mcp");
     let open = |_: &Invocation| -> Result<Surface, String> {
         Ok(Box::new(FakeSurface::new(records.clone())))
@@ -177,13 +173,12 @@ fn a_session_reads_the_scope_tree_and_answers_by_the_commands() {
     let audited = std::fs::read_to_string(directory.join("audit.toml")).expect("records");
     assert!(audited.contains("action = \"health\""), "{audited}");
     assert!(audited.contains("action = \"show\""), "{audited}");
-    let _ = std::fs::remove_dir_all(&directory);
 }
 
 #[test]
 fn a_line_that_acts_is_refused_whatever_reaches_it() {
     let directory = scratch("acts");
-    let audit = ProgramAudit::new(PROGRAM, FileSink::stated(Some(&directory)));
+    let audit = ProgramAudit::new(PROGRAM, FileSink::stated(Some(&*directory)));
     let session = Invocation::parse(&["mcp".to_string()]).expect("mcp");
     let open =
         |_: &Invocation| -> Result<Surface, String> { Err("no surface in this test".into()) };
@@ -206,5 +201,4 @@ fn a_line_that_acts_is_refused_whatever_reaches_it() {
     assert_eq!(exit, 2);
     assert_eq!(output, "");
     assert!(error.contains("mcp reads only"), "{error}");
-    let _ = std::fs::remove_dir_all(&directory);
 }

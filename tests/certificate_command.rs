@@ -6,8 +6,9 @@
 //! cluster are the test cluster's, never a literal (ADR-0056, amendment
 //! 2026-10-03).
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
+use file::temporary::Folder;
 use tls::certificate::Certificate;
 use xmip_core_cli::command::{Command, certificate};
 use xmip_core_cli::invocation::Invocation;
@@ -44,25 +45,17 @@ fn answer(words: &[&str]) -> String {
     said
 }
 
-// A folder of the test's own, gone when it is dropped.
-struct Place(PathBuf);
+// A folder of the test's own, gone when it is dropped, and the paths in it
+// as the line writes them.
+struct Place(Folder);
 
 impl Place {
     fn new(name: &str) -> Self {
-        let place = std::env::temp_dir().join(format!("xmip-{name}-{}", std::process::id()));
-        let _ = std::fs::remove_dir_all(&place);
-        std::fs::create_dir_all(&place).expect("made");
-        Self(place)
+        Self(Folder::new(&format!("cli-certificate-{name}")))
     }
 
     fn at(&self, name: &str) -> String {
         self.0.join(name).display().to_string()
-    }
-}
-
-impl Drop for Place {
-    fn drop(&mut self) {
-        let _ = std::fs::remove_dir_all(&self.0);
     }
 }
 
@@ -308,22 +301,26 @@ fn a_node_certificate_carried_across_an_air_gap_is_requested_signed_imported_and
     assert!(error.contains("no request is waiting"), "{error}");
 }
 
-// An authority kept as the capability keeps one, and a node's configuration
-// naming it in `[provision.operator]`: the configuration.
+// An authority kept as the capability keeps one, and a node's slice
+// declaring it in `[provision.operator]`, signed by it in a configuration
+// folder of its own (ADR-0031, amendment 2026-11-19): the slice.
 fn authority(place: &Place) -> String {
-    provision::Issuer::kept_or_made(
-        &place.0.join("authority"),
-        "test authority",
-        provision::now(),
-        86_400,
+    let folder = place.0.join("config");
+    std::fs::create_dir_all(&folder).expect("a configuration folder");
+    let kept = folder.join("authority");
+    provision::Issuer::kept_or_made(&kept, "test authority", provision::now(), 86_400)
+        .expect("an authority");
+    let cluster = "[service]\nname = \"n\"\n\n\
+                   [nodes.d.provision.operator]\nauthority = \"authority\"\n";
+    let signed = runtime::signed::sliced_signed(
+        cluster,
+        &folder.join("cluster.xmip"),
+        "d",
+        Some("c"),
+        Some(&kept),
     )
-    .expect("an authority");
-    let configuration = place.at("node.xmip");
-    std::fs::write(
-        &configuration,
-        "[service]\nname = \"n\"\ncluster_name = \"c\"\nnode_name = \"d\"\n\n\
-         [provision.operator]\nauthority = \"authority\"\n",
-    )
-    .expect("written");
-    configuration
+    .expect("signed");
+    let configuration = folder.join("node.xmip");
+    std::fs::write(&configuration, signed).expect("written");
+    configuration.display().to_string()
 }

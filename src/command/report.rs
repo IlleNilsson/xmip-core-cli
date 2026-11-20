@@ -72,8 +72,7 @@ pub fn answer(
     let directory = audited
         .directory
         .as_deref()
-        .map(|path| path.display().to_string())
-        .unwrap_or_default();
+        .map_or_default(|path| path.display().to_string());
     let said = if let Some(configuration) = &asked.configuration {
         let mut arguments = json!({
             "report": asked.name,
@@ -373,8 +372,7 @@ fn kind_of(answer: &Value, entry: &Value, word: &str) -> String {
     list(answer, "kinds")
         .iter()
         .find(|kind| kind["kind"] == entry["kind"])
-        .map(|kind| text(kind, word).to_string())
-        .unwrap_or_default()
+        .map_or_default(|kind| text(kind, word).to_string())
 }
 
 fn list(value: &Value, name: &str) -> Vec<Value> {
