@@ -12,13 +12,13 @@
 [Xmip]
 # Which surface a command reads (ADR-0052 clause 3): "local", a node on this
 # machine followed over gRPC at the local endpoint Local names (ADR-0014,
-# amendment 2026-10-13), "snapshot", a file a node or the Essentials
-# publishes, or "remote", a node on another machine followed over gRPC at its
+# amendment 2026-10-13), "snapshot", a file a node or the System Tests
+# publish, or "remote", a node on another machine followed over gRPC at its
 # operate Address. Stated here and never guessed. With no surface named, a
 # command names no node and says so; validate asks the runtime this
 # executable links, since it has no node behind it.
 #
-# As shipped, in a developer's clone: the Essentials roll the estate's own
+# As shipped, in a developer's clone: the System Tests roll the estate's own
 # walkthrough starts, which names its cluster CL1 only because a roll must be
 # given some name — the same file the PowerShell prompt follows. Roll under
 # another name and name that file below. A package never carries this file:
@@ -27,7 +27,7 @@
 Surface = "snapshot"
 
 # What this process is for, said in its declaration (ADR-0053): "test" or
-# "runtime". As shipped it follows an Essentials roll, which is test; a
+# "runtime". As shipped it follows a System Tests roll, which is test; a
 # deployment leaves it out or says runtime.
 Purpose = "test"
 
@@ -36,9 +36,9 @@ Purpose = "test"
 # path is from this file's directory: as cargo builds by default, target/debug
 # at the estate's root (one workspace; CARGO_TARGET_DIR elsewhere moves it,
 # and this example with it), two levels up from it is the estate root, where a roll
-# publishes under .local-work/essentials. The file is named for the cluster
+# publishes under .local-work/system-test. The file is named for the cluster
 # the roll was started as, so this line follows one roll and no other.
-Snapshot = "../../.local-work/essentials/CL1-snapshot.xmip"
+Snapshot = "../../.local-work/system-test/CL1-snapshot.xmip"
 
 # The node on this machine to follow when Surface = "local": its local
 # endpoint, as its [operate] local names it. The node takes every act as the

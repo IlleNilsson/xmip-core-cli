@@ -73,7 +73,7 @@ Which surface a command reads is stated in `cli.toml` beside the
 executable, with the same `[Xmip]` keys as the GUI hosts and the PowerShell
 module — `Surface = "local" | "snapshot" | "remote"`, `Local`, `Address`,
 `Snapshot` — and never guessed (ADR-0052 clause 3). As shipped, in a
-developer's clone, it follows the Essentials roll started as cluster CL1 — a
+developer's clone, it follows the System Tests roll started as cluster CL1 — a
 name the walkthrough picked, and nothing Xmip knows — the same file the
 PowerShell prompt follows, so `xmip show xmip:///CL1` answers while a roll
 runs and says `SNAPSHOT — no file at ...` before one has. Roll under another
