@@ -111,13 +111,13 @@ fn health_says_what_the_run_was_started_with_where_a_surface_says_one() {
             format!("{receiver}=receiving"),
             format!("{processor}=processing+sending"),
         ],
-        online: vec![receiver.clone()],
+        capabilities: vec![format!("{receiver}=online")],
         stress: "calm".into(),
         ..Run::default()
     }));
     let line = format!(
-        "RoundTrip · {} · nodes {receiver}=receiving {processor}=processing+sending · online \
-         {receiver} · calm",
+        "RoundTrip · {} · nodes {receiver}=receiving {processor}=processing+sending · Node \
+         capabilities {receiver}=online · calm",
         cluster.name
     );
 

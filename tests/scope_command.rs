@@ -114,7 +114,7 @@ fn a_node_s_row_says_what_the_node_is_for() {
             &format!("{at}/capability"),
             Health::Fine,
             0,
-            "declares receiving; online; x",
+            "declares receiving; Node capabilities online; x",
         ),
         leaf(&format!("{at}/receive/orders"), Health::Fine, 0, ""),
     ]);
