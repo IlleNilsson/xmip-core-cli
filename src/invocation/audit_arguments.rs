@@ -20,9 +20,6 @@ pub const OPTIONS: [&str; 12] = [
     "--limit",
 ];
 
-/// What records a run that declared itself hidden made.
-pub const INCLUDE_HIDDEN: &str = "--include-hidden";
-
 /// Walk each writer's audit chain.
 pub const VERIFY: &str = "--verify";
 
@@ -42,7 +39,6 @@ pub struct AuditAsk {
     pub order: Option<String>,
     pub offset: u32,
     pub limit: u32,
-    pub include_hidden: bool,
     pub verify: bool,
 }
 
@@ -67,7 +63,6 @@ impl AuditAsk {
             ("order", self.order.clone()),
             ("offset", offset),
             ("limit", limit),
-            ("hidden", self.include_hidden.then(|| "include".to_string())),
             ("verify", self.verify.then(|| "yes".to_string())),
         ];
 
@@ -97,10 +92,6 @@ pub fn take(
 ) -> Option<Result<(), String>> {
     let option = args[*index].as_str();
 
-    if option == INCLUDE_HIDDEN {
-        ask.get_or_insert_with(AuditAsk::default).include_hidden = true;
-        return Some(Ok(()));
-    }
     if option == VERIFY {
         ask.get_or_insert_with(AuditAsk::default).verify = true;
         return Some(Ok(()));
@@ -205,7 +196,7 @@ mod tests {
             location: Some(scope.clone()),
             sort: Some(" ".into()),
             limit: 3,
-            include_hidden: true,
+            verify: true,
             ..AuditAsk::default()
         };
 
@@ -214,7 +205,7 @@ mod tests {
             [
                 ("location".to_string(), scope),
                 ("limit".to_string(), "3".to_string()),
-                ("hidden".to_string(), "include".to_string()),
+                ("verify".to_string(), "yes".to_string()),
             ]
         );
         assert!(ask.descending());

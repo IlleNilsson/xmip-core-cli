@@ -118,9 +118,7 @@ Get-XmipAudit read. Its options are the query's words:
   --order <word>            ascending or descending, newest first by default
   --offset <n>              where the page starts
   --limit <n>               how long a page: 100 by default, 1000 at most
-  --include-hidden          the records of a run started hidden too, marked
-                            test; left out unless given
-  --verify                  walk the audit chain of each writer of the records
+  --verify                 walk the audit chain of each writer of the records
                             matched and say where it breaks, or OK, and
                             say each record whose write was interrupted
 

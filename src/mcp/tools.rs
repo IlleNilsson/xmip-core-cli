@@ -7,7 +7,7 @@
 
 use serde_json::Value;
 
-use crate::invocation::audit_arguments::{self, INCLUDE_HIDDEN, VERIFY};
+use crate::invocation::audit_arguments::{self, VERIFY};
 use crate::invocation::noun_arguments::{ID, MESSAGE, MESSAGE_SHARED, NAME, SHARED};
 use crate::invocation::report_arguments;
 use crate::json::Json;
@@ -128,7 +128,7 @@ fn records() -> Vec<Tool> {
             ),
             (Some("pattern"), false),
             audit_arguments::OPTIONS.to_vec(),
-            vec![INCLUDE_HIDDEN, VERIFY],
+            vec![VERIFY],
         ),
         tool(
             (

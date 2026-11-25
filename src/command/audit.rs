@@ -133,7 +133,6 @@ pub fn document(read: &AuditRead) -> String {
                     json.number("warnings", count(group.warnings));
                     json.number("errors", count(group.errors));
                     json.string("latest", &group.latest);
-                    json.boolean("hidden", group.hidden);
                 });
             }
         });
@@ -208,14 +207,13 @@ fn write_text(output: &mut dyn Write, read: &AuditRead) {
             say(
                 output,
                 &format!(
-                    "  {}  {}  {} records, {} warnings, {} errors, latest {}{}",
+                    "  {}  {}  {} records, {} warnings, {} errors, latest {}",
                     left(group.kind, kind),
                     left(&group.who, who),
                     group.count,
                     group.warnings,
                     group.errors,
-                    english::to_the_second(&group.latest),
-                    english::test(group.hidden)
+                    english::to_the_second(&group.latest)
                 ),
             );
         }
@@ -246,7 +244,6 @@ fn write_record(output: &mut dyn Write, entry: &AuditEntry) {
         ("phase", Some(entry.phase.as_str())),
         ("severity", Some(entry.severity.as_str())),
         ("message", entry.message.as_deref()),
-        ("hidden", entry.hidden.then_some("true")),
     ];
 
     for (name, value) in fields {
@@ -283,11 +280,7 @@ fn table(output: &mut dyn Write, heading: &str, pairs: &BTreeMap<String, String>
 fn row(entry: &AuditEntry) -> Vec<String> {
     vec![
         english::to_the_second(&entry.at),
-        format!(
-            "{}{}",
-            english::value(entry.node().unwrap_or_default()),
-            english::test(entry.hidden)
-        ),
+        english::value(entry.node().unwrap_or_default()).to_string(),
         entry.program.clone(),
         entry.action.clone(),
         entry.phase.clone(),
@@ -310,7 +303,6 @@ fn write_entry(json: &mut Json, entry: &AuditEntry) {
     json.string("severity", &entry.severity);
     json.string_or_null("message", entry.message.as_deref());
     json.string("summary", &entry.summary());
-    json.boolean("hidden", entry.hidden);
     pairs(json, "scope", &entry.scope);
     pairs(json, "properties", &entry.properties);
 }

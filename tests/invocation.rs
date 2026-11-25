@@ -280,8 +280,8 @@ fn a_line_the_audit_cannot_obey_is_refused_as_any_line() {
         ),
         (&["audit", "--location"][..], "--location needs a value."),
         (
-            &["health", "xmip:///", "--include-hidden"][..],
-            "--include-hidden only applies to 'audit'.",
+            &["health", "xmip:///", "--verify"][..],
+            "--verify only applies to 'audit'.",
         ),
     ] {
         assert_eq!(parsed(line), Err(expected.to_string()), "{line:?}");

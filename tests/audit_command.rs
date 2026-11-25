@@ -4,7 +4,6 @@
 //! is `invocation.rs`'s.
 
 use std::collections::BTreeMap;
-use std::fmt::Write as _;
 use std::path::Path;
 
 use audit_file::FileSink;
@@ -66,40 +65,6 @@ fn read(directory: &Path, ask: &AuditAsk, json: bool) -> (i32, String, String) {
         String::from_utf8(output).expect("UTF-8"),
         String::from_utf8(error).expect("UTF-8"),
     )
-}
-
-#[test]
-fn a_hidden_run_s_records_are_left_out_until_included_and_then_marked_test() {
-    // The owner, 2026-09-29, and ADR-0028, amendment 2026-09-30: what a run
-    // that declared itself hidden recorded is read only when asked.
-    let cluster = test_cluster();
-    let asked = parsed(&["audit", "--include-hidden"])
-        .expect("parsed")
-        .audit
-        .expect("query");
-    assert!(asked.include_hidden);
-    let directory = written();
-    let file = directory.join("audit.toml");
-    let mut text = std::fs::read_to_string(&file).expect("written");
-    let _ = write!(
-        text,
-        "[[record]]\naudit_id = \"h1\"\nat = \"2026-09-30T10:00:00.000000000Z\"\nprogram = \
-         \"probe\"\nhost = \"H1\"\nprocess = \"7\"\nlocation = \"{}\"\nhidden = \"true\"\naction \
-         = \"start\"\nphase = \"Begin\"\nseverity = \"Information\"\n\n",
-        cluster.node_scope(0)
-    );
-    std::fs::write(&file, text).expect("appended");
-
-    let (_, left, _) = read(&directory, &AuditAsk::default(), false);
-    let (_, included, _) = read(&directory, &asked, false);
-
-    assert!(left.starts_with("2 of 2 records"), "{left}");
-    assert!(!left.contains(&cluster.scope()), "{left}");
-    assert!(included.starts_with("3 of 3 records"), "{included}");
-    assert!(
-        included.contains(&format!("{} · test", cluster.nodes[0].name)),
-        "{included}"
-    );
 }
 
 #[test]
