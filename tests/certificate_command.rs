@@ -312,14 +312,8 @@ fn authority(place: &Place) -> String {
         .expect("an authority");
     let cluster = "[service]\nname = \"n\"\n\n\
                    [nodes.d.provision.operator]\nauthority = \"authority\"\n";
-    let signed = runtime::signed::sliced_signed(
-        cluster,
-        &folder.join("cluster.xmip"),
-        "d",
-        Some("c"),
-        Some(&kept),
-    )
-    .expect("signed");
+    let (signed, _) =
+        runtime::signed::sliced_signed(cluster, "d", Some("c"), Some(&kept)).expect("signed");
     let configuration = folder.join("node.xmip");
     std::fs::write(&configuration, signed).expect("written");
     configuration.display().to_string()
