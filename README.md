@@ -48,7 +48,13 @@ xmip event-subscriptions [pattern]
 xmip dead-messages [pattern]
                           the Messages no Subscription matched, in each node's Dead
                           Message Queue; open one, or replay it
-xmip message [id]         list the Messages that failed, or retry or dismiss one
+xmip message [id]         list the Messages that failed, or retry or dismiss one,
+                          at a Send Port or a Work Process
+xmip instances [work-process]
+                          the Instances of each Work Process, running, waiting,
+                          failed or done, with their values, and the Messages that
+                          failed in its queue; with --instance <id>, one with its
+                          history
 xmip secret [name]        the secrets a node keeps, never a value; with --set,
                           set one through the node
 xmip report [name]        every Report, quick or taking longer; with
@@ -418,6 +424,37 @@ as `dead-message.replay` (ADR-0014, amendment 2026-11-13); a snapshot is
 never acted on, and the Replay is declined in words. `OK.` and exit 0 when it
 was taken, `ASKED.` and exit 0 when its node has not taken it yet, `REFUSED:`
 and exit 1 when it was not.
+
+## A Work Process's Instances
+
+`xmip instances [work-process]` lists the Instances of each Work Process the
+nodes at or beneath `--location` run (runtime-model.md section 22; ADR-0066,
+amendment 2026-11-25; the owner, 2026-11-25: *A Work Process is like an
+Orchestration in BizTalk. So it is aware via subscriptions, even when running
+or not*), the one its argument names where it names one:
+
+```text
+xmip instances [work-process] --location <scope> --instance <id> --json
+```
+
+Each Work Process says on which node it runs, how many Instances the list
+holds and how many Messages that failed wait in its queue; each Instance its
+identifier — the Journey of the Message that started it — and whether it is
+running, waiting, failed, dismissed or completed, what it waits for —
+`message`, `time` or both — until its earliest deadline, each Correlation it
+holds a key in with the key, its own values and its turns. Each Message that
+failed in the queue is listed with its Journey, its place and why, and the
+line that retries it, `xmip message <journey> --retry --location <node>`:
+an Instance takes no act of its own (exit 2), and a Message that failed it is
+retried or dismissed as every failed Message is, by the node that runs the
+Work Process. `--instance` opens one: its state, its code and why where it
+failed, its keys, values and turns, and its history of Messages — when, what
+(started, arrived, due, made, published, failed, retried or dismissed), the
+Message and the Journey — the newest sixty-four, the earlier counted. A node
+publishes the newest twenty of each Work Process it runs; which are listed is
+`operate::surface::instance_query`'s, the one the web's Instances view and
+`Get-XmipInstance` ask. `--json` writes `xmip_operate.h` section 29's shape,
+each pair as `name` and `value`.
 
 ## A Message that failed
 

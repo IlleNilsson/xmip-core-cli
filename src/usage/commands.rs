@@ -36,7 +36,12 @@ pub const USAGE: &str = r#"xmip — the Xmip command line
                             node's Dead Message Queue; open one, or
                             replay it
   xmip message [id]         list the Messages that failed, or retry or
-                            dismiss one
+                            dismiss one, at a Send Port or a Work Process
+  xmip instances [work-process]
+                            the Instances of each Work Process, running,
+                            waiting, failed or done, with their values, and
+                            the Messages that failed in its queue; with
+                            --instance <id>, one with its history
   xmip secret [name]        the secrets a node keeps, never a value; with
                             --set, set one through the node
   xmip report [name]        every Report, quick or taking longer; with
@@ -87,7 +92,7 @@ mcp is for an MCP client that starts it (ADR-0071): JSON-RPC 2.0 on
 stdin and stdout, one message a line, and nothing else on stdout. Its
 tools are the read commands — abi, status, health, measure, list,
 show, validate, audit, subscriptions, event-subscriptions,
-dead-messages, message and report, each with its options as
+dead-messages, message, instances and report, each with its options as
 arguments — and never an act. Its resources are the scopes, each an
 Xmip URI, read as an operator drills: the scope's row, then the rows
 beneath it.

@@ -8,7 +8,9 @@
 use serde_json::Value;
 
 use crate::invocation::audit_arguments::{self, VERIFY};
-use crate::invocation::noun_arguments::{ID, MESSAGE, MESSAGE_SHARED, NAME, SHARED};
+use crate::invocation::noun_arguments::{
+    ID, INSTANCE, MESSAGE, MESSAGE_SHARED, NAME, SECRET_SHARED, SHARED,
+};
 use crate::invocation::report_arguments;
 use crate::json::Json;
 
@@ -166,6 +168,18 @@ fn records() -> Vec<Tool> {
             ),
             (None, false),
             MESSAGE_SHARED.to_vec(),
+            vec![],
+        ),
+        tool(
+            (
+                "instances",
+                "The Instances of each Work Process the nodes at or beneath location run, \
+                 newest first: running, waiting, failed, dismissed or completed, with their \
+                 values, and the Messages that failed in its queue; instance opens one with \
+                 its history of Messages.",
+            ),
+            (Some("work-process"), false),
+            with(&SECRET_SHARED, &[INSTANCE]),
             vec![],
         ),
         tool(

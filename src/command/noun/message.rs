@@ -13,8 +13,9 @@ use crate::command::noun;
 use crate::json::Json;
 use crate::run::Writers;
 
-/// Take `act` on the Message of `journey`, sent at `location` — the node
-/// that sends its Send Port or the Port's scope beneath it — as `who`.
+/// Take `act` on the Message of `journey`, failed at `location` — the node
+/// that sends its Send Port or runs its Work Process, or the Port's scope
+/// beneath it — as `who`.
 pub fn over(
     surface: &dyn OperatorSurface,
     (location, journey): (Option<&str>, &str),
@@ -28,8 +29,9 @@ pub fn over(
         crate::say(
             to.error,
             &format!(
-                "REFUSED: to {} a Message, name the node that sends its Send Port with \
-                 --location xmip:///<cluster>/node/<name>, or the Send Port's scope beneath it.",
+                "REFUSED: to {} a Message, name the node that sends its Send Port or runs its \
+                 Work Process with --location xmip:///<cluster>/node/<name>, or the Send Port's \
+                 scope beneath it.",
                 act.word()
             ),
         );

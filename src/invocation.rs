@@ -53,7 +53,7 @@ pub struct Invocation {
     /// What `audit` asks.
     pub audit: Option<AuditAsk>,
     /// What a noun's list asks, for `event-subscriptions`,
-    /// `subscriptions` and `dead-messages`.
+    /// `subscriptions`, `dead-messages` and `instances`.
     pub noun: Option<NounAsk>,
     /// The act a noun's line takes on the one it names.
     pub act: Option<Act>,
@@ -276,6 +276,7 @@ impl Read {
             Command::DeadMessages => noun_arguments::dead_message_act(act)?,
             Command::Message => noun_arguments::message_act(act, named)?,
             Command::EventSubscriptions => noun_arguments::event_subscription_act(act),
+            Command::Instances => noun_arguments::instance_act(act)?,
             _ => None,
         };
         let audit = self.audit.clone().unwrap_or_default();
@@ -299,7 +300,10 @@ impl Read {
         let pattern = named.then(|| argument.clone());
         let listed = matches!(
             command,
-            Command::EventSubscriptions | Command::Subscriptions | Command::DeadMessages
+            Command::EventSubscriptions
+                | Command::Subscriptions
+                | Command::DeadMessages
+                | Command::Instances
         );
         let message = command == Command::Message;
 

@@ -75,6 +75,7 @@ pub fn answer(
         | Command::Subscriptions
         | Command::DeadMessages
         | Command::Message
+        | Command::Instances
         | Command::Secret => on(invocation, open, to, |surface, to| {
             command::noun::answer(surface, invocation, &who, to)
         }),

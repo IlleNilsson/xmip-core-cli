@@ -2,13 +2,15 @@
 //! secrets: `xmip event-subscriptions` (ADR-0065, amendment 2026-09-29),
 //! `subscriptions` (ADR-0013, amendment 2026-09-30), `dead-messages`
 //! (ADR-0052, amendment 2026-10-01), `message` (runtime-model.md section
-//! 13) and `secret` (ADR-0019, amendment 2026-10-29). Each lists what the
+//! 13), `instances` (runtime-model.md section 22; ADR-0066, amendment
+//! 2026-11-25) and `secret` (ADR-0019, amendment 2026-10-29). Each lists what the
 //! line's query selects, or takes the one act it names on the one it names;
 //! what they share — a refused query, an act's sentence, an age — is said
 //! here once.
 
 pub mod dead_message;
 pub mod event_subscription;
+pub mod instance;
 pub mod message;
 pub mod secret;
 pub mod subscription;
@@ -57,6 +59,7 @@ pub fn answer(
             (who, json),
             to,
         ),
+        Command::Instances => instance::over(surface, &asked, json, to),
         Command::Message => match invocation.act {
             Some(act) => message::over(
                 surface,

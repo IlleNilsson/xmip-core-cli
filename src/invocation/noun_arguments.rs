@@ -1,10 +1,11 @@
 //! What the nouns a node publishes for an operator to act on share on the
 //! line (`observe::Noun`): `event-subscriptions`, `subscriptions`,
-//! `dead-messages` and `message`, and a node's `secret`. The act — one of
+//! `dead-messages` and `message`, a Work Process's `instances` and a node's
+//! `secret`. The act — one of
 //! `--pause`, `--resume`, `--remove`, `--replay`, `--retry`, `--dismiss`
 //! and `--set` — read as the word the runtime names it by, which each noun
-//! then takes or refuses; each noun's own selector, `--id`, `--name` or
-//! `--message`; and which of audit's words each takes.
+//! then takes or refuses; each noun's own selector, `--id`, `--name`,
+//! `--message` or `--instance`; and which of audit's words each takes.
 
 use observe::Act;
 
@@ -37,6 +38,7 @@ pub const DATABASE_SHARED: [&str; 2] = ["--from", "--to"];
 pub const ID: &str = "--id";
 pub const NAME: &str = "--name";
 pub const MESSAGE: &str = "--message";
+pub const INSTANCE: &str = "--instance";
 
 /// What a noun's selectors hold.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -44,6 +46,8 @@ pub struct Selectors {
     pub id: Option<u64>,
     pub name: Option<String>,
     pub message: Option<String>,
+    /// The Instance `instances` opens, by its identifier.
+    pub instance: Option<String>,
 }
 
 /// Take a noun's own option at `index` into `selectors`: `None` where it is
@@ -65,9 +69,13 @@ pub fn take_selector(
             }
             None => Err("--id needs an Event subscription's number.".to_string()),
         },
-        NAME | MESSAGE => match next.filter(|value| !value.trim().is_empty()) {
+        NAME | MESSAGE | INSTANCE => match next.filter(|value| !value.trim().is_empty()) {
             Some(value) if option == NAME => {
                 selectors.name = Some(value.clone());
+                Ok(())
+            }
+            Some(value) if option == INSTANCE => {
+                selectors.instance = Some(value.clone());
                 Ok(())
             }
             Some(value) => {
@@ -75,6 +83,9 @@ pub fn take_selector(
                 Ok(())
             }
             None if option == NAME => Err("--name needs a Subscription's name.".to_string()),
+            None if option == INSTANCE => {
+                Err("--instance needs an Instance's identifier.".to_string())
+            }
             None => Err("--message needs a Message's identifier.".to_string()),
         },
         _ => return None,
@@ -120,7 +131,7 @@ pub fn take_act(option: &str, act: &mut Option<String>) -> Option<Result<(), Str
 pub fn foreign(command: Command, audit_options: &[String]) -> Option<String> {
     let takes = |option: &str| match command {
         Command::Message => MESSAGE_SHARED.contains(&option),
-        Command::Secret => SECRET_SHARED.contains(&option),
+        Command::Secret | Command::Instances => SECRET_SHARED.contains(&option),
         Command::Database => DATABASE_SHARED.contains(&option),
         Command::EventSubscriptions | Command::Subscriptions | Command::DeadMessages => {
             SHARED.contains(&option)
@@ -152,13 +163,16 @@ pub fn stray(command: Command, noun_options: &[String]) -> Option<String> {
             (command != Command::Subscriptions).then_some("'subscriptions'")
         } else if option == MESSAGE {
             (command != Command::DeadMessages).then_some("'dead-messages'")
+        } else if option == INSTANCE {
+            (command != Command::Instances).then_some("'instances'")
         } else if secret_arguments::OPTIONS.contains(&option) {
             (command != Command::Secret).then_some("'secret'")
         } else if report_arguments::OPTIONS.contains(&option) {
             (command != Command::Report).then_some("'report'")
         } else {
-            (!command.is_noun())
-                .then_some("'event-subscriptions', 'subscriptions', 'dead-messages' and 'message'")
+            (!command.is_noun()).then_some(
+                "'event-subscriptions', 'subscriptions', 'dead-messages', 'message' and 'instances'",
+            )
         };
 
         if let Some(owner) = owner {
@@ -220,6 +234,22 @@ pub fn dead_message_act(word: Option<&str>) -> Result<Option<Act>, String> {
         Some(other) => Err(format!(
             "REFUSED: --{other}: a Message in a Dead Message Queue is replayed, and --replay is \
              its one act."
+        )),
+    }
+}
+
+/// The act an Instance takes: none. A Message that failed it is retried
+/// or dismissed as every failed Message is.
+///
+/// # Errors
+///
+/// Any act.
+pub fn instance_act(word: Option<&str>) -> Result<Option<Act>, String> {
+    match word {
+        None => Ok(None),
+        Some(other) => Err(format!(
+            "REFUSED: --{other}: an Instance takes no act; retry or dismiss the Message that \
+             failed it: 'message <journey> --retry --location <node>'."
         )),
     }
 }

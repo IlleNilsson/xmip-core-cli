@@ -62,6 +62,10 @@ pub enum Command {
     /// The Messages that failed, and Retry or Dismiss on one
     /// (runtime-model.md section 13).
     Message,
+    /// The Instances of each Work Process, and the Messages that failed in
+    /// its queue (runtime-model.md section 22; ADR-0066, amendment
+    /// 2026-11-25).
+    Instances,
     /// The secrets a node keeps, never a value, and Set on one (ADR-0019,
     /// amendment 2026-10-29).
     Secret,
@@ -75,7 +79,7 @@ pub enum Command {
 impl Command {
     /// Every command's word, its command, and the fewest and most
     /// arguments it takes.
-    pub const KNOWN: [(&'static str, Self, usize, usize); 21] = [
+    pub const KNOWN: [(&'static str, Self, usize, usize); 22] = [
         ("help", Self::Help, 0, 0),
         ("abi", Self::Abi, 0, 0),
         ("status", Self::Status, 1, 1),
@@ -94,6 +98,7 @@ impl Command {
         ("subscriptions", Self::Subscriptions, 0, 1),
         ("dead-messages", Self::DeadMessages, 0, 1),
         ("message", Self::Message, 0, 1),
+        ("instances", Self::Instances, 0, 1),
         ("secret", Self::Secret, 0, 1),
         ("report", Self::Report, 0, 1),
         ("mcp", Self::Mcp, 0, 0),
@@ -128,6 +133,7 @@ impl Command {
                 | Self::Subscriptions
                 | Self::DeadMessages
                 | Self::Message
+                | Self::Instances
                 | Self::Secret
         )
     }
