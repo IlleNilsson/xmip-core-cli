@@ -130,7 +130,10 @@ its nodes it reached, the runtime's words (the design approved 2026-11-12,
 section 3.5; `GatheredClusterTests`). A node gathering none answers for
 itself; which of the two, its answer decides, never its name. `xmip status`
 says what a status code means and reads no surface. `validate` asks the
-runtime itself, since no node stands behind it. Text
+runtime itself, since no node stands behind it, each Location held to its
+technology's declaration as the desktop's library holds it
+(`operate::catalogue::carried`; ADR-0064, amendment 2026-11-26), though
+the command line loads no technology. Text
 goes to stdout for a person, column-aligned, each line ended by a line feed;
 `--json` emits one document; `--follow` subscribes to the shared operator
 change stream and emits one JSON Lines record each time the snapshot it reads

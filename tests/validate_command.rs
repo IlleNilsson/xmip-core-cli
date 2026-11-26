@@ -1,10 +1,14 @@
 //! `xmip validate <toml>`: a verdict rendered — valid on stdout, invalid on
 //! stderr with its problems, the record as a document — and the exit
-//! decided by the record, never by the sentence (ADR-0052 clause 4).
+//! decided by the record, never by the sentence (ADR-0052 clause 4); and a
+//! Location held to its technology's declaration, though the command line
+//! loads no technology (ADR-0064, amendment 2026-11-26).
 
 use abi::ffi::status;
+use configure::fixture::test_cluster;
+use file::temporary::Folder;
 use operate::surface::configuration_verdict::ConfigurationVerdict;
-use xmip_core_cli::command::validate::verdict;
+use xmip_core_cli::command::validate::{run, verdict};
 
 const TOML: &str = "node.xmip";
 
@@ -66,4 +70,37 @@ fn the_exit_is_the_record_s_not_the_sentence_s() {
     };
 
     assert_eq!(rendered(&misleading, false).0, 1);
+}
+
+#[test]
+fn a_locations_setting_its_technology_does_not_declare_is_refused() {
+    let cluster = test_cluster();
+    let node = &cluster.node(0).name;
+    let folder = Folder::new("cli-validate-declared");
+    let path = folder.join(TOML);
+    std::fs::write(
+        &path,
+        format!(
+            "[service]\nname = \"xmip-{node}\"\ncluster_name = \"{}\"\nnode_name = \"{node}\"\n\n\
+             [[send_locations]]\nname = \"billing-out\"\naddress = \"C:/out\"\n\
+             [send_locations.settings]\nnamed = \"{{message}}.edi\"\n",
+            cluster.name
+        ),
+    )
+    .expect("written");
+    let (mut output, mut error) = (Vec::new(), Vec::new());
+
+    let exit = run(
+        path.to_str().expect("UTF-8"),
+        false,
+        &mut output,
+        &mut error,
+    );
+
+    let said = String::from_utf8(error).expect("UTF-8");
+    assert_eq!(exit, 1, "{said}");
+    assert!(
+        said.contains("xmip-core-transport-file has no setting \"named\""),
+        "{said}"
+    );
 }

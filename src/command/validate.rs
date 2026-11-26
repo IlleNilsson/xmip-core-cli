@@ -4,7 +4,10 @@
 //! clause 9). The problems are `runtime::start::validate`'s and the verdict
 //! `operate::surface::configuration_verdict`'s, the same record and
 //! sentence the desktop shows (ADR-0052 clause 4); the exit is decided by
-//! the record, never the sentence.
+//! the record, never the sentence. Each Location is held to its
+//! technology's declaration, carried as the desktop's library carries it
+//! (`operate::catalogue::carried`; ADR-0064, amendment 2026-11-26), though
+//! the command line loads no technology.
 
 use std::io::Write;
 use std::path::Path;
@@ -23,6 +26,7 @@ pub fn run(path: &str, json: bool, output: &mut dyn Write, error: &mut dyn Write
         return 2;
     }
 
+    operate::catalogue::carried();
     match std::fs::read_to_string(path) {
         Ok(text) => verdict(
             &ConfigurationVerdict::of(path, runtime::start::validate(&text)),
