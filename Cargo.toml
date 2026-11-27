@@ -1,11 +1,11 @@
 [package]
 name = "xmip-core-cli"
-version = "0.1.0"
-edition = "2024"
-license = "AGPL-3.0-or-later"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
 repository = "https://github.com/IlleNilsson/xmip-core-cli"
 description = "The xmip command line over a running Xmip, in Rust and needing no .NET: text for a person, --json for a program, --follow as JSON Lines, every command audited, and xmip mcp, a Model Context Protocol server on stdin and stdout, over xmip-core-operate's surface and the runtime's crates."
-publish = false
+publish.workspace = true
 # Copies cli.toml beside the executable and links the Xmip mark into it as
 # its Windows icon.
 build = "build.rs"
