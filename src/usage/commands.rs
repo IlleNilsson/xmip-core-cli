@@ -78,8 +78,8 @@ the GUI's filter box matches (ADR-0059 clauses 7 and 8).
                                          node is its member
   xmip list "xmip:///CL1/*/receive"      beneath every receive
 
-CL1 and RX1 are names a tester gave; they mean nothing to Xmip, and a
-node receives because it declared receive, never because of its name.
+CL1 and RX1 are names a cluster's file gives; they mean nothing to Xmip,
+and a node receives because it declared receive, never because of its name.
 
 health, measure, list and show answer for each scope a pattern names,
 one after the other, and never add them together; pause and resume act
