@@ -1,7 +1,9 @@
 //! `xmip health <scope>`: every leaf at and beneath a scope, worst first,
 //! with the rollup for the scope itself (ADR-0041). A scope that is Holding
 //! says why on the spot — the worst leaf beneath it and that leaf's
-//! evidence (ADR-0052 clause 2). Text for a person, one document with
+//! evidence (ADR-0052 clause 2). The cluster is named as every surface names
+//! it, its short name and what its tooltip carries (`cluster_named`;
+//! ADR-0028, amendment 2026-11-28). Text for a person, one document with
 //! `--json`, and with `--follow` one JSON Lines record each time the health
 //! changes (ADR-0014 clause 10).
 
@@ -9,6 +11,7 @@ use std::io::Write;
 
 use observe::{Health, HealthRecord};
 use operate::surface::OperatorSurface;
+use operate::surface::cluster_named::ClusterNamed;
 use operate::surface::english;
 use operate::surface::scope_selection::ScopeSelection;
 use operate::surface::scope_tree;
@@ -126,6 +129,15 @@ fn body(json: &mut Json, surface: &dyn OperatorSurface, scope: &str, records: &[
     json.string("source", &surface.source());
     json.string("state", english::rollup(records));
 
+    // The cluster as every surface shows it, where the surface names one.
+    let named = ClusterNamed::of(surface);
+    if !named.shown().is_empty() {
+        json.object("cluster", |json| {
+            json.string("shown", named.shown());
+            json.string("title", &named.title());
+        });
+    }
+
     // What the run was started with, where its publisher says; a surface
     // that says nothing of a run writes no key at all.
     let run = surface.run();
@@ -188,6 +200,17 @@ fn write_text(
         }
     }
     say(output, &format!("{gap} source {}", surface.source()));
+    let named = ClusterNamed::of(surface);
+    if !named.shown().is_empty() {
+        // What a tooltip carries, said beside it where the publisher names
+        // the cluster for a person.
+        let shown = if named.naming.said() {
+            format!("{} ({})", named.shown(), named.title())
+        } else {
+            named.shown().to_string()
+        };
+        say(output, &format!("{gap} cluster {shown}"));
+    }
     let run = surface.run();
     if run.said() {
         say(output, &format!("{gap} run {}", run.line()));

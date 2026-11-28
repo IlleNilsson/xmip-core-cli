@@ -324,7 +324,11 @@ amendment 2026-11-11) — state, picked-up, held and since. `xmip health`,
 `list` and `show` say on each record and row where its work came from and
 went, `from <from> → to <to>`, and a document's `from` and `to`, the
 runtime's words for the nearest thing the publication draws at or above it
-(`OperatorSurface::ends`; ADR-0052, amendment 2026-11-11). On a node's own
+(`OperatorSurface::ends`; ADR-0052, amendment 2026-11-11). `xmip health`
+says the cluster as every surface shows it, `cluster <short name>` and, in
+parentheses where the publisher names it, what a tooltip would carry; a
+document's `cluster` holds both, `shown` and `title` (`cluster_named`;
+ADR-0028, amendment 2026-11-28). On a node's own
 row, `xmip:///<cluster>/node/<name>`, `list` and `show` say beneath it what
 the node is for, each role it declares with its meaning, a line each —
 `receiving: takes Streams in and makes Messages` — and a document its
@@ -711,8 +715,8 @@ scope's words; `xmip-core-abi`, the boundaries and what a status means;
 the civil calendar; `xmip-core-provision`, a person's request; and
 `xmip-core`, the Clock and an audit record's words. Beyond them: `serde_json`,
 and on Windows `windows-sys` and elsewhere `nix` for Ctrl+C and the user.
-The dependencies track `branch = "main"` (ADR-0005); in the estate every one
-is patched to its working tree.
+Each estate crate is taken from the root's `[workspace.dependencies]`, by
+path, its working tree (ADR-0005, amendment 2026-11-28).
 
 ## Not this repository's
 
